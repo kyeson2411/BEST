@@ -228,6 +228,7 @@ final class Assessments
      * The assignment if the student may see it: enrolled (active), class active, published or closed, and open.
      * With $allowScheduled, a published assignment that opens later is returned with not_open = true
      * (title and dates only — callers must not show questions or accept work).
+     * due_at is the student's own due date when their teacher set one (see Overrides::apply).
      * @return array<string,mixed>
      */
     public static function forStudent(int $studentId, int $assignmentId, bool $allowScheduled = false): array
@@ -248,7 +249,7 @@ final class Assessments
         if ($row['not_open'] && !$allowScheduled) {
             throw new HttpException(409, t('This work opens :date.', ['date' => Dates::format((string) $row['opens_at'], 'datetime_short')]));
         }
-        return $row;
+        return Overrides::apply($row, $studentId);
     }
 
     /** @return list<array<string,mixed>> newest first */
@@ -271,7 +272,8 @@ final class Assessments
         $submittedCount = count(array_filter($subs, static fn ($s) => $s['status'] !== 'in_progress'));
         $now = Db::now();
         $pastDue = $assignment['due_at'] !== null && $assignment['due_at'] < $now;
-        $closed = $assignment['status'] === 'closed';
+        // Closing stops everyone except a student whose own extension is still running.
+        $closed = $assignment['status'] === 'closed' && !(!empty($assignment['extended']) && !$pastDue);
         $lateBlocked = $pastDue && $assignment['late_policy'] === 'not_accepted';
         $returned = $latest && $latest['status'] === 'returned';
         $canWork = !$closed && (!$lateBlocked || $returned);
@@ -295,6 +297,7 @@ final class Assessments
             'attempts_left' => max(0, (int) $assignment['max_attempts'] - $submittedCount),
             'past_due' => $pastDue,
             'closed' => $closed,
+            'excused' => !empty($assignment['excused']),
             'late_blocked' => $lateBlocked,
             'can_start' => $canStart,
             'can_submit' => $canSubmit,
@@ -306,6 +309,9 @@ final class Assessments
     public static function studentStatus(array $assignment, ?array $latest): array
     {
         $now = Db::now();
+        if (!empty($assignment['excused'])) {
+            return [t('Excused'), 'neutral'];
+        }
         if ($latest && $latest['status'] === 'returned') {
             return [t('Returned for changes'), 'amber'];
         }
@@ -330,8 +336,9 @@ final class Assessments
             case 'after_submit':
                 return $submission !== null && $submission['status'] === 'submitted';
             case 'after_due':
-                return $submission !== null && $submission['status'] === 'submitted'
-                    && $assignment['due_at'] !== null && $assignment['due_at'] <= Db::now();
+                // Wait for the latest extension in the class, not only this student's own date.
+                $due = Overrides::latestDue((int) $assignment['id'], array_key_exists('class_due_at', $assignment) ? $assignment['class_due_at'] : $assignment['due_at']);
+                return $submission !== null && $submission['status'] === 'submitted' && $due !== null && $due <= Db::now();
             case 'manual':
                 return $assignment['answers_released_at'] !== null && $submission !== null && $submission['status'] === 'submitted';
             default:
@@ -371,15 +378,7 @@ final class Assessments
         if (!$state['can_start']) {
             throw new HttpException(409, t('You cannot start another attempt for this quiz.'));
         }
-        $now = time();
-        $deadline = null;
-        if ((int) $assignment['time_limit_minutes'] > 0) {
-            $deadline = $now + (int) $assignment['time_limit_minutes'] * 60;
-        }
-        if ($assignment['due_at'] !== null && $assignment['late_policy'] === 'not_accepted') {
-            $due = strtotime((string) $assignment['due_at'] . ' UTC');
-            $deadline = $deadline === null ? $due : min($deadline, $due);
-        }
+        $deadline = self::attemptDeadline($assignment, time());
         $id = Db::insert('submissions', [
             'organization_id' => (int) $assignment['organization_id'],
             'assignment_id' => (int) $assignment['id'],
@@ -394,6 +393,24 @@ final class Assessments
             'updated_at' => Db::now(),
         ]);
         return Db::one('SELECT * FROM submissions WHERE id = :id', ['id' => $id]);
+    }
+
+    /**
+     * When an attempt started at $startedAt must end (Unix time), or null for no limit: the time limit plus
+     * the student's extra minutes, and never past their due date when late work is not accepted.
+     * @param array<string,mixed> $assignment as one student sees it (Overrides::apply)
+     */
+    public static function attemptDeadline(array $assignment, int $startedAt): ?int
+    {
+        $deadline = null;
+        if ((int) $assignment['time_limit_minutes'] > 0) {
+            $deadline = $startedAt + ((int) $assignment['time_limit_minutes'] + (int) ($assignment['extra_minutes'] ?? 0)) * 60;
+        }
+        if ($assignment['due_at'] !== null && $assignment['late_policy'] === 'not_accepted') {
+            $due = (int) strtotime((string) $assignment['due_at'] . ' UTC');
+            $deadline = $deadline === null ? $due : min($deadline, $due);
+        }
+        return $deadline;
     }
 
     /** Saves in-progress answers. @param array<int|string,mixed> $answers question id => response */

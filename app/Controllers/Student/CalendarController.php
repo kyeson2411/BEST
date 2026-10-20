@@ -11,6 +11,7 @@ use Sibol\Core\Db;
 use Sibol\Core\HttpException;
 use Sibol\Core\Response;
 use Sibol\Policies\Access;
+use Sibol\Services\Overrides;
 
 /** Month calendar of due dates, scheduled openings and personal study sessions, in the student's timezone. */
 final class CalendarController extends Controller
@@ -31,14 +32,17 @@ final class CalendarController extends Controller
         $uid = (int) $user['id'];
 
         $events = [];
+        // Each student's own due dates; excused work is left off.
+        $due = Overrides::dueSql('a');
         foreach (Db::all(
-            "SELECT a.id, a.title, a.kind, a.due_at, c.name AS class_name,
+            "SELECT a.id, a.title, a.kind, $due AS due_at, c.name AS class_name,
                     EXISTS (SELECT 1 FROM submissions s WHERE s.assignment_id = a.id AND s.student_id = :u1 AND s.status = 'submitted') AS done
              FROM assignments a
              JOIN class_memberships cm ON cm.class_id = a.class_id AND cm.user_id = :u2 AND cm.role = 'student' AND cm.status = 'active'
-             JOIN classes c ON c.id = a.class_id AND c.status = 'active'
-             WHERE a.status IN ('published','closed') AND a.due_at >= :f AND a.due_at < :t",
-            ['u1' => $uid, 'u2' => $uid, 'f' => $from, 't' => $to]
+             JOIN classes c ON c.id = a.class_id AND c.status = 'active'"
+             . Overrides::joinSql('a', 'u3') . "
+             WHERE a.status IN ('published','closed') AND " . Overrides::notExcusedSql() . " AND $due >= :f AND $due < :t",
+            ['u1' => $uid, 'u2' => $uid, 'u3' => $uid, 'f' => $from, 't' => $to]
         ) as $a) {
             $events[] = ['type' => 'due', 'at' => $a['due_at'], 'title' => $a['title'], 'meta' => $a['class_name'], 'done' => (bool) $a['done'], 'url' => '/student/assignments/' . (int) $a['id'], 'id' => (int) $a['id']];
         }

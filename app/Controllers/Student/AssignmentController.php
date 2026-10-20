@@ -23,7 +23,7 @@ final class AssignmentController extends Controller
     public function index(): Response
     {
         $user = $this->user();
-        $filters = ['upcoming', 'overdue', 'submitted', 'graded', 'all'];
+        $filters = ['upcoming', 'overdue', 'submitted', 'graded', 'excused', 'all'];
         $filter = in_array($this->request->str('filter'), $filters, true) ? $this->request->str('filter') : 'upcoming';
         $classId = $this->request->int('class_id');
         $classes = StudentRepo::classes($user);

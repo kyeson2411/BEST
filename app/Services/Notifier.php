@@ -88,8 +88,8 @@ final class Notifier
     }
 
     /**
-     * Creates due-soon reminders for a student lazily (no cron needed under XAMPP).
-     * Each assignment gets at most one reminder per student.
+     * Creates due-soon reminders for a student lazily (no cron needed under XAMPP), using the student's
+     * own due date. Each due date gets at most one reminder per student, so an extension brings a new one.
      */
     public static function remindDueSoon(array $student): void
     {
@@ -98,13 +98,15 @@ final class Notifier
         if ($hours <= 0) {
             return;
         }
+        $due = Overrides::dueSql('a');
         $rows = Db::all(
-            "SELECT a.id, a.title, a.due_at, a.kind FROM assignments a
-             JOIN class_memberships cm ON cm.class_id = a.class_id AND cm.user_id = :u AND cm.role = 'student' AND cm.status = 'active'
-             WHERE a.status = 'published' AND (a.opens_at IS NULL OR a.opens_at <= UTC_TIMESTAMP())
-               AND a.due_at BETWEEN UTC_TIMESTAMP() AND UTC_TIMESTAMP() + INTERVAL " . $hours . " HOUR
+            "SELECT a.id, a.title, $due AS due_at, a.kind FROM assignments a
+             JOIN class_memberships cm ON cm.class_id = a.class_id AND cm.user_id = :u AND cm.role = 'student' AND cm.status = 'active'"
+             . Overrides::joinSql('a', 'u3') . "
+             WHERE " . Overrides::openSql('a') . ' AND ' . Overrides::notExcusedSql() . " AND (a.opens_at IS NULL OR a.opens_at <= UTC_TIMESTAMP())
+               AND $due BETWEEN UTC_TIMESTAMP() AND UTC_TIMESTAMP() + INTERVAL " . $hours . " HOUR
                AND NOT EXISTS (SELECT 1 FROM submissions s WHERE s.assignment_id = a.id AND s.student_id = :u2 AND s.status = 'submitted')",
-            ['u' => (int) $student['id'], 'u2' => (int) $student['id']]
+            ['u' => (int) $student['id'], 'u2' => (int) $student['id'], 'u3' => (int) $student['id']]
         );
         foreach ($rows as $row) {
             self::send(
@@ -114,7 +116,7 @@ final class Notifier
                 t('Due soon: :title', ['title' => $row['title']]),
                 \Sibol\Core\Dates::due((string) $row['due_at'])['label'],
                 '/student/assignments/' . (int) $row['id'],
-                'due:' . (int) $row['id']
+                'due:' . (int) $row['id'] . ':' . (string) $row['due_at']
             );
         }
     }

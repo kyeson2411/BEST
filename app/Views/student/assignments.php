@@ -1,10 +1,15 @@
 <?php /** @var string $filter @var int|null $classId @var list<array> $classes @var list<array> $rows @var array<string,int> $counts */
-$labels = ['upcoming' => t('To do'), 'overdue' => t('Overdue'), 'submitted' => t('Submitted'), 'graded' => t('Graded'), 'all' => t('All')];
+$labels = ['upcoming' => t('To do'), 'overdue' => t('Overdue'), 'submitted' => t('Submitted'), 'graded' => t('Graded'), 'excused' => t('Excused'), 'all' => t('All')];
+// The excused tab appears only when a teacher has excused something.
+if (empty($counts['excused']) && $filter !== 'excused') {
+    unset($labels['excused']);
+}
 $empty = [
     'upcoming' => [t('Nothing to do right now'), t('New assignments and quizzes will appear here as soon as your teachers publish them.')],
     'overdue' => [t('Nothing overdue'), t('Work you have not handed in after its due date will appear here.')],
     'submitted' => [t('Nothing waiting for a grade'), t('Work you have submitted appears here until your teacher releases feedback.')],
     'graded' => [t('No graded work yet'), t('When your teachers release grades and comments, you will find them here.')],
+    'excused' => [t('Nothing excused'), t('Work your teacher excuses you from appears here. It is not counted and never shows as missing.')],
     'all' => [t('No work yet'), t('Your classes have no published assignments or quizzes yet.')],
 ];
 ?>

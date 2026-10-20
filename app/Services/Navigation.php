@@ -84,14 +84,16 @@ final class Navigation
 
     private static function studentDueCount(int $studentId): int
     {
+        $due = Overrides::dueSql('a');
         return (int) Db::value(
             "SELECT COUNT(*) FROM assignments a
              JOIN class_memberships cm ON cm.class_id = a.class_id AND cm.user_id = :u AND cm.role = 'student' AND cm.status = 'active'
-             JOIN classes c ON c.id = a.class_id AND c.status = 'active'
-             WHERE a.status = 'published' AND (a.opens_at IS NULL OR a.opens_at <= UTC_TIMESTAMP())
-               AND a.due_at IS NOT NULL AND a.due_at BETWEEN UTC_TIMESTAMP() AND UTC_TIMESTAMP() + INTERVAL 7 DAY
+             JOIN classes c ON c.id = a.class_id AND c.status = 'active'"
+             . Overrides::joinSql('a', 'u3') . "
+             WHERE " . Overrides::openSql('a') . ' AND ' . Overrides::notExcusedSql() . " AND (a.opens_at IS NULL OR a.opens_at <= UTC_TIMESTAMP())
+               AND $due IS NOT NULL AND $due BETWEEN UTC_TIMESTAMP() AND UTC_TIMESTAMP() + INTERVAL 7 DAY
                AND NOT EXISTS (SELECT 1 FROM submissions s WHERE s.assignment_id = a.id AND s.student_id = :u2 AND s.status = 'submitted')",
-            ['u' => $studentId, 'u2' => $studentId]
+            ['u' => $studentId, 'u2' => $studentId, 'u3' => $studentId]
         );
     }
 

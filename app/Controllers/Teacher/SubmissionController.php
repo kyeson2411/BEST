@@ -6,6 +6,7 @@ namespace Sibol\Controllers\Teacher;
 
 use Sibol\Controllers\Controller;
 use Sibol\Core\Audit;
+use Sibol\Core\Dates;
 use Sibol\Core\Db;
 use Sibol\Core\HttpException;
 use Sibol\Core\Response;
@@ -17,6 +18,7 @@ use Sibol\Services\Ai\Providers;
 use Sibol\Services\Ai\Usage;
 use Sibol\Services\Assessments;
 use Sibol\Services\Notifier;
+use Sibol\Services\Overrides;
 
 final class SubmissionController extends Controller
 {
@@ -34,6 +36,7 @@ final class SubmissionController extends Controller
         $user = $this->user();
         $a = Access::teacherAssignment($user, $id);
         $filter = $this->request->str('filter');
+        $overrides = Overrides::forAssignment($id);
         $rows = Db::all(
             "SELECT u.id AS student_id, u.given_name, u.family_name, u.preferred_name, s.id, s.status, s.submitted_at, s.is_late, s.score, s.points_possible,
                     s.grading_status, s.feedback_status, s.attempt_no,
@@ -46,14 +49,18 @@ final class SubmissionController extends Controller
              ORDER BY u.family_name, u.given_name",
             ['a1' => $id, 'a2' => $id, 'c' => (int) $a['class_id']]
         );
+        $students = [];
         foreach ($rows as &$r) {
+            $r['override'] = $overrides[(int) $r['student_id']] ?? null;
             $r['state'] = $this->state($r, $a);
+            $students[(int) $r['student_id']] = user_name($r);
         }
         unset($r);
         $counts = array_count_values(array_column($rows, 'state'));
         if ($filter !== '') {
             $rows = array_values(array_filter($rows, static fn ($r) => $r['state'] === $filter));
         }
+        $selected = $this->request->int('student');
         return $this->view('teacher/submissions', [
             'title' => t('Submissions: :title', ['title' => $a['title']]),
             'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], '/teacher/assignments/' . $id], [t('Submissions'), null]],
@@ -61,7 +68,58 @@ final class SubmissionController extends Controller
             'rows' => $rows,
             'counts' => $counts,
             'filter' => $filter,
+            'students' => $students,
+            'overrides' => array_intersect_key($overrides, $students),
+            'selected' => $selected !== null && isset($students[$selected]) ? $selected : null,
         ]);
+    }
+
+    /** Gives one student their own due date, extra quiz minutes, or excuses them (all three optional). */
+    public function saveOverride(int $id): Response
+    {
+        $user = $this->user();
+        $a = Access::teacherAssignment($user, $id);
+        $back = '/teacher/assignments/' . $id . '/submissions';
+        $data = $this->validate([
+            'student_id' => 'required|int',
+            'due_at' => 'nullable|datetime',
+            'extra_minutes' => 'nullable|int|min:0|max:' . Overrides::MAX_EXTRA_MINUTES,
+            'excused' => 'bool',
+        ], ['student_id' => t('Student'), 'due_at' => t('Their own due date'), 'extra_minutes' => t('Extra minutes')], $back . '#adjust');
+        $studentId = (int) $data['student_id'];
+        $this->activeStudent($a, $studentId);
+        $dueAt = $data['due_at'] ? Dates::toUtc((string) $data['due_at']) : null;
+        if ($dueAt !== null && $a['opens_at'] !== null && $dueAt <= $a['opens_at']) {
+            $this->fail('due_at', t('Choose a date after the work opens (:date).', ['date' => fmt_date($a['opens_at'], 'datetime_short')]), $back . '?student=' . $studentId . '#adjust');
+        }
+        Overrides::save($user, $a, $studentId, $dueAt, (int) ($data['extra_minutes'] ?? 0), (bool) $data['excused']);
+        $name = user_name(Db::one('SELECT given_name, family_name, preferred_name FROM users WHERE id = :u', ['u' => $studentId]));
+        $this->flash('success', Overrides::find($id, $studentId)
+            ? t('Saved for :name. They see their own dates from now on.', ['name' => $name])
+            : t(':name follows the class settings again.', ['name' => $name]));
+        return $this->redirect($back . '#adjust');
+    }
+
+    public function removeOverride(int $assignmentId, int $id): Response
+    {
+        $user = $this->user();
+        $a = Access::teacherAssignment($user, $assignmentId);
+        $this->activeStudent($a, $id);
+        Overrides::remove($user, $a, $id);
+        $name = user_name(Db::one('SELECT given_name, family_name, preferred_name FROM users WHERE id = :u', ['u' => $id]));
+        $this->flash('success', t(':name follows the class settings again.', ['name' => $name]));
+        return $this->redirect('/teacher/assignments/' . $assignmentId . '/submissions#adjust');
+    }
+
+    /** The student must be active in the assignment's class; anyone else is not found. */
+    private function activeStudent(array $a, int $studentId): void
+    {
+        if (!(int) Db::value(
+            "SELECT COUNT(*) FROM class_memberships WHERE class_id = :c AND user_id = :u AND role = 'student' AND status = 'active'",
+            ['c' => (int) $a['class_id'], 'u' => $studentId]
+        )) {
+            throw HttpException::notFound();
+        }
     }
 
     public function show(int $id): Response
@@ -224,8 +282,13 @@ final class SubmissionController extends Controller
 
     private function state(array $r, array $a): string
     {
+        $ov = $r['override'] ?? null;
+        if ($ov && (int) $ov['excused'] === 1) {
+            return 'excused';
+        }
         if ($r['id'] === null) {
-            return ($a['due_at'] !== null && $a['due_at'] < Db::now()) ? 'missing' : 'not_started';
+            $due = $ov['due_at'] ?? $a['due_at'];
+            return ($due !== null && $due < Db::now()) ? 'missing' : 'not_started';
         }
         if ($r['status'] === 'in_progress') {
             return 'in_progress';

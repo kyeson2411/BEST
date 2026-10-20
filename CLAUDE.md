@@ -56,6 +56,10 @@ The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL m
   (`Db::now()`); convert with `Core\Dates` for display and input.
 - **Schema changes:** add a new numbered file in `database/migrations/`, then run `bin/sibol.php migrate` and
   `schema:build`. Keep SQL valid on MariaDB 10.4 and MySQL 8 (JSON stored as TEXT; utf8mb4_unicode_ci).
+- **A student's deadline is their own.** Teachers can give one student their own due date, extra quiz minutes or
+  excused status (`assignment_overrides`). Load assignments for a student with `Assessments::forStudent()`, and in
+  SQL use `Overrides::joinSql()` / `dueSql()` / `notExcusedSql()` instead of `a.due_at`. Answers released "after
+  the due date" go through `Assessments::answersReleased()`, which waits for the latest extension.
 - **Settings and policies:** school-level values come from `Services\Settings` (defaults merged with stored JSON).
   Add a default there before reading a new key.
 - **Icons:** Lucide via the sprite `public/assets/icons/sprite.svg`. To add an icon, add its name in

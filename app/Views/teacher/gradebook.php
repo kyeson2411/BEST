@@ -51,6 +51,7 @@ foreach ((array) ($grading['categories'] ?? []) as $c) {
                   <a class="cell-pending" href="<?= e(url('/teacher/submissions/' . (int) $c['submission_id'])) ?>"><?= e(t('to grade')) ?></a>
                 <?php elseif ($c['state'] === 'returned'): ?><span class="meta"><?= e(t('returned')) ?></span>
                 <?php elseif ($c['state'] === 'missing'): ?><span class="cell-missing"><?= e(t('missing')) ?></span>
+                <?php elseif ($c['state'] === 'excused'): ?><span class="meta"><?= e(t('excused')) ?></span>
                 <?php else: ?><span class="meta">—</span><?php endif; ?>
               </td>
             <?php endforeach; ?>
@@ -60,5 +61,5 @@ foreach ((array) ($grading['categories'] ?? []) as $c) {
       </tbody>
     </table>
   </div>
-  <p class="meta" style="margin-top:12px"><?= e(t('• marks a grade you have not released yet. Missing work is shown but not counted as zero. Click a score to open the submission.')) ?></p>
+  <p class="meta" style="margin-top:12px"><?= e(t('• marks a grade you have not released yet. Missing work is shown but not counted as zero, and excused work is not counted at all. Click a score to open the submission.')) ?></p>
 <?php endif; ?>

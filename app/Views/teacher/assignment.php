@@ -1,4 +1,4 @@
-<?php /** @var array $a @var array $stats @var list<array> $questions @var list<string> $problems @var array $rubric @var list<array> $questionStats */
+<?php /** @var array $a @var array $stats @var list<array> $questions @var list<string> $problems @var array $rubric @var list<array> $questionStats @var string|null $answersAt @var int $runningExtensions */
 [$sl, $st] = assignment_status($a);
 $base = '/teacher/assignments/' . (int) $a['id'];
 $isQuiz = $a['kind'] === 'quiz';
@@ -20,7 +20,11 @@ foreach ($questionStats as $qs) {
 </div>
 
 <dl class="stat-line" style="margin-bottom: 24px">
-  <div class="stat"><dt class="stat__label"><?= e(t('Handed in')) ?></dt><dd style="margin:0"><span class="stat__value"><?= (int) $stats['submitted'] ?><span class="muted" style="font-size:1rem"> / <?= (int) $stats['enrolled'] ?></span></span><span class="stat__note"><?= e(tp(':count late', ':count late', (int) $stats['late'])) ?></span></dd></div>
+  <div class="stat"><dt class="stat__label"><?= e(t('Handed in')) ?></dt><dd style="margin:0"><span class="stat__value"><?= (int) $stats['submitted'] ?><span class="muted" style="font-size:1rem"> / <?= (int) $stats['enrolled'] ?></span></span><span class="stat__note"><?= e(implode(', ', array_filter([
+      tp(':count late', ':count late', (int) $stats['late']),
+      (int) $stats['extended'] ? tp(':count with their own due date', ':count with their own due date', (int) $stats['extended']) : null,
+      (int) $stats['excused'] ? tp(':count excused', ':count excused', (int) $stats['excused']) : null,
+  ]))) ?></span></dd></div>
   <div class="stat"><dt class="stat__label"><?= e(t('To grade')) ?></dt><dd style="margin:0"><span class="stat__value"><?= (int) $stats['ungraded'] ?></span><span class="stat__note"><?= e(tp(':count graded, not released', ':count graded, not released', (int) $stats['unreleased'])) ?></span></dd></div>
   <div class="stat"><dt class="stat__label"><?= e(t('Average so far')) ?></dt><dd style="margin:0"><span class="stat__value"><?= $stats['avg_pct'] !== null ? e(fmt_number($stats['avg_pct'])) . '%' : '—' ?></span><span class="stat__note"><?= e(t('Graded work only')) ?></span></dd></div>
   <div class="stat"><dt class="stat__label"><?= e(t('Due')) ?></dt><dd style="margin:0"><span class="stat__value" style="font-size:1.25rem"><?= $a['due_at'] ? e(fmt_date($a['due_at'], 'datetime_short')) : '—' ?></span><span class="stat__note"><?= $a['opens_at'] ? e(t('Opens :d', ['d' => fmt_date($a['opens_at'], 'datetime_short')])) : e(t('Open when published')) ?></span></dd></div>
@@ -74,13 +78,14 @@ foreach ($questionStats as $qs) {
           <form method="post" action="<?= e(url($base . '/reopen')) ?>"><?= csrf_field() ?><button class="btn btn--secondary btn--sm" type="submit"><?= e(t('Reopen')) ?></button></form>
         <?php endif; ?>
         <?php if ($isQuiz && $a['status'] !== 'draft' && $a['answer_key_release'] !== 'after_submit' && $a['answers_released_at'] === null): ?>
-          <form method="post" action="<?= e(url($base . '/release-answers')) ?>" data-confirm="<?= e(t('Students who submitted will be able to see the correct answers and explanations now.')) ?>" data-confirm-title="<?= e(t('Release correct answers?')) ?>" data-confirm-action="<?= e(t('Release answers')) ?>"><?= csrf_field() ?><button class="btn btn--secondary btn--sm" type="submit"><?= e(t('Release answers now')) ?></button></form>
+          <form method="post" action="<?= e(url($base . '/release-answers')) ?>" data-confirm="<?= e(t('Students who submitted will be able to see the correct answers and explanations now.') . ($runningExtensions ? ' ' . tp(':count student still has an extension and could see the answers before taking the quiz.', ':count students still have extensions and could see the answers before taking the quiz.', $runningExtensions) : '')) ?>" data-confirm-title="<?= e(t('Release correct answers?')) ?>" data-confirm-action="<?= e(t('Release answers')) ?>"><?= csrf_field() ?><button class="btn btn--secondary btn--sm" type="submit"><?= e(t('Release answers now')) ?></button></form>
         <?php endif; ?>
       </div>
       <dl class="dl" style="margin-top: 16px">
         <dt><?= e(t('Late work')) ?></dt><dd><?= e(['not_accepted' => t('Not accepted'), 'accepted' => t('Accepted, marked late'), 'penalty' => t(':p% penalty', ['p' => (int) $a['late_penalty_pct']])][$a['late_policy']]) ?></dd>
         <dt><?= e(t('Grades shown')) ?></dt><dd><?= e($a['feedback_release'] === 'manual' ? t('When you release them') : t('Immediately')) ?></dd>
-        <?php if ($isQuiz): ?><dt><?= e(t('Answers shown')) ?></dt><dd><?= e($a['answers_released_at'] ? t('Released :d', ['d' => fmt_date($a['answers_released_at'])]) : ['never' => t('Never'), 'after_submit' => t('After submitting'), 'after_due' => t('After the due date'), 'manual' => t('When you release them')][$a['answer_key_release']]) ?></dd><?php endif; ?>
+        <?php if ($isQuiz): ?><dt><?= e(t('Answers shown')) ?></dt><dd><?= e($a['answers_released_at'] ? t('Released :d', ['d' => fmt_date($a['answers_released_at'])]) : ['never' => t('Never'), 'after_submit' => t('After submitting'), 'after_due' => t('After the due date'), 'manual' => t('When you release them')][$a['answer_key_release']]) ?>
+          <?php if (!$a['answers_released_at'] && $a['answer_key_release'] === 'after_due' && $answersAt !== null && $answersAt !== $a['due_at']): ?><br><span class="meta"><?= e(t('Waiting for the latest extension: :date', ['date' => fmt_date($answersAt, 'datetime_short')])) ?></span><?php endif; ?></dd><?php endif; ?>
         <dt><?= e(t('Category')) ?></dt><dd><?= e($a['category'] ?: t('None')) ?></dd>
       </dl>
     </section>

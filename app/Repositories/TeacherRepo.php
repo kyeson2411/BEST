@@ -6,6 +6,7 @@ namespace Sibol\Repositories;
 
 use Sibol\Core\Db;
 use Sibol\Policies\Access;
+use Sibol\Services\Overrides;
 
 /** Read queries for teacher screens, always limited to classes the teacher actively teaches. */
 final class TeacherRepo
@@ -59,8 +60,7 @@ final class TeacherRepo
         [$in, $p] = Db::in($ids, 'c');
         return Db::all(
             "SELECT a.id, a.title, a.kind, a.due_at, a.opens_at, a.status, c.name AS class_name, c.id AS class_id,
-                    (SELECT COUNT(*) FROM class_memberships m WHERE m.class_id = a.class_id AND m.role = 'student' AND m.status = 'active') AS enrolled,
-                    (SELECT COUNT(DISTINCT s.student_id) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted') AS submitted,
+                    " . Overrides::expectedSql('a') . ' AS enrolled, ' . Overrides::handedInSql('a') . " AS submitted,
                     (SELECT COUNT(*) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted' AND s.grading_status <> 'graded') AS ungraded,
                     (SELECT COUNT(*) FROM submissions s WHERE s.assignment_id = a.id AND s.grading_status = 'graded' AND s.feedback_status <> 'released' AND s.status = 'submitted') AS unreleased
              FROM assignments a JOIN classes c ON c.id = a.class_id
@@ -111,9 +111,9 @@ final class TeacherRepo
         }
         [$in, $p] = Db::in($ids, 'c');
         $row = Db::one(
-            "SELECT COUNT(*) AS due,
-                    COALESCE(SUM((SELECT COUNT(*) FROM class_memberships m WHERE m.class_id = a.class_id AND m.role = 'student' AND m.status = 'active')), 0) AS expected,
-                    COALESCE(SUM((SELECT COUNT(DISTINCT s.student_id) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted')), 0) AS submitted
+            'SELECT COUNT(*) AS due,
+                    COALESCE(SUM(' . Overrides::expectedSql('a') . '), 0) AS expected,
+                    COALESCE(SUM(' . Overrides::handedInSql('a') . "), 0) AS submitted
              FROM assignments a WHERE a.class_id IN $in AND a.status IN ('published','closed')
                AND a.due_at < UTC_TIMESTAMP() AND a.due_at >= UTC_TIMESTAMP() - INTERVAL 30 DAY",
             $p

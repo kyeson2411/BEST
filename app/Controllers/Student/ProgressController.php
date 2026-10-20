@@ -9,6 +9,7 @@ use Sibol\Core\Db;
 use Sibol\Core\Response;
 use Sibol\Repositories\StudentRepo;
 use Sibol\Services\Grades;
+use Sibol\Services\Overrides;
 
 /**
  * Personal progress from the student's own records only: released grades, submissions
@@ -28,6 +29,8 @@ final class ProgressController extends Controller
             $books[] = ['class' => $class, 'assignments' => $book['assignments'], 'cells' => $book['cells'][$uid] ?? [], 'overall' => $book['overall'][$uid] ?? null, 'grading' => $book['grading']];
         }
 
+        // Work due so far by the student's own dates; excused work is not counted.
+        $due = Overrides::dueSql('a');
         $work = Db::one(
             "SELECT
                SUM(CASE WHEN s.id IS NOT NULL THEN 1 ELSE 0 END) AS submitted,
@@ -35,9 +38,10 @@ final class ProgressController extends Controller
                COUNT(*) AS due_so_far
              FROM assignments a
              JOIN class_memberships cm ON cm.class_id = a.class_id AND cm.user_id = :u1 AND cm.role = 'student' AND cm.status = 'active'
-             LEFT JOIN submissions s ON s.id = (SELECT s2.id FROM submissions s2 WHERE s2.assignment_id = a.id AND s2.student_id = :u2 AND s2.status = 'submitted' ORDER BY s2.attempt_no LIMIT 1)
-             WHERE a.status IN ('published','closed') AND a.due_at IS NOT NULL AND a.due_at <= UTC_TIMESTAMP()",
-            ['u1' => $uid, 'u2' => $uid]
+             LEFT JOIN submissions s ON s.id = (SELECT s2.id FROM submissions s2 WHERE s2.assignment_id = a.id AND s2.student_id = :u2 AND s2.status = 'submitted' ORDER BY s2.attempt_no LIMIT 1)"
+             . Overrides::joinSql('a', 'u3') . "
+             WHERE a.status IN ('published','closed') AND " . Overrides::notExcusedSql() . " AND $due IS NOT NULL AND $due <= UTC_TIMESTAMP()",
+            ['u1' => $uid, 'u2' => $uid, 'u3' => $uid]
         );
         $released = Db::all(
             "SELECT s.score, s.points_possible, s.released_at, a.id AS assignment_id, a.title, a.kind, c.name AS class_name

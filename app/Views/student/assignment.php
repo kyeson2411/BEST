@@ -24,6 +24,8 @@ $answerRule = [
 ][$assignment['answer_key_release']];
 $editable = !$isQuiz && $state['can_submit'];
 $returned = $latest && $latest['status'] === 'returned';
+// The student's own time: the time limit plus any extra minutes from their teacher.
+$minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time_limit_minutes'] + (int) ($assignment['extra_minutes'] ?? 0) : 0;
 ?>
 <div class="page-head">
   <div class="page-head__text">
@@ -34,6 +36,12 @@ $returned = $latest && $latest['status'] === 'returned';
 
 <div class="layout-split">
   <div class="stack">
+    <?php if ($state['excused']): ?>
+      <div class="callout callout--leaf"><?= icon('circle-check') ?><div><p class="callout__title"><?= e(t('You are excused from this work')) ?></p><p><?= e(t('Your teacher excused you, so it is not counted in your grade and will not show as missing.')) ?></p></div></div>
+    <?php elseif (!empty($assignment['extended']) || (int) ($assignment['extra_minutes'] ?? 0) > 0): ?>
+      <div class="callout"><?= icon('clock') ?><div><p class="callout__title"><?= e(t('Your teacher gave you more time')) ?></p>
+        <p><?php if (!empty($assignment['extended'])): ?><?= e(t('Your own due date is :date.', ['date' => fmt_date($assignment['due_at'], 'datetime')])) ?> <?php endif; ?><?php if ((int) ($assignment['extra_minutes'] ?? 0) > 0 && $minutes > 0): ?><?= e(tp('You have :count extra minute on the time limit.', 'You have :count extra minutes on the time limit.', (int) $assignment['extra_minutes'])) ?><?php endif; ?></p></div></div>
+    <?php endif; ?>
     <?php if ($released): ?>
       <section class="section" aria-labelledby="grade-title">
         <div class="section__head"><h2 class="section__title" id="grade-title"><?= e(t('Your grade and feedback')) ?></h2></div>
@@ -189,7 +197,7 @@ $returned = $latest && $latest['status'] === 'returned';
           </div></div>
         <?php elseif ($state['can_start']): ?>
           <form method="post" action="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/start')) ?>"
-                data-confirm="<?= e($assignment['time_limit_minutes'] ? t('The :n-minute timer starts now and keeps running even if you close the page.', ['n' => (int) $assignment['time_limit_minutes']]) : t('Your answers save as you go. Submit when you are done.')) ?>"
+                data-confirm="<?= e($minutes ? t('The :n-minute timer starts now and keeps running even if you close the page.', ['n' => $minutes]) : t('Your answers save as you go. Submit when you are done.')) ?>"
                 data-confirm-title="<?= e(t('Start the quiz?')) ?>" data-confirm-action="<?= e(t('Start quiz')) ?>" style="margin-bottom:16px">
             <?= csrf_field() ?>
             <button class="btn btn--primary" type="submit" data-busy="<?= e(t('Starting…')) ?>"><?= icon('play', 'icon--sm') ?><?= e($state['submitted_count'] ? t('Start another attempt') : t('Start quiz')) ?></button>
@@ -273,11 +281,12 @@ $returned = $latest && $latest['status'] === 'returned';
       <h2 class="panel__title" id="glance-title"><?= e(t('At a glance')) ?></h2>
       <dl class="dl">
         <dt><?= e(t('Status')) ?></dt><dd><?= badge($statusLabel, $statusTone) ?></dd>
-        <dt><?= e(t('Due')) ?></dt><dd><?= $assignment['due_at'] ? e(fmt_date($assignment['due_at'], 'date_long')) . '<br><span class="meta">' . e(fmt_date($assignment['due_at'], 'time') . ' (' . \Sibol\Core\Dates::tz() . ')') . '</span>' : e(t('No due date')) ?></dd>
+        <dt><?= e(t('Due')) ?></dt><dd><?= $assignment['due_at'] ? e(fmt_date($assignment['due_at'], 'date_long')) . '<br><span class="meta">' . e(fmt_date($assignment['due_at'], 'time') . ' (' . \Sibol\Core\Dates::tz() . ')') . '</span>' : e(t('No due date')) ?>
+          <?php if (!empty($assignment['extended'])): ?><br><span class="meta"><?= e($assignment['class_due_at'] ? t('Your own date. The class date is :date.', ['date' => fmt_date($assignment['class_due_at'], 'datetime_short')]) : t('Your own date.')) ?></span><?php endif; ?></dd>
         <dt><?= e(t('Points')) ?></dt><dd class="num"><?= e(fmt_number($assignment['points_possible'], 2)) ?></dd>
         <?php if ($isQuiz): ?>
           <dt><?= e(t('Questions')) ?></dt><dd><?= count($snapshot['questions'] ?? []) ?></dd>
-          <dt><?= e(t('Time limit')) ?></dt><dd><?= $assignment['time_limit_minutes'] ? e(t(':n minutes', ['n' => (int) $assignment['time_limit_minutes']])) : e(t('None')) ?></dd>
+          <dt><?= e(t('Time limit')) ?></dt><dd><?= $minutes ? e(t(':n minutes', ['n' => $minutes])) . ((int) ($assignment['extra_minutes'] ?? 0) > 0 ? '<br><span class="meta">' . e(tp('Includes :count extra minute from your teacher', 'Includes :count extra minutes from your teacher', (int) $assignment['extra_minutes'])) . '</span>' : '') : e(t('None')) ?></dd>
           <dt><?= e(t('Attempts')) ?></dt><dd><?= e(t(':used of :max used', ['used' => (int) $state['submitted_count'], 'max' => (int) $assignment['max_attempts']])) ?></dd>
         <?php endif; ?>
         <dt><?= e(t('Late work')) ?></dt><dd><?= e($latePolicy) ?></dd>

@@ -87,6 +87,9 @@ final class AuditLabels
             case 'assignment.archived': return t('Archived an assignment');
             case 'assignment.duplicated': return t('Duplicated an assignment');
             case 'assignment.copied': return t('Copied an assignment to another section');
+            case 'assignment.override_saved':
+                return !empty($meta['excused']) ? t('Excused a student from an assignment') : t('Gave a student their own due date or extra time');
+            case 'assignment.override_removed': return t('Put a student back on the class due date');
             case 'assignment.deleted': return t('Deleted a draft assignment');
             case 'assignment.answers_released': return t('Released correct answers');
             case 'assignment.ai_questions_drafted': return tp('Drafted :count question with AI', 'Drafted :count questions with AI', max(1, $n('count')));

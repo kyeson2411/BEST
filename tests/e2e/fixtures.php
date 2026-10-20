@@ -19,6 +19,8 @@ echo json_encode([
     'users' => [
         'andrea' => $user('andrea.cruz'),
         'bea' => $user('bea.ramos'),
+        'carlo' => $user('carlo.reyes'),
+        'paolo' => $user('paolo.aquino'),
         'nicole' => $user('nicole.tan'),
         'ramon' => $user('ramon.dizon'),
         'carmela' => $user('carmela.reyes'),
@@ -36,6 +38,7 @@ echo json_encode([
     'scheduledMaterial' => (int) Db::value("SELECT id FROM learning_materials WHERE title = 'Module 2 review sheet'"),
     'releasedMaterial' => (int) Db::value("SELECT m.id FROM learning_materials m JOIN classes c ON c.id = m.class_id WHERE m.title = 'Breathing and circulation notes' AND c.name = 'Science 9 – Narra'"),
     'mathAssignment' => (int) Db::value("SELECT a.id FROM assignments a WHERE a.class_id = :c ORDER BY a.id LIMIT 1", ['c' => $class('Mathematics 9 – Narra')]),
+    'sciPastQuiz' => (int) Db::value("SELECT a.id FROM assignments a WHERE a.class_id = :c AND a.title = 'Respiratory and circulatory systems check'", ['c' => $class('Science 9 – Narra')]),
     'exportRequest' => (int) Db::value("SELECT id FROM privacy_requests WHERE request_type = 'export' ORDER BY id LIMIT 1"),
     'report' => (int) Db::value('SELECT id FROM ai_reports ORDER BY id LIMIT 1'),
 ], JSON_PRETTY_PRINT) . PHP_EOL;

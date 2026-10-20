@@ -80,8 +80,7 @@ final class Insights
     {
         return Db::all(
             "SELECT a.id, a.title, a.kind, a.due_at, a.points_possible,
-                    (SELECT COUNT(*) FROM class_memberships m WHERE m.class_id = a.class_id AND m.role = 'student' AND m.status = 'active') AS enrolled,
-                    (SELECT COUNT(DISTINCT s.student_id) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted') AS submitted,
+                    " . Overrides::expectedSql('a') . ' AS enrolled, ' . Overrides::handedInSql('a') . " AS submitted,
                     (SELECT COUNT(DISTINCT s.student_id) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted' AND s.is_late = 1) AS late,
                     (SELECT AVG(s.score / NULLIF(s.points_possible, 0) * 100) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted' AND s.grading_status = 'graded') AS avg_pct,
                     (SELECT COUNT(*) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted' AND s.grading_status = 'graded') AS graded

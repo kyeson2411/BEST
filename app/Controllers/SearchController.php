@@ -7,6 +7,7 @@ namespace Sibol\Controllers;
 use Sibol\Core\Db;
 use Sibol\Core\Response;
 use Sibol\Policies\Access;
+use Sibol\Services\Overrides;
 
 /** Global search, constrained to what the signed-in user may see. */
 final class SearchController extends Controller
@@ -51,8 +52,9 @@ final class SearchController extends Controller
         $groups[] = ['label' => t('Classes'), 'icon' => 'school', 'items' => array_map(static fn ($r) => ['title' => $r['name'], 'meta' => $r['subject'], 'url' => '/student/classes/' . (int) $r['id']],
             Db::all("SELECT c.id, c.name, s.name AS subject FROM classes c JOIN subjects s ON s.id = c.subject_id WHERE c.id IN $in AND (c.name LIKE :q1 OR s.name LIKE :q2) LIMIT " . self::PER_GROUP, $p + ['q1' => $like, 'q2' => $like]))];
         $groups[] = ['label' => t('Assignments and quizzes'), 'icon' => 'clipboard-list', 'items' => array_map(static fn ($r) => ['title' => $r['title'], 'meta' => $r['class_name'] . ($r['due_at'] ? ', ' . \Sibol\Core\Dates::due($r['due_at'])['label'] : ''), 'url' => '/student/assignments/' . (int) $r['id']],
-            Db::all("SELECT a.id, a.title, a.due_at, c.name AS class_name FROM assignments a JOIN classes c ON c.id = a.class_id
-                     WHERE a.class_id IN $in AND a.status IN ('published','closed') AND (a.title LIKE :q1 OR a.instructions LIKE :q2) ORDER BY a.due_at DESC LIMIT " . self::PER_GROUP, $p + ['q1' => $like, 'q2' => $like]))];
+            Db::all('SELECT a.id, a.title, ' . Overrides::dueSql('a') . " AS due_at, c.name AS class_name FROM assignments a JOIN classes c ON c.id = a.class_id"
+                     . Overrides::joinSql('a', 'me') . "
+                     WHERE a.class_id IN $in AND a.status IN ('published','closed') AND (a.title LIKE :q1 OR a.instructions LIKE :q2) ORDER BY a.due_at DESC LIMIT " . self::PER_GROUP, $p + ['q1' => $like, 'q2' => $like, 'me' => (int) $user['id']]))];
         $groups[] = ['label' => t('Materials'), 'icon' => 'file-text', 'items' => array_map(static fn ($r) => ['title' => $r['title'], 'meta' => $r['class_name'], 'url' => '/student/classes/' . (int) $r['class_id'] . '?tab=materials#material-' . (int) $r['id']],
             Db::all("SELECT m.id, m.title, m.class_id, c.name AS class_name FROM learning_materials m JOIN classes c ON c.id = m.class_id
                      WHERE m.class_id IN $in AND " . Access::releasedMaterialSql('m') . ' AND (m.title LIKE :q1 OR m.description LIKE :q2 OR m.topic LIKE :q3) LIMIT ' . self::PER_GROUP, $p + ['q1' => $like, 'q2' => $like, 'q3' => $like]))];

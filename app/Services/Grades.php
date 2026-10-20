@@ -10,6 +10,7 @@ use Sibol\Core\Db;
  * Gradebook arithmetic driven by the school's grading settings. Nothing about the
  * scale or the weights is hard-coded: "points" uses earned/possible over all graded
  * work; "weighted" averages each category and applies the configured weights.
+ * Work is "missing" after the student's own due date; excused work is never counted.
  */
 final class Grades
 {
@@ -59,19 +60,26 @@ final class Grades
                 }
             }
             $now = Db::now();
+            $overrides = Overrides::forAssignments(array_map(static fn ($a) => (int) $a['id'], $assignments));
             foreach ($students as $st) {
                 foreach ($assignments as $a) {
                     $s = $best[(int) $st['id'] . ':' . (int) $a['id']] ?? null;
+                    $ov = $overrides[(int) $st['id'] . ':' . (int) $a['id']] ?? null;
+                    $due = $ov['due_at'] ?? $a['due_at'];
                     $possible = (float) $a['points_possible'];
-                    if ($s && $s['_scored']) {
+                    if ($ov && (int) $ov['excused'] === 1) {
+                        // Excused work is neither counted nor missing, whatever was handed in.
+                        $cell = ['state' => 'excused', 'score' => null, 'possible' => $possible, 'percent' => null, 'released' => false, 'late' => false, 'submission_id' => $s ? (int) $s['id'] : null];
+                    } elseif ($s && $s['_scored']) {
                         $cell = ['state' => 'graded', 'score' => (float) $s['score'], 'possible' => $possible, 'percent' => $possible > 0 ? round((float) $s['score'] / $possible * 100, 1) : null, 'released' => $s['feedback_status'] === 'released', 'late' => (bool) $s['is_late'], 'submission_id' => (int) $s['id']];
                     } elseif ($s) {
                         $cell = ['state' => $s['status'] === 'returned' ? 'returned' : 'pending', 'score' => null, 'possible' => $possible, 'percent' => null, 'released' => false, 'late' => (bool) $s['is_late'], 'submission_id' => (int) $s['id']];
-                    } elseif ($a['due_at'] !== null && $a['due_at'] < $now) {
+                    } elseif ($due !== null && $due < $now) {
                         $cell = ['state' => 'missing', 'score' => null, 'possible' => $possible, 'percent' => null, 'released' => false, 'late' => false, 'submission_id' => null];
                     } else {
                         $cell = ['state' => 'open', 'score' => null, 'possible' => $possible, 'percent' => null, 'released' => false, 'late' => false, 'submission_id' => null];
                     }
+                    $cell['extended'] = $ov !== null && $ov['due_at'] !== null;
                     $cells[(int) $st['id']][(int) $a['id']] = $cell;
                 }
             }

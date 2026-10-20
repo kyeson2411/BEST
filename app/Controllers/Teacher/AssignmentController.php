@@ -20,6 +20,7 @@ use Sibol\Services\Ai\Usage;
 use Sibol\Services\Assessments;
 use Sibol\Services\Grades;
 use Sibol\Services\Notifier;
+use Sibol\Services\Overrides;
 use Sibol\Services\SectionCopies;
 
 final class AssignmentController extends Controller
@@ -49,8 +50,7 @@ final class AssignmentController extends Controller
             }
             $rows = Db::all(
                 "SELECT a.*, c.name AS class_name,
-                        (SELECT COUNT(*) FROM class_memberships m WHERE m.class_id = a.class_id AND m.role = 'student' AND m.status = 'active') AS enrolled,
-                        (SELECT COUNT(DISTINCT s.student_id) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted') AS submitted,
+                        " . Overrides::expectedSql('a') . ' AS enrolled, ' . Overrides::handedInSql('a') . " AS submitted,
                         (SELECT COUNT(*) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted' AND s.grading_status <> 'graded') AS ungraded,
                         (SELECT COUNT(*) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted' AND s.grading_status = 'graded' AND s.feedback_status <> 'released') AS unreleased,
                         (SELECT COUNT(*) FROM questions q WHERE q.assignment_id = a.id AND q.reviewed = 0) AS unreviewed
@@ -113,14 +113,17 @@ final class AssignmentController extends Controller
     {
         $user = $this->user();
         $a = Access::teacherAssignment($user, $id);
+        // Excused students are not expected to hand in, so they count in neither figure.
         $stats = Db::one(
-            "SELECT (SELECT COUNT(*) FROM class_memberships m WHERE m.class_id = :c AND m.role = 'student' AND m.status = 'active') AS enrolled,
-                    (SELECT COUNT(DISTINCT s.student_id) FROM submissions s WHERE s.assignment_id = :a1 AND s.status = 'submitted') AS submitted,
-                    (SELECT COUNT(*) FROM submissions s WHERE s.assignment_id = :a2 AND s.status = 'submitted' AND s.grading_status <> 'graded') AS ungraded,
-                    (SELECT COUNT(*) FROM submissions s WHERE s.assignment_id = :a3 AND s.status = 'submitted' AND s.grading_status = 'graded' AND s.feedback_status <> 'released') AS unreleased,
-                    (SELECT COUNT(DISTINCT s.student_id) FROM submissions s WHERE s.assignment_id = :a4 AND s.status = 'submitted' AND s.is_late = 1) AS late,
-                    (SELECT AVG(s.score / NULLIF(s.points_possible, 0) * 100) FROM submissions s WHERE s.assignment_id = :a5 AND s.grading_status = 'graded' AND s.status = 'submitted') AS avg_pct",
-            ['c' => (int) $a['class_id'], 'a1' => $id, 'a2' => $id, 'a3' => $id, 'a4' => $id, 'a5' => $id]
+            'SELECT ' . Overrides::expectedSql('a') . ' AS enrolled, ' . Overrides::handedInSql('a') . " AS submitted,
+                    (SELECT COUNT(*) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted' AND s.grading_status <> 'graded') AS ungraded,
+                    (SELECT COUNT(*) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted' AND s.grading_status = 'graded' AND s.feedback_status <> 'released') AS unreleased,
+                    (SELECT COUNT(DISTINCT s.student_id) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted' AND s.is_late = 1) AS late,
+                    (SELECT AVG(s.score / NULLIF(s.points_possible, 0) * 100) FROM submissions s WHERE s.assignment_id = a.id AND s.grading_status = 'graded' AND s.status = 'submitted') AS avg_pct,
+                    (SELECT COUNT(*) FROM assignment_overrides o WHERE o.assignment_id = a.id AND o.excused = 1) AS excused,
+                    (SELECT COUNT(*) FROM assignment_overrides o WHERE o.assignment_id = a.id AND o.due_at IS NOT NULL) AS extended
+             FROM assignments a WHERE a.id = :a",
+            ['a' => $id]
         );
         return $this->view('teacher/assignment', [
             'title' => $a['title'],
@@ -131,6 +134,8 @@ final class AssignmentController extends Controller
             'problems' => $a['status'] === 'draft' ? Assessments::publishProblems($a) : [],
             'rubric' => json_decode((string) ($a['rubric'] ?? ''), true) ?: [],
             'questionStats' => \Sibol\Services\Insights::questions((int) $a['class_id'], $id),
+            'answersAt' => Overrides::latestDue($id, $a['due_at']),
+            'runningExtensions' => (int) Db::value('SELECT COUNT(*) FROM assignment_overrides WHERE assignment_id = :a AND due_at > UTC_TIMESTAMP()', ['a' => $id]),
             'copyPanel' => SectionCopies::panel($user, 'assignment', $a),
             'katex' => true,
         ]);

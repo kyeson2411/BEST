@@ -35,9 +35,9 @@ final class DashboardController extends Controller
             ['o' => $o, 'm' => Dates::startOfMonthUtc()]
         );
         $completion = Db::all(
-            "SELECT s.name AS subject,
-                    SUM((SELECT COUNT(*) FROM class_memberships m WHERE m.class_id = a.class_id AND m.role = 'student' AND m.status = 'active')) AS expected,
-                    SUM((SELECT COUNT(DISTINCT su.student_id) FROM submissions su WHERE su.assignment_id = a.id AND su.status = 'submitted')) AS submitted,
+            'SELECT s.name AS subject,
+                    SUM(' . \Sibol\Services\Overrides::expectedSql('a') . ') AS expected,
+                    SUM(' . \Sibol\Services\Overrides::handedInSql('a') . ") AS submitted,
                     COUNT(*) AS tasks
              FROM assignments a JOIN classes c ON c.id = a.class_id JOIN subjects s ON s.id = c.subject_id
              WHERE a.organization_id = :o AND a.status IN ('published','closed') AND a.due_at < UTC_TIMESTAMP() AND a.due_at >= UTC_TIMESTAMP() - INTERVAL 30 DAY

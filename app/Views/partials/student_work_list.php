@@ -7,6 +7,7 @@ $labels = [
     'overdue' => [t('Overdue'), 'coral'],
     'submitted' => [t('Submitted'), 'neutral'],
     'graded' => [t('Graded'), 'leaf'],
+    'excused' => [t('Excused'), 'neutral'],
 ];
 ?>
 <ul class="entries">

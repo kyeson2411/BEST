@@ -248,7 +248,7 @@ source-wrapping, password rules, translations (including a check that the script
 against the database: class and record permissions,
 permission-filtered retrieval (other sections, drafts and scheduled materials never reach a prompt),
 a full demo companion turn, data export and erasure, daily limits and usage accounting, audit-log hygiene and
-retention purging, and copying work to other sections without exposing drafts. Last run: **59 tests, all passing**.
+retention purging, copying work to other sections without exposing drafts, and extensions and excused work. Last run: **69 tests, all passing**.
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -267,8 +267,9 @@ areas, 404 for records outside your classes, CSRF), a teacher building a quiz wi
 approved before publishing, a student taking it and receiving a receipt, grade release, the companion with
 cited sources and answer reporting, administrator invitation and one-time links, CSV import with a preview,
 class setup, a policy switch, a data export downloaded only by its owner, the audit log, Filipino text written
-by the page scripts, copying a material, a quiz and a lesson to another section as drafts, phone-width layout
-of 21 screens and structural accessibility checks on 31 screens. Last run: **45 tests, all passing**.
+by the page scripts, copying a material, a quiz and a lesson to another section as drafts, an extension and an
+excused student, phone-width layout of 21 screens and structural accessibility checks on 31 screens.
+Last run: **50 tests, all passing**.
 
 ## Project layout
 
@@ -368,6 +369,11 @@ tools/             asset scripts (fonts and icons, school images with their orig
   not the question or the rest of the conversation. There is no administrator tool to read conversations.
 - Conversations are deleted after the school's retention period (default 365 days without activity);
   students can delete their own if the school allows it.
+- **Extensions, extra time and excused work.** On an assignment's submissions page a teacher can give one
+  student their own due date, extra minutes on a timed quiz, or excuse them. No reason is stored, so health or
+  family details stay out of Sibol. The student's dashboard, calendar, reminders, timer and late rules use their
+  own date; excused work is not counted and never shows as missing. Answers set to appear "after the due date"
+  wait until the latest extension has passed, so they cannot reach a student who has not taken the quiz yet.
 - People can ask for a copy of their data, a correction or deletion from their account settings.
   Administrators prepare exports (downloadable only by the requester, for 14 days) or erase personal data
   (the account is anonymised; school records are kept unless the administrator chooses to delete them too).

@@ -16,7 +16,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 59 PHP tests, 45 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 69 PHP tests, 50 browser tests, all passing |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
 
@@ -36,6 +36,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 |---|---|---|
 | Dashboard, classes, assignments, calendar, progress | Done | screenshots at 1440/1024/390; phone and accessibility checks |
 | Assignment submission (text and files), receipts | Done | |
+| Extensions, extra quiz time and excused work per student | Done | `Services/Overrides.php`, set on the submissions page; own dates drive the dashboard, calendar, reminders, nav count, timers and late rules; excused work not counted or missing; "after the due date" answers wait for the latest extension (PHPUnit `OverridesTest`, browser `extensions.spec`) |
 | Quizzes: attempts, time limit, autosave, auto-marking | Done | browser quiz flow; `GradingTest` |
 | Companion modes: explain, step-by-step, practice quiz, flashcards, summary, study plan, vocabulary EN/FIL, ask class materials | Done (demo mode) | live-model behaviour untested |
 | Streaming, stop, regenerate | Done (demo mode) | |
