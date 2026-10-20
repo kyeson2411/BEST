@@ -21,6 +21,7 @@ use Sibol\Controllers\SetupController;
 use Sibol\Controllers\SlipController;
 use Sibol\Controllers\Student;
 use Sibol\Controllers\Teacher;
+use Sibol\Controllers\TwoStepController;
 use Sibol\Core\Auth;
 use Sibol\Core\HttpException;
 use Sibol\Core\Request;
@@ -62,6 +63,9 @@ $router->get('/', [PageController::class, 'home']);
 $router->get('/login', [AuthController::class, 'showLogin'], ['guest']);
 $router->post('/login', [AuthController::class, 'login'], ['guest']);
 $router->post('/demo-login', [AuthController::class, 'demoLogin'], ['guest']);
+// The code step for people who turned on two-step sign-in: the password alone signs nobody in.
+$router->get('/login/code', [TwoStepController::class, 'showChallenge'], ['guest']);
+$router->post('/login/code', [TwoStepController::class, 'challenge'], ['guest']);
 $router->post('/logout', [AuthController::class, 'logout']);
 $router->get('/invite/{token}', [AuthController::class, 'showInvite']);
 $router->post('/invite/{token}', [AuthController::class, 'acceptInvite']);
@@ -97,6 +101,12 @@ $router->group('', ['auth', 'notices'], static function ($r): void {
     $r->post('/settings/avatar', [ProfileController::class, 'updateAvatar']);
     $r->post('/settings/avatar/remove', [ProfileController::class, 'removeAvatar']);
     $r->post('/settings/sessions/revoke', [ProfileController::class, 'signOutOthers']);
+    // Two-step sign-in, optional for administrators and teachers.
+    $r->get('/settings/two-step', [TwoStepController::class, 'setup'], ['role:admin,teacher']);
+    $r->post('/settings/two-step', [TwoStepController::class, 'enable'], ['role:admin,teacher']);
+    $r->get('/settings/two-step/codes', [TwoStepController::class, 'codes'], ['role:admin,teacher']);
+    $r->post('/settings/two-step/codes', [TwoStepController::class, 'renewCodes'], ['role:admin,teacher']);
+    $r->post('/settings/two-step/off', [TwoStepController::class, 'disable'], ['role:admin,teacher']);
     $r->post('/settings/privacy-requests', [ProfileController::class, 'requestPrivacy']);
     $r->get('/settings/privacy-requests/{id}/download', [ProfileController::class, 'downloadExport']);
 
@@ -307,6 +317,7 @@ $router->group('/admin', ['role:admin', 'notices'], static function ($r): void {
     $r->post('/users/{id}/slip', [Admin\UserController::class, 'slip']);
     $r->post('/users/{id}/ai', [Admin\UserController::class, 'ai']);
     $r->post('/users/{id}/guardian', [Admin\UserController::class, 'guardian']);
+    $r->post('/users/{id}/two-step', [Admin\UserController::class, 'twoStepOff']);
 
     $r->get('/classes', [Admin\ClassController::class, 'index']);
     $r->get('/classes/new', [Admin\ClassController::class, 'create']);

@@ -83,6 +83,7 @@ final class Privacy
             $counts['notifications'] = Db::exec('DELETE FROM notifications WHERE user_id = :u', ['u' => $userId]);
             Db::exec('DELETE FROM content_views WHERE user_id = :u', ['u' => $userId]);
             Db::exec('DELETE FROM notice_acknowledgments WHERE user_id = :u', ['u' => $userId]);
+            Db::exec('DELETE FROM recovery_codes WHERE user_id = :u', ['u' => $userId]);
             $counts['feedback'] = Db::exec('DELETE FROM site_feedback WHERE user_id = :u', ['u' => $userId]);
             $counts['comment_bank'] = Db::exec('DELETE FROM comment_bank WHERE user_id = :u', ['u' => $userId]);
             Db::exec('UPDATE user_tokens SET revoked_at = :n WHERE user_id = :u AND used_at IS NULL AND revoked_at IS NULL', ['n' => Db::now(), 'u' => $userId]);
@@ -102,6 +103,9 @@ final class Privacy
                 'email' => null,
                 'username' => null,
                 'password_hash' => null,
+                'totp_secret' => null,
+                'totp_enabled_at' => null,
+                'totp_last_step' => null,
                 'avatar_path' => null,
                 'preferences' => null,
                 'language' => null,

@@ -1,5 +1,5 @@
 <?php /** @var list<array> $rows @var int $unread */
-$icons = ['material' => 'file-text', 'assignment' => 'clipboard-list', 'reminder' => 'clock', 'feedback' => 'message-circle', 'announcement' => 'megaphone', 'submission' => 'inbox', 'processing' => 'triangle-alert', 'privacy' => 'shield-check', 'class' => 'users', 'site_feedback' => 'message-square-reply'];
+$icons = ['material' => 'file-text', 'assignment' => 'clipboard-list', 'reminder' => 'clock', 'feedback' => 'message-circle', 'announcement' => 'megaphone', 'submission' => 'inbox', 'processing' => 'triangle-alert', 'privacy' => 'shield-check', 'class' => 'users', 'site_feedback' => 'message-square-reply', 'account' => 'lock'];
 ?>
 <div class="notif-panel__head">
   <strong><?= e(t('Notifications')) ?></strong>

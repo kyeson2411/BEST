@@ -33,9 +33,10 @@ with no build step and no Node.js at runtime.
 10. [Versions and performance](#versions-and-performance)
 11. [Project layout](#project-layout)
 12. [Deploying for real use](#deploying-for-real-use)
-13. [Security and Privacy Notes](#security-and-privacy-notes)
-14. [Accessibility and languages](#accessibility-and-languages)
-15. [Known limitations](#known-limitations)
+13. [Backups and restoring](#backups-and-restoring)
+14. [Security and Privacy Notes](#security-and-privacy-notes)
+15. [Accessibility and languages](#accessibility-and-languages)
+16. [Known limitations](#known-limitations)
 
 ---
 
@@ -145,7 +146,9 @@ of files on disk.
 | `APP_DEMO_LOGIN` | `true` | One-click demo sign-in (local only, same computer only). |
 | `SESSION_SECURE_COOKIE` | `false` | Set `true` when served over HTTPS. |
 | `SESSION_IDLE_MINUTES` | `120` | Sign out after this long without activity. |
+| `APP_KEY` | empty | Encrypts two-step sign-in secrets in the database. Make one with `bin\sibol.php key:generate` (it writes it into `.env`). Keep a copy apart from database backups; if it changes or is lost, everyone who uses two-step sign-in needs it switched off and set up again. |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | XAMPP defaults | Database connection. |
+| `DB_DUMP_PATH` | empty | Full path to `mysqldump` (or `mariadb-dump`) for `backup`. Empty uses XAMPP's or one on the `PATH`. |
 | `AI_PROVIDER` | `demo` | `demo`, `anthropic` or `openai_compatible`. |
 | `AI_API_KEY` | empty | Provider key. Read only on the server. |
 | `AI_MODEL` | empty | Model name. Empty means `claude-opus-5-5` for `anthropic`. Required for `openai_compatible`. |
@@ -311,6 +314,9 @@ C:\xampp\php\php.exe bin\sibol.php <command>
 | `lang:missing [fil]` | Count untranslated interface strings and write stubs to `storage/cache/`. |
 | `school:create "Name" email Given Family [timezone]` | Create a real school and its first administrator; prints a one-time invitation link. |
 | `user:link email-or-username` | Print a new invitation link (not yet accepted) or password reset link (active account). |
+| `two-step:off email-or-username` | Switch off someone's two-step sign-in (a lost phone and lost recovery codes); they are told in Sibol. |
+| `key:generate [--show]` | Write a new `APP_KEY` into `.env` when it has none (it never replaces one); `--show` only prints a key. |
+| `backup [--to=FOLDER] [--keep=14]` | The database and the uploaded files in one dated zip, without `.env` or `APP_KEY`; keeps the newest 14 (see [Backups and restoring](#backups-and-restoring)). |
 | `mail:test ADDRESS` | Send a test email with the `MAIL_` settings (see [Email](#email-optional)). |
 | `mail:digest` | Send the daily notification summaries people turned on; run once a day. |
 | `ai:eval [--demo] [--case=A01,B02] [--show]` | Run the AI check on the demo school: a pass/fail table with token cost (see [Checking the AI before going live](#checking-the-ai-before-going-live)). |
@@ -360,8 +366,14 @@ work in class and absences handled as in the gradebook; one reminder a day, none
 and email (off without `MAIL_HOST` and never showing the password; invitation and reset links emailed in the
 person's language and not without an address; the daily summary with unread titles only, never bodies, at most once
 in 20 hours and only what is new since the last one), and the Daily Lesson Log (every lesson section in exactly one
-row, the rows Sibol has nothing for left blank, and labels in the lesson's language with the page's language put back).
-Last run: **157 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
+row, the rows Sibol has nothing for left blank, and labels in the lesson's language with the page's language put back),
+and the installable app (the manifest's name, addresses and icon files, an offline page with nothing personal, and
+Keep offline only for files), and two-step sign-in (the published RFC 6238 and RFC 4648 test values, one step
+either side and each code once, recovery codes kept only as hashes and working once, the secret unreadable without
+`APP_KEY`, a waiting sign-in ending after five minutes or when the person is signed out everywhere, and a person
+told when someone else switches it off), and backups (the database, every uploaded file and no secrets in the zip,
+and only older Sibol archives removed).
+Last run: **168 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -403,9 +415,11 @@ day, the reminder in the student's notifications, a 403 for students), email swi
 promise of an email, no password shown, no daily summary offered), a lesson printed as a Daily Lesson Log (and a
 404 for a teacher of another class), installing Sibol as an app and reading a kept class file offline (other
 pages, a quiz and files not kept show the offline page in the person's language; the offline page carries no
-name, message or form token; signing out removes the kept file), phone-width layout of 39 screens and structural
-accessibility checks on 56 screens.
-Last run: **99 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
+name, message or form token; signing out removes the kept file), a teacher turning on two-step sign-in (the code
+step after the password and after a reset link, each app code and recovery code working once, and an
+administrator switching it off with the teacher told), phone-width layout of 41 screens and structural
+accessibility checks on 58 screens.
+Last run: **103 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
 
 ## Versions and performance
 
@@ -528,7 +542,8 @@ tools/             asset scripts (fonts and icons, school images with their orig
 1. Use **PHP 8.3** (tested) and keep it updated. Turn on compression for the stylesheet, scripts and icons
    (Apache `mod_deflate`; `public/.htaccess` already asks for it when the module is loaded).
 2. In `.env` (or real environment variables): `APP_ENV=production`, `APP_DEMO_LOGIN=false`, the real `APP_URL`,
-   `SESSION_SECURE_COOKIE=true`.
+   `SESSION_SECURE_COOKIE=true`, and an `APP_KEY` (run `bin\sibol.php key:generate`). Keep a copy of `.env`
+   somewhere safe, apart from database backups.
 3. Serve over **HTTPS** only. Browsers run Sibol's service worker (installing it as an app, the offline page and
    files kept for offline reading) only over HTTPS or on the same computer (`localhost`). `public/.htaccess`
    sends `public/sw.js` with `Cache-Control: no-cache`; on another web server, do the same, so a new version
@@ -541,7 +556,7 @@ tools/             asset scripts (fonts and icons, school images with their orig
    (`CREATE`, `ALTER`, `INDEX`, `DROP` and `REFERENCES` are only needed while running migrations.)
 5. Point the web server's document root at `public/` if you can; otherwise keep the root `.htaccess`.
 6. Make `storage/` writable by the web server and not by anyone else. Back up the database and
-   `storage/uploads` together.
+   `storage/uploads` together every day with `bin\sibol.php backup` (see [Backups and restoring](#backups-and-restoring)).
 7. In `my.ini`, set `max_allowed_packet=16M`. In `php.ini`, set `upload_max_filesize` and `post_max_size` to at
    least `UPLOAD_MAX_MB`.
 8. Do **not** run `db:seed` in production. Create the school and its first administrator from the command line,
@@ -556,6 +571,44 @@ tools/             asset scripts (fonts and icons, school images with their orig
    If the only administrator loses their password, `bin\sibol.php user:link principal@school.edu.ph` prints a new
    one-time reset link.
 9. Optional cron: `php bin/sibol.php privacy:purge` nightly and `materials:process` every few minutes.
+
+## Backups and restoring
+
+`bin\sibol.php backup` writes one zip to `storage/backups` (or `--to=FOLDER`), named by the school's local date
+and time, for example `sibol-backup-2026-10-21-020000.zip`:
+
+- `database.sql`: the whole database, dumped by `mysqldump` in one consistent snapshot. The database password
+  reaches `mysqldump` in a temporary option file that only the server account can read and that is deleted
+  straight away, never on its command line. The database user needs only `SELECT` for this.
+- `uploads/`: every uploaded file (materials, submitted work, photos, exports waiting to be downloaded).
+- `backup.json` (date, database server, number of tables and files, migrations) and `RESTORE.txt`.
+
+It never contains `.env` or `APP_KEY`: keep those safe separately, for example on a USB drive the principal
+keeps. Archives beyond the newest 14 (`--keep=N`) are removed; only files named `sibol-backup-*.zip` are ever
+removed. A backup holds personal data, so keep copies only where staff are allowed to keep student records, and
+copy them off the server (another computer or storage the school controls) so one failed disk cannot take both.
+`check` reports how old the newest backup is.
+
+Run it every day with Windows Task Scheduler (or cron on Linux), for example at 2:00:
+
+```bat
+C:\xampp\php\php.exe C:\xampp\htdocs\BEST\bin\sibol.php backup --keep=14
+```
+
+**To restore** (tested on the demo school: every table, row and uploaded file came back):
+
+1. Install the same or a newer version of Sibol and put your saved `.env` (with the same `APP_KEY`) in place.
+2. Unzip the backup. Create an empty database and load the dump, in Command Prompt:
+   ```bat
+   C:\xampp\mysql\bin\mysql.exe -u root -e "CREATE DATABASE sibol CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+   C:\xampp\mysql\bin\mysql.exe -u root sibol < database.sql
+   ```
+   (or use phpMyAdmin's Import with `database.sql`).
+3. Copy the contents of the archive's `uploads` folder into `storage/uploads`.
+4. Run `bin\sibol.php migrate` (when the code is newer than the backup), then `bin\sibol.php check`.
+
+Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it off for each person who used it
+(`bin\sibol.php two-step:off username`) and they set it up again.
 
 ## Security and Privacy Notes
 
@@ -575,6 +628,18 @@ tools/             asset scripts (fonts and icons, school images with their orig
   only to whoever issued them, for 30 minutes. Every slip is audit-logged with who printed it, never the code;
   nobody ever sees or sets another person's password. Sections (a grade level's classes in a period, such as
   Grade 9 Narra) come from the section name on each class; each can have one adviser.
+- **Two-step sign-in (optional, administrators and teachers).** In **Account and preferences**, staff can add
+  Sibol to an authenticator app (Google Authenticator, Microsoft Authenticator or any app for time-based codes,
+  RFC 6238: six digits every 30 seconds) by scanning a QR code or typing its key, confirmed with a code from the
+  app and their password. From then on the password alone signs nobody in: a code from the app follows, on its
+  own page, and a password reset link also ends at that page. Each code works once (a code within 30 seconds
+  either side of the server's clock is accepted). Ten single-use recovery codes are shown once, for a lost or
+  flat phone; new ones replace them. Turning it off or making new codes needs the password. The app's secret is
+  encrypted in the database with `APP_KEY` (AES-256-GCM) and recovery codes are kept only as keyed hashes, so a
+  copy of the database alone (a backup, say) reveals neither. Wrong codes are rate-limited (six per 15 minutes)
+  and audit-logged. An administrator can switch it off for someone else who has lost their phone, from that
+  person's page; the person gets a notification. If the only administrator is locked out, run
+  `bin\sibol.php two-step:off their-username` on the server. Demo sign-in on this computer skips it.
 - The session ID is regenerated at sign-in and sign-out. Cookies are `HttpOnly`, `SameSite=Lax`, and `Secure`
   when configured. The signed-in user is reloaded on every request, so deactivation, role changes and
   "sign out other devices" take effect immediately. Idle sessions end after `SESSION_IDLE_MINUTES`; the
@@ -795,7 +860,11 @@ tools/             asset scripts (fonts and icons, school images with their orig
 
 ## Known limitations
 
-- No single sign-on or multi-factor authentication yet. People without email use printed sign-in slips.
+- No single sign-on yet. Two-step sign-in is optional, for administrators and teachers only; it was tested with
+  codes computed the way authenticator apps compute them (RFC 6238 test values), not yet with a real phone app.
+  People without email use printed sign-in slips.
+- Uploaded files are not scanned for viruses (a scanning hook was not chosen for this phase). They are kept
+  outside the web folder and served only as downloads or inside a sandbox.
 - Email was tested with PHPMailer against a local SMTP test server and with messages kept in memory, not against
   Google's servers. Run `mail:test` once before relying on it.
 - The QR codes on sign-in slips come from Sibol's own encoder (no library). The tests read every code back with

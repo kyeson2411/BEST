@@ -5,7 +5,7 @@ import { demoLogin, ids } from './helpers.mjs';
 // scrolling and keep the bottom navigation reachable.
 const screens = {
   student: ['student', 'student/assignments', 'student/classes', 'companion', 'student/progress', 'student/progress/report', 'student/review', 'student/calendar', 'student/learning', 'feedback'],
-  teacher: ['teacher', 'teacher/review', 'teacher/comments', 'teacher/assignments', 'teacher/materials', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback'],
+  teacher: ['teacher', 'teacher/review', 'teacher/comments', 'teacher/assignments', 'teacher/materials', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback', 'settings', 'settings/two-step'],
   admin: ['admin', 'admin/users', 'admin/classes', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot', 'admin/grading', 'admin/academic-periods'],
 };
 

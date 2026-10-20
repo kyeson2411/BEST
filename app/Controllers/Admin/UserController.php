@@ -17,6 +17,7 @@ use Sibol\Services\Mailer;
 use Sibol\Services\Settings;
 use Sibol\Services\SignInSlips;
 use Sibol\Services\Tokens;
+use Sibol\Services\TwoStep;
 use Sibol\Services\Usernames;
 
 /**
@@ -287,6 +288,20 @@ final class UserController extends Controller
         Audit::log($purpose === 'invitation' ? 'user.invitation_link' : 'user.reset_link', 'user', $id);
         $this->reveal($id, $purpose, $token);
         return $this->redirect($back);
+    }
+
+    /** Switches off someone's two-step sign-in, for example after a lost phone. They are told. */
+    public function twoStepOff(int $id): Response
+    {
+        $admin = $this->user();
+        $person = $this->find($id, (int) $admin['organization_id']);
+        if ((int) $admin['id'] === $id || !TwoStep::enabled($person)) {
+            // Your own is switched off in Account and preferences, with your password.
+            return $this->redirect('/admin/users/' . $id);
+        }
+        TwoStep::disable($person, $admin);
+        $this->flash('success', t('Two-step sign-in is off for :name. Their password alone signs them in until they set it up again.', ['name' => user_name($person)]));
+        return $this->redirect('/admin/users/' . $id);
     }
 
     /** Switches a student's AI companion on or off, or back to the school's setting. */

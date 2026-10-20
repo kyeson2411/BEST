@@ -19,6 +19,10 @@ declare(strict_types=1);
  *   lang:missing [fil] List interface strings that are not translated yet
  *   school:create      Create a real school and its first administrator (prints a one-time link)
  *   user:link EMAIL    Print a new invitation or password-reset link for an account (email or username)
+ *   two-step:off LOGIN Switch off two-step sign-in for an account (email or username), e.g. after a lost phone
+ *   key:generate       Write a new APP_KEY into .env (only when it has none; --show prints one instead)
+ *   backup             Database and uploaded files in a dated zip in storage/backups, no secrets
+ *                      (--to=FOLDER, --keep=14 removes older archives beyond the newest 14)
  *   check              Show configuration problems (database, AI provider, email, folders)
  *   mail:test ADDRESS  Send a test email with the MAIL_ settings in .env
  *   mail:digest        Send the daily notification summaries people turned on (run once a day)
@@ -142,6 +146,63 @@ try {
             $link = Sibol\Services\Tokens::link($purpose, Sibol\Services\Tokens::issue((int) $user['id'], $purpose, null));
             $out(($purpose === 'invitation' ? 'Invitation' : 'Password reset') . ' link (one-time, earlier links stop working):');
             $out($link);
+            break;
+
+        case 'two-step:off':
+            // php bin/sibol.php two-step:off person@school.edu.ph  (or a username)
+            $login = mb_strtolower(trim($argv[2] ?? ''));
+            $user = Sibol\Core\Db::one('SELECT * FROM users WHERE ' . (str_contains($login, '@') ? 'email' : 'username') . ' = :l', ['l' => $login]);
+            if (!$user || !Sibol\Services\TwoStep::enabled($user)) {
+                throw new RuntimeException('No account with that email or username uses two-step sign-in.');
+            }
+            Sibol\Services\TwoStep::disable($user, null);
+            $out('Two-step sign-in is off for ' . $login . '. Their password alone signs them in until they set it up again; they have been told.');
+            break;
+
+        case 'key:generate':
+            // php bin/sibol.php key:generate [--show]
+            $key = Sibol\Core\AppKey::generate();
+            if (in_array('--show', $argv, true)) {
+                $out($key);
+                break;
+            }
+            if (Sibol\Core\AppKey::available()) {
+                throw new RuntimeException('APP_KEY is already set. A new one would make the two-step sign-in secrets unreadable, so it is left as it is.');
+            }
+            $envFile = BASE_PATH . '/.env';
+            if (!is_file($envFile)) {
+                throw new RuntimeException('There is no .env file. Copy .env.example to .env first, or set APP_KEY in the server environment (key:generate --show prints one).');
+            }
+            $text = (string) file_get_contents($envFile);
+            $eol = str_contains($text, "\r\n") ? "\r\n" : "\n";
+            $text = preg_match('/^APP_KEY=.*$/m', $text)
+                ? (string) preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=' . $key, $text, 1)
+                : rtrim($text) . $eol . $eol . '# Seals two-step sign-in secrets. Keep a copy apart from database backups.' . $eol . 'APP_KEY=' . $key . $eol;
+            file_put_contents($envFile, $text);
+            $out('APP_KEY written to .env. Keep a copy of it somewhere safe, apart from database backups: without it,');
+            $out('two-step sign-in codes cannot be checked and has to be switched off (two-step:off) and set up again.');
+            break;
+
+        case 'backup':
+            // php bin/sibol.php backup [--to=FOLDER] [--keep=14]
+            $to = null;
+            $keep = 14;
+            foreach (array_slice($argv, 2) as $flag) {
+                if (str_starts_with($flag, '--to=')) {
+                    $to = substr($flag, 5);
+                } elseif (preg_match('/^--keep=(\d+)$/', $flag, $m)) {
+                    $keep = max(1, (int) $m[1]);
+                } else {
+                    throw new RuntimeException('Usage: backup [--to=FOLDER] [--keep=14]');
+                }
+            }
+            $result = Sibol\Services\Backup::create($to, $keep, $out);
+            $size = $result['bytes'] >= 1048576 ? number_format($result['bytes'] / 1048576, 1) . ' MB' : max(1, (int) round($result['bytes'] / 1024)) . ' KB';
+            $out(sprintf('Backup written: %s (%s, %d tables, %d uploaded files).', $result['path'], $size, $result['tables'], $result['files']));
+            foreach ($result['removed'] as $old) {
+                $out('Removed an older backup: ' . $old);
+            }
+            $out('It holds no .env and no APP_KEY: keep those safe separately. See README > Backups and restoring.');
             break;
 
         case 'lang:missing':

@@ -497,6 +497,15 @@ legend { padding: 0; margin-bottom: var(--s-2); font-weight: 700; font-size: var
 .error-page { padding: var(--s-7) 0; max-width: 58ch; }
 .error-page__code { font-family: var(--font-display); font-size: 4rem; font-weight: 700; color: var(--sage); line-height: 1; margin-bottom: var(--s-3); }
 
+/* Two-step sign-in: the QR code beside its typed key, and the recovery codes (printable). */
+.two-step { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--s-5); align-items: start; }
+.two-step__qr { display: block; width: 200px; height: 200px; border: 1px solid var(--rule); border-radius: 6px; }
+.two-step__key { margin: var(--s-2) 0 var(--s-3); font-size: 1.125rem; overflow-wrap: anywhere; }
+.recovery-codes { max-width: 420px; margin: 0; padding: var(--s-4) var(--s-5); columns: 2; column-gap: var(--s-6); background: var(--paper-raised); border: 1px solid var(--rule); border-radius: 10px; font-size: 1.125rem; line-height: 2; }
+@media screen and (max-width: 759px) {
+  .two-step { grid-template-columns: 1fr; }
+}
+
 /* Offline reading: the offline page the service worker shows, and the Keep offline toggle on class files. */
 .offline { padding: var(--s-7) 0; max-width: 58ch; }
 .offline__mark { color: var(--ink-3); margin: 0 0 var(--s-3); }

@@ -90,6 +90,9 @@ $activeClasses = array_values(array_filter($memberships, static fn ($m) => $m['s
           <dt><?= e(t('Last sign-in')) ?></dt><dd><?= $person['last_login_at'] ? time_tag($person['last_login_at'], 'datetime') : e(t('Never')) ?></dd>
           <dt><?= e(t('Account created')) ?></dt><dd><?= time_tag($person['created_at']) ?></dd>
           <?php if ($pendingLink): ?><dt><?= e($pendingLink['purpose'] === 'invitation' ? t('Invitation link') : t('Reset link')) ?></dt><dd><?= e(t('Unused, expires :date', ['date' => fmt_date($pendingLink['expires_at'], 'datetime_short')])) ?></dd><?php endif; ?>
+          <?php if (\Sibol\Services\TwoStep::offered($person)): ?>
+            <dt><?= e(t('Two-step sign-in')) ?></dt><dd><?= e(\Sibol\Services\TwoStep::enabled($person) ? t('On since :date', ['date' => fmt_date($person['totp_enabled_at'])]) : t('Off')) ?></dd>
+          <?php endif; ?>
         </dl>
         <div class="stack-sm" style="margin-top: 16px">
           <?php if ($person['status'] !== 'deactivated'): ?>
@@ -101,6 +104,12 @@ $activeClasses = array_values(array_filter($memberships, static fn ($m) => $m['s
               <?= csrf_field() ?>
               <button class="btn btn--secondary btn--block" type="submit"><?= icon('printer', 'icon--sm') ?><?= e($person['status'] === 'invited' ? t('Print sign-in slip') : t('Print password slip')) ?></button>
             </form>
+            <?php if (!$isSelf && \Sibol\Services\TwoStep::enabled($person)): ?>
+              <form method="post" action="<?= e(url($base . '/two-step')) ?>" data-confirm="<?= e(t('Do this only when :name cannot use their phone or recovery codes, and you are sure it is them asking. They will be told.', ['name' => user_name($person)])) ?>" data-confirm-title="<?= e(t('Switch off two-step sign-in?')) ?>" data-confirm-action="<?= e(t('Switch off')) ?>" data-confirm-tone="danger">
+                <?= csrf_field() ?>
+                <button class="btn btn--secondary btn--block" type="submit"><?= icon('lock', 'icon--sm') ?><?= e(t('Switch off two-step sign-in')) ?></button>
+              </form>
+            <?php endif; ?>
           <?php endif; ?>
           <?php if ($person['status'] === 'deactivated'): ?>
             <form method="post" action="<?= e(url($base . '/status')) ?>"><?= csrf_field() ?><input type="hidden" name="action" value="reactivate">

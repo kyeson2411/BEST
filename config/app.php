@@ -12,6 +12,8 @@ return [
         'demo_login' => Env::bool('APP_DEMO_LOGIN', false),
         'secure_cookie' => Env::bool('SESSION_SECURE_COOKIE', false),
         'idle_minutes' => Env::int('SESSION_IDLE_MINUTES', 120),
+        // Seals two-step sign-in secrets in the database (Core\AppKey). Never shown or logged.
+        'key' => Env::get('APP_KEY', ''),
         'locales' => ['en' => 'English', 'fil' => 'Filipino'],
     ],
     // The school this copy of Sibol serves: shown on the sign-in page and used for the demo school.
@@ -31,6 +33,8 @@ return [
         'name' => Env::get('DB_NAME', 'sibol'),
         'user' => Env::get('DB_USER', 'root'),
         'password' => Env::get('DB_PASSWORD', ''),
+        // mysqldump for bin/sibol.php backup; empty finds XAMPP's or one on the PATH.
+        'dump_path' => Env::get('DB_DUMP_PATH', ''),
     ],
     'ai' => [
         'provider' => Env::get('AI_PROVIDER', 'demo'),

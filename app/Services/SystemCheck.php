@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sibol\Services;
 
+use Sibol\Core\AppKey;
 use Sibol\Core\Config;
 use Sibol\Core\Db;
 
@@ -60,6 +61,20 @@ final class SystemCheck
             ? ['label' => 'Email delivery', 'ok' => true, 'detail' => 'SMTP ' . $mail['host'] . ':' . $mail['port'] . ' (' . $mail['encryption'] . '), from ' . $mail['from']
                 . ($mail['has_password'] ? ', password set (hidden)' : ', no password') . '. Links are still shown to copy. Run "php bin/sibol.php mail:test you@school" to try it.']
             : ['label' => 'Email delivery', 'ok' => false, 'detail' => 'Not configured (MAIL_HOST and MAIL_FROM_ADDRESS in .env). Sibol shows invitation and password links to administrators to share; it never claims an email was sent.'];
+        $rows[] = AppKey::available()
+            ? ['label' => 'App key (APP_KEY)', 'ok' => true, 'detail' => 'Set (hidden). Staff can turn on two-step sign-in. Keep a copy apart from database backups.']
+            : ['label' => 'App key (APP_KEY)', 'ok' => false, 'detail' => 'Missing, so two-step sign-in cannot be turned on. Run "php bin/sibol.php key:generate".'];
+        $backups = glob(BASE_PATH . '/storage/backups/' . Backup::PREFIX . '*.zip') ?: [];
+        rsort($backups);
+        $latest = $backups[0] ?? null;
+        $age = $latest !== null ? (time() - (int) filemtime($latest)) / 86400 : null;
+        $rows[] = [
+            'label' => 'Backups',
+            'ok' => $age !== null && $age < 8,
+            'detail' => $latest === null
+                ? 'None in storage/backups yet. Run "php bin/sibol.php backup" every day (Task Scheduler or cron), and copy the archives to another place.'
+                : sprintf('Newest: %s, %.0f day(s) old, %s MB.', basename($latest), floor($age), number_format((int) filesize($latest) / 1048576, 1)),
+        ];
         return $rows;
     }
 }

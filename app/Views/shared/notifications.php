@@ -1,5 +1,5 @@
 <?php /** @var list<array> $rows @var \Sibol\Core\Paginator $pager @var string $filter @var int $unread */
-$icons = ['material' => 'file-text', 'assignment' => 'clipboard-list', 'reminder' => 'clock', 'feedback' => 'message-circle', 'announcement' => 'megaphone', 'submission' => 'inbox', 'processing' => 'triangle-alert', 'privacy' => 'shield-check', 'class' => 'users', 'site_feedback' => 'message-square-reply'];
+$icons = ['material' => 'file-text', 'assignment' => 'clipboard-list', 'reminder' => 'clock', 'feedback' => 'message-circle', 'announcement' => 'megaphone', 'submission' => 'inbox', 'processing' => 'triangle-alert', 'privacy' => 'shield-check', 'class' => 'users', 'site_feedback' => 'message-square-reply', 'account' => 'lock'];
 ?>
 <div class="page-head">
   <div class="page-head__text">

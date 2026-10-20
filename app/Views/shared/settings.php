@@ -16,6 +16,7 @@ $typeLabel = ['export' => t('Copy of my data'), 'correction' => t('Correct my in
   <a class="tab" href="#preferences"><?= e(t('Preferences')) ?></a>
   <a class="tab" href="#password"><?= e(t('Password')) ?></a>
   <a class="tab" href="#sessions"><?= e(t('Sign-in')) ?></a>
+  <?php if (\Sibol\Services\TwoStep::offered($user)): ?><a class="tab" href="#two-step"><?= e(t('Two-step sign-in')) ?></a><?php endif; ?>
   <a class="tab" href="#privacy"><?= e(t('Privacy requests')) ?></a>
 </nav>
 
@@ -106,6 +107,36 @@ $typeLabel = ['export' => t('Copy of my data'), 'correction' => t('Correct my in
       <button class="btn btn--secondary" type="submit"><?= icon('log-out', 'icon--sm') ?><?= e(t('Sign out of other devices')) ?></button>
     </form>
   </section>
+
+  <?php if (\Sibol\Services\TwoStep::offered($user)): ?>
+    <section class="section" id="two-step" aria-labelledby="two-step-title">
+      <div class="section__head"><h2 class="section__title" id="two-step-title"><?= e(t('Two-step sign-in')) ?></h2></div>
+      <?php if (\Sibol\Services\TwoStep::enabled($user)): ?>
+        <?php $left = \Sibol\Services\TwoStep::recoveryCodesLeft((int) $user['id']); ?>
+        <p><?= badge(t('On'), 'leaf') ?> <?= e(t('Since :date, Sibol asks for a code from your authenticator app after your password.', ['date' => fmt_date($user['totp_enabled_at'], 'date_long')])) ?>
+          <?= e(tp(':count recovery code left.', ':count recovery codes left.', $left)) ?></p>
+        <?php if (\Sibol\Services\TwoStep::available()): ?>
+          <form method="post" action="<?= e(url('/settings/two-step/codes')) ?>" autocomplete="off">
+            <?= csrf_field() ?>
+            <?= field('password', 'two_step_password', t('Current password'), ['required' => true, 'hint' => t('Needed to make new recovery codes or to switch two-step sign-in off.'), 'attrs' => ['autocomplete' => 'current-password']]) ?>
+            <div class="cluster">
+              <button class="btn btn--secondary" type="submit"><?= icon('refresh-cw', 'icon--sm') ?><?= e(t('Make new recovery codes')) ?></button>
+              <button class="btn btn--danger-quiet" type="submit" formaction="<?= e(url('/settings/two-step/off')) ?>" data-confirm="<?= e(t('Your password alone will sign you in again, and your recovery codes stop working.')) ?>" data-confirm-title="<?= e(t('Switch off two-step sign-in?')) ?>" data-confirm-action="<?= e(t('Switch off')) ?>" data-confirm-tone="danger"><?= e(t('Switch off two-step sign-in')) ?></button>
+            </div>
+          </form>
+        <?php endif; ?>
+      <?php else: ?>
+        <p><?= e(t('After your password, Sibol can also ask for a code from an app on your phone, so a password someone else learns is not enough to sign in as you. Recommended for administrators.')) ?></p>
+      <?php endif; ?>
+      <?php if (!\Sibol\Services\TwoStep::available()): ?>
+        <p class="meta"><?= e($user['role'] === 'admin'
+            ? t('Not ready on this server yet: it needs an APP_KEY. Run "php bin/sibol.php key:generate" on the server (see README).')
+            : t('Not ready on this server yet. Ask your school administrator to set it up.')) ?></p>
+      <?php elseif (!\Sibol\Services\TwoStep::enabled($user)): ?>
+        <a class="btn btn--secondary" href="<?= e(url('/settings/two-step')) ?>"><?= icon('lock', 'icon--sm') ?><?= e(t('Set up two-step sign-in')) ?></a>
+      <?php endif; ?>
+    </section>
+  <?php endif; ?>
 
   <section class="section" id="privacy" aria-labelledby="privacy-title">
     <div class="section__head"><h2 class="section__title" id="privacy-title"><?= e(t('Privacy requests')) ?></h2><a class="section__link" href="<?= e(url('/privacy')) ?>"><?= e(t('Privacy notice')) ?></a></div>

@@ -86,7 +86,7 @@ final class Session
     /** Keep submitted values and errors for the next request (after a redirect). */
     public static function withInput(array $old, array $errors = []): void
     {
-        unset($old['_token'], $old['password'], $old['password_confirmation'], $old['current_password']);
+        unset($old['_token'], $old['password'], $old['password_confirmation'], $old['current_password'], $old['two_step_password']);
         $_SESSION['_next'] = ['old' => $old, 'errors' => $errors];
     }
 

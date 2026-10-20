@@ -26,5 +26,7 @@
         <env name="AI_PROVIDER" value="demo" force="true"/>
         <env name="AI_API_KEY" value="" force="true"/>
         <env name="LOG_LEVEL" value="error" force="true"/>
+        <!-- A fixed key for the tests only: it seals nothing real. -->
+        <env name="APP_KEY" value="base64:c2lib2wtdGVzdC1rZXkhIXNpYm9sLXRlc3Qta2V5ISE=" force="true"/>
     </php>
 </phpunit>

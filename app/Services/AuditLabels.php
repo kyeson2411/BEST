@@ -37,13 +37,19 @@ final class AuditLabels
         $meta = json_decode((string) ($row['metadata'] ?? ''), true) ?: [];
         $n = static fn (string $key): int => (int) ($meta[$key] ?? 0);
         switch ((string) $row['action']) {
-            case 'auth.login': return t('Signed in');
+            case 'auth.login': return ($meta['second_step'] ?? '') === 'recovery' ? t('Signed in with a recovery code')
+                : (($meta['second_step'] ?? '') === 'app' ? t('Signed in with a code from their app') : t('Signed in'));
             case 'auth.demo_login': return t('Signed in with a demo account');
             case 'auth.logout': return t('Signed out');
             case 'auth.invitation_accepted': return t('Accepted an invitation and set a password');
             case 'auth.password_reset': return t('Set a new password with a reset link');
             case 'auth.password_changed': return t('Changed their password');
             case 'auth.sessions_revoked': return t('Signed out their other sessions');
+            case 'auth.two_step_on': return t('Turned on two-step sign-in');
+            case 'auth.two_step_off': return t('Turned off two-step sign-in');
+            case 'auth.two_step_failed': return t('Typed a sign-in code that did not match');
+            case 'auth.recovery_codes_renewed': return t('Made new recovery codes');
+            case 'user.two_step_reset': return t('Switched off two-step sign-in for someone');
             case 'access.denied': return t('Was refused access to a page');
 
             case 'user.invited': return t('Invited a :role', ['role' => lcfirst_u(role_label((string) ($meta['role'] ?? 'student')))]);

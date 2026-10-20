@@ -13,6 +13,7 @@ use Sibol\Core\RateLimiter;
 use Sibol\Core\Response;
 use Sibol\Core\Session;
 use Sibol\Services\Tokens;
+use Sibol\Services\TwoStep;
 use Sibol\Services\Usernames;
 
 final class AuthController extends Controller
@@ -72,12 +73,16 @@ final class AuthController extends Controller
             Db::update('users', ['password_hash' => password_hash($password, PASSWORD_DEFAULT)], ['id' => (int) $user['id']]);
         }
         RateLimiter::clear('login-name', $login);
-        Auth::login($user);
-        Audit::log('auth.login', 'user', (int) $user['id'], [], $user);
-
         $intended = Session::pull('intended');
         $target = (is_string($intended) && str_starts_with($intended, '/') && !str_starts_with($intended, '//') && $intended !== '/login')
             ? $intended : home_path((string) $user['role']);
+        if (TwoStep::enabled($user)) {
+            // The password was right; nobody is signed in until the code from the app matches too.
+            TwoStep::begin($user, $target);
+            return $this->redirect('/login/code');
+        }
+        Auth::login($user);
+        Audit::log('auth.login', 'user', (int) $user['id'], [], $user);
         return $this->redirect($target);
     }
 
@@ -219,8 +224,14 @@ final class AuthController extends Controller
             Tokens::consume((int) $row['token_id']);
         });
         $user = Db::one('SELECT * FROM users WHERE id = :id', ['id' => (int) $row['id']]);
-        Auth::login($user);
         Audit::log('auth.password_reset', 'user', (int) $row['id'], [], $user);
+        if (TwoStep::enabled($user)) {
+            // A password link is not enough on its own: the code from the app is still needed.
+            TwoStep::begin($user, home_path((string) $row['role']));
+            $this->flash('success', t('Your password has been changed. Type the code from your authenticator app to finish signing in.'));
+            return $this->redirect('/login/code');
+        }
+        Auth::login($user);
         $this->flash('success', t('Your password has been changed. Other devices have been signed out.'));
         return $this->redirect(home_path((string) $row['role']));
     }
