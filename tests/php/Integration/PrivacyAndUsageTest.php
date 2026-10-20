@@ -24,6 +24,7 @@ final class PrivacyAndUsageTest extends IntegrationTestCase
         self::assertSame('nicole.tan', $data['account']['username']);
         self::assertNull($data['account']['email'], 'students here have no email');
         self::assertArrayHasKey('review_queue', $data, 'the review queue is the student\'s own data too');
+        self::assertArrayHasKey('comment_bank', $data, 'and a teacher\'s saved comments are theirs');
         self::assertStringNotContainsString('andrea.cruz', $json);
         self::assertArrayNotHasKey('password_hash', $data['account']);
         foreach ($data['submissions'] as $s) {

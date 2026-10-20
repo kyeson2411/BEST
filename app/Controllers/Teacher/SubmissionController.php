@@ -19,6 +19,7 @@ use Sibol\Services\Ai\Providers;
 use Sibol\Services\Ai\Usage;
 use Sibol\Services\AiAccess;
 use Sibol\Services\Assessments;
+use Sibol\Services\CommentBank;
 use Sibol\Services\Notifier;
 use Sibol\Services\Overrides;
 use Sibol\Services\PaperScores;
@@ -213,6 +214,7 @@ final class SubmissionController extends Controller
             'answers' => $answers,
             'files' => Db::all('SELECT * FROM submission_files WHERE submission_id = :s', ['s' => $id]),
             'rubric' => json_decode((string) ($a['rubric'] ?? ''), true) ?: [],
+            'bank' => CommentBank::forGrading((int) $this->user()['id'], json_decode((string) ($a['rubric'] ?? ''), true) ?: []),
             'rubricScores' => json_decode((string) ($sub['rubric_scores'] ?? ''), true) ?: [],
             'history' => Db::all('SELECT h.*, u.given_name, u.family_name, u.preferred_name FROM grading_history h LEFT JOIN users u ON u.id = h.actor_id WHERE h.submission_id = :s ORDER BY h.created_at DESC', ['s' => $id]),
             'suggestion' => $suggestion ? json_decode((string) $suggestion['suggestion'], true) + ['created_at' => $suggestion['created_at'], 'model' => $suggestion['model']] : null,

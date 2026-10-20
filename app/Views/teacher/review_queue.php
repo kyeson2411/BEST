@@ -4,6 +4,7 @@
     <h1 class="page-title"><?= e(t('To review')) ?></h1>
     <p class="page-lead"><?= e($rows ? tp(':count submission is waiting, oldest first.', ':count submissions are waiting, oldest first.', count($rows)) : t('Nothing is waiting for you.')) ?></p>
   </div>
+  <div class="page-actions"><a class="btn btn--secondary" href="<?= e(url('/teacher/comments')) ?>"><?= icon('message-square-text', 'icon--sm') ?><?= e(t('Comment bank')) ?></a></div>
 </div>
 <?php if (!$rows): ?>
   <?= partial('empty', ['title' => t('All caught up'), 'body' => t('New submissions that need marking appear here. Quizzes with only automatically marked questions do not need you.')]) ?>

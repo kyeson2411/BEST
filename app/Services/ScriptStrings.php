@@ -92,11 +92,14 @@ final class ScriptStrings
         ];
     }
 
-    /** grading.js: copying an AI grading suggestion into the form. */
+    /** grading.js: copying an AI grading suggestion into the form, and the comment bank. */
     public static function grading(): array
     {
         return [
             'suggestion_copied' => t('Suggestion copied into the form. Check it, then save.'),
+            'bank_saved' => t('Saved to your comment bank.'),
+            'bank_failed' => t('Could not save the comment. Try again.'),
+            'bank_empty' => t('Write a comment first, or select the words to save.'),
         ];
     }
 }

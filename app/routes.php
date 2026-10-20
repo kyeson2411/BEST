@@ -247,6 +247,12 @@ $router->group('/teacher', ['role:teacher', 'notices'], static function ($r): vo
     $r->post('/assignments/{assignmentId}/overrides/{id}/remove', [Teacher\SubmissionController::class, 'removeOverride']);
 
     $r->get('/review', [Teacher\SubmissionController::class, 'queue']);
+    // A teacher's own saved feedback comments; the grading page inserts them.
+    $r->get('/comments', [Teacher\CommentBankController::class, 'index']);
+    $r->post('/comments', [Teacher\CommentBankController::class, 'store']);
+    $r->post('/comments/{id}', [Teacher\CommentBankController::class, 'update']);
+    $r->post('/comments/{id}/delete', [Teacher\CommentBankController::class, 'destroy']);
+    $r->post('/comments/{id}/used', [Teacher\CommentBankController::class, 'used']);
     $r->get('/submissions/{id}', [Teacher\SubmissionController::class, 'show']);
     $r->post('/submissions/{id}/grade', [Teacher\SubmissionController::class, 'grade']);
     $r->post('/submissions/{id}/release', [Teacher\SubmissionController::class, 'release']);

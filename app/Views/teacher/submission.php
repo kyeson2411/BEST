@@ -65,7 +65,7 @@ $historyLabels = ['submitted' => t('Submitted by the student'), 'graded' => t('G
                     <div class="field" style="margin:0"><label class="field__label" for="pts-<?= (int) $q['id'] ?>"><?= e(t('Points (of :n)', ['n' => fmt_number($q['points'], 2)])) ?></label>
                       <input class="input" id="pts-<?= (int) $q['id'] ?>" type="number" name="points[<?= (int) $q['id'] ?>]" min="0" max="<?= e((string) $q['points']) ?>" step="0.5" value="<?= e($ans !== null && $ans['points_awarded'] !== null ? fmt_number($ans['points_awarded'], 2) : '') ?>"<?= $q['qtype'] === 'essay' ? ' required' : '' ?>></div>
                     <div class="field" style="margin:0"><label class="field__label" for="cm-<?= (int) $q['id'] ?>"><?= e(t('Comment')) ?> <span class="field__optional"><?= e(t('optional')) ?></span></label>
-                      <input class="input" id="cm-<?= (int) $q['id'] ?>" name="comments[<?= (int) $q['id'] ?>]" value="<?= e((string) ($ans['teacher_comment'] ?? '')) ?>" maxlength="2000"></div>
+                      <input class="input" id="cm-<?= (int) $q['id'] ?>" name="comments[<?= (int) $q['id'] ?>]" value="<?= e((string) ($ans['teacher_comment'] ?? '')) ?>" maxlength="2000" data-comment-target></div>
                   </div>
                 </div>
               </li>
@@ -76,7 +76,8 @@ $historyLabels = ['submitted' => t('Submitted by the student'), 'graded' => t('G
 
       <section class="section" aria-labelledby="fb-title">
         <div class="section__head"><h2 class="section__title" id="fb-title"><?= e(t('Feedback for the student')) ?></h2></div>
-        <?= field('textarea', 'feedback', t('Overall comment'), ['value' => (string) $sub['feedback'], 'rows' => 5, 'attrs' => ['maxlength' => 10000, 'data-charcount' => true, 'data-suggest-target' => 'comment'], 'hint' => t('Specific, kind, and focused on the work. The student sees this when you release it.')]) ?>
+        <?= field('textarea', 'feedback', t('Overall comment'), ['value' => (string) $sub['feedback'], 'rows' => 5, 'attrs' => ['maxlength' => 10000, 'data-charcount' => true, 'data-suggest-target' => 'comment', 'data-comment-target' => 'overall'], 'hint' => t('Specific, kind, and focused on the work. The student sees this when you release it.')]) ?>
+        <?= partial('comment_bank', ['bank' => $bank, 'rubric' => $rubric]) ?>
       </section>
     </div>
 

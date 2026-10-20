@@ -6,7 +6,7 @@ import { demoLogin, ids } from './helpers.mjs';
 const pages = {
   guest: ['', 'login', 'start', 'privacy', 'help', 'login?lang=fil'],
   student: ['student', 'student/assignments', 'student/classes', 'companion/new', 'student/progress', 'student/progress/report', 'student/review', 'student/calendar', 'student/learning', 'settings', 'feedback'],
-  teacher: ['teacher', 'teacher/review', 'teacher/assignments/new', 'teacher/materials/new', 'teacher/lessons', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback'],
+  teacher: ['teacher', 'teacher/review', 'teacher/comments', 'teacher/assignments/new', 'teacher/materials/new', 'teacher/lessons', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback'],
   admin: ['admin', 'admin/users', 'admin/users/new', 'admin/users/import', 'admin/classes/new', 'admin/subjects', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/settings', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot', 'admin/grading', 'admin/academic-periods'],
 };
 
@@ -63,6 +63,13 @@ test('paper work screens pass structural accessibility checks', async ({ page })
   await demoLogin(page, 'student');
   await page.goto(`student/assignments/${id}`);
   expect(await audit(page), 'student paper work').toEqual([]);
+});
+
+test('the grading page with the comment bank passes structural accessibility checks', async ({ page }) => {
+  await demoLogin(page, 'teacher');
+  await page.goto(`teacher/submissions/${ids().beaSubmission}`);
+  await page.locator('[data-comment-bank] summary').click();
+  expect(await audit(page), 'grading page').toEqual([]);
 });
 
 test('an adviser\'s progress reports pass structural accessibility checks', async ({ page }) => {

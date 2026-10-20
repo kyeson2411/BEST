@@ -1144,6 +1144,25 @@ input[type="file"]::file-selector-button:hover { background: var(--sage-soft); }
 .review-item__prompt p:last-child { margin-bottom: 0; }
 .review-item__back { margin: 0 0 var(--s-3); }
 
+/* Comment bank: a teacher's saved feedback comments, inserted while grading. */
+.comment-bank { margin-top: var(--s-3); border: 1px solid var(--rule); border-radius: var(--radius-control); background: var(--paper-raised); }
+.comment-bank > summary { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-2) var(--s-3); font-weight: 700; cursor: pointer; }
+.comment-bank__inner { padding: 0 var(--s-3) var(--s-3); }
+.comment-bank__filter { margin-bottom: var(--s-2); }
+.comment-bank__group { margin: var(--s-3) 0 var(--s-1); font-size: 0.8125rem; font-weight: 700; color: var(--ink-3); }
+.comment-bank__list { display: grid; gap: var(--s-1); margin: 0 0 var(--s-2); padding: 0; list-style: none; }
+.comment-chip {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; width: 100%;
+  padding: 6px 10px; border: 1px solid var(--rule); border-radius: var(--radius-control); background: var(--paper);
+  color: var(--ink); font: inherit; font-size: 0.875rem; text-align: left; cursor: pointer;
+}
+.comment-chip:hover { border-color: var(--forest-2); background: var(--paper-hover); }
+.comment-chip:focus-visible { outline: 3px solid rgba(30, 61, 49, 0.35); outline-offset: 1px; }
+.comment-bank__save { display: grid; gap: var(--s-1); justify-items: start; margin: var(--s-2) 0; padding-top: var(--s-2); border-top: 1px solid var(--rule); }
+.comment-bank__save .select { max-width: 100%; }
+.comment-bank__body { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.comment-bank__edit { flex: 1 0 100%; }
+
 /* Progress reports: one sheet per student, each printed on its own page. */
 .report + .report { margin-top: var(--s-6); }
 .report__school { display: flex; align-items: center; gap: var(--s-2); margin: 0 0 var(--s-2); font-weight: 600; color: var(--ink-2); }

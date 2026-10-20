@@ -51,6 +51,7 @@ final class Privacy
             'notifications' => Db::all('SELECT title, body, created_at, read_at FROM notifications WHERE user_id = :u ORDER BY created_at DESC LIMIT 500', ['u' => $userId]),
             'privacy_requests' => Db::all('SELECT request_type, status, created_at, resolved_at FROM privacy_requests WHERE user_id = :u', ['u' => $userId]),
             'feedback_sent' => Db::all('SELECT category, body, page_path, status, reply, replied_at, created_at FROM site_feedback WHERE user_id = :u ORDER BY created_at', ['u' => $userId]),
+            'comment_bank' => Db::all('SELECT body, criterion, uses, created_at FROM comment_bank WHERE user_id = :u ORDER BY id', ['u' => $userId]),
             'notices_accepted' => Db::all('SELECT notice, version, acknowledged_at FROM notice_acknowledgments WHERE user_id = :u ORDER BY acknowledged_at', ['u' => $userId]),
             'ai_companion' => [
                 'setting' => $aiSetting === null ? 'school default' : ((int) $aiSetting === 1 ? 'on' : 'off'),
@@ -83,6 +84,7 @@ final class Privacy
             Db::exec('DELETE FROM content_views WHERE user_id = :u', ['u' => $userId]);
             Db::exec('DELETE FROM notice_acknowledgments WHERE user_id = :u', ['u' => $userId]);
             $counts['feedback'] = Db::exec('DELETE FROM site_feedback WHERE user_id = :u', ['u' => $userId]);
+            $counts['comment_bank'] = Db::exec('DELETE FROM comment_bank WHERE user_id = :u', ['u' => $userId]);
             Db::exec('UPDATE user_tokens SET revoked_at = :n WHERE user_id = :u AND used_at IS NULL AND revoked_at IS NULL', ['n' => Db::now(), 'u' => $userId]);
             if ($includeRecords) {
                 foreach (Db::column('SELECT f.stored_path FROM submission_files f JOIN submissions s ON s.id = f.submission_id WHERE s.student_id = :u', ['u' => $userId]) as $path) {
