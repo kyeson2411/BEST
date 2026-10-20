@@ -10,7 +10,9 @@ use Sibol\Core\Db;
  * Gradebook arithmetic driven by the school's grading settings. Nothing about the
  * scale or the weights is hard-coded: "points" uses earned/possible over all graded
  * work; "weighted" averages each category and applies the configured weights.
- * Work is "missing" after the student's own due date; excused work is never counted.
+ * Work is "missing" after the student's own due date; excused work is never counted. Work done in class
+ * or on paper is never missing by itself: until its score is entered it is "not recorded", and a student
+ * marked absent counts as missing until they make it up.
  */
 final class Grades
 {
@@ -44,7 +46,7 @@ final class Grades
         if ($assignments && $students) {
             [$in, $inParams] = Db::in(array_map(static fn ($a) => (int) $a['id'], $assignments), 'a');
             $subs = Db::all(
-                "SELECT id, assignment_id, student_id, status, score, points_possible, grading_status, feedback_status, is_late, submitted_at, attempt_no
+                "SELECT id, assignment_id, student_id, status, source, score, points_possible, grading_status, feedback_status, is_late, submitted_at, attempt_no
                  FROM submissions WHERE assignment_id IN $in AND status IN ('submitted','returned')",
                 $inParams
             );
@@ -67,6 +69,7 @@ final class Grades
                     $ov = $overrides[(int) $st['id'] . ':' . (int) $a['id']] ?? null;
                     $due = $ov['due_at'] ?? $a['due_at'];
                     $possible = (float) $a['points_possible'];
+                    $past = $due !== null && $due < $now;
                     if ($ov && (int) $ov['excused'] === 1) {
                         // Excused work is neither counted nor missing, whatever was handed in.
                         $cell = ['state' => 'excused', 'score' => null, 'possible' => $possible, 'percent' => null, 'released' => false, 'late' => false, 'submission_id' => $s ? (int) $s['id'] : null];
@@ -74,12 +77,16 @@ final class Grades
                         $cell = ['state' => 'graded', 'score' => (float) $s['score'], 'possible' => $possible, 'percent' => $possible > 0 ? round((float) $s['score'] / $possible * 100, 1) : null, 'released' => $s['feedback_status'] === 'released', 'late' => (bool) $s['is_late'], 'submission_id' => (int) $s['id']];
                     } elseif ($s) {
                         $cell = ['state' => $s['status'] === 'returned' ? 'returned' : 'pending', 'score' => null, 'possible' => $possible, 'percent' => null, 'released' => false, 'late' => (bool) $s['is_late'], 'submission_id' => (int) $s['id']];
-                    } elseif ($due !== null && $due < $now) {
-                        $cell = ['state' => 'missing', 'score' => null, 'possible' => $possible, 'percent' => null, 'released' => false, 'late' => false, 'submission_id' => null];
+                    } elseif ($ov && (int) $ov['absent'] === 1 && ($ov['due_at'] === null || $past)) {
+                        // Absent from work done in class, with no make-up date still ahead.
+                        $cell = ['state' => 'absent', 'score' => null, 'possible' => $possible, 'percent' => null, 'released' => false, 'late' => false, 'submission_id' => null];
+                    } elseif ($past) {
+                        $cell = ['state' => $a['kind'] === 'paper' ? 'unrecorded' : 'missing', 'score' => null, 'possible' => $possible, 'percent' => null, 'released' => false, 'late' => false, 'submission_id' => null];
                     } else {
                         $cell = ['state' => 'open', 'score' => null, 'possible' => $possible, 'percent' => null, 'released' => false, 'late' => false, 'submission_id' => null];
                     }
                     $cell['extended'] = $ov !== null && $ov['due_at'] !== null;
+                    $cell['paper'] = $s !== null && ($s['source'] ?? 'online') === 'paper';
                     $cells[(int) $st['id']][(int) $a['id']] = $cell;
                 }
             }
@@ -113,7 +120,7 @@ final class Grades
             $cats[(string) $c['key']] = ['earned' => 0.0, 'possible' => 0.0];
         }
         foreach ($cells as $aid => $cell) {
-            if ($cell['state'] === 'missing') {
+            if ($cell['state'] === 'missing' || $cell['state'] === 'absent') {
                 $missing++;
             }
             if ($cell['state'] !== 'graded' || $cell['possible'] <= 0) {

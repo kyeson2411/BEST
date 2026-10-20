@@ -111,6 +111,8 @@ final class Overrides
         $assignment['extended'] = $own !== null && $own !== $classDue;
         $assignment['extra_minutes'] = (int) ($ov['extra_minutes'] ?? 0);
         $assignment['excused'] = (int) ($ov['excused'] ?? 0) === 1;
+        // Marked absent for work done in class, unless a make-up date (their own due date) is still ahead.
+        $assignment['absent'] = (int) ($ov['absent'] ?? 0) === 1 && ($own === null || $own <= Db::now());
         return $assignment;
     }
 
@@ -126,10 +128,11 @@ final class Overrides
 
     /**
      * Saves a teacher's exceptions for one student, or removes them when nothing differs from the class.
-     * The student is told in Sibol. Attempts already in progress are re-timed.
+     * The student is told in Sibol. Attempts already in progress are re-timed. $absent marks a student who
+     * missed work done in class (null keeps what is stored); a make-up date is their own due date.
      * @param array<string,mixed> $assignment as loaded by Access::teacherAssignment
      */
-    public static function save(array $teacher, array $assignment, int $studentId, ?string $dueAtUtc, int $extraMinutes, bool $excused): void
+    public static function save(array $teacher, array $assignment, int $studentId, ?string $dueAtUtc, int $extraMinutes, bool $excused, ?bool $absent = null): void
     {
         $assignmentId = (int) $assignment['id'];
         $timed = $assignment['kind'] === 'quiz' && (int) $assignment['time_limit_minutes'] > 0;
@@ -138,20 +141,21 @@ final class Overrides
             $dueAtUtc = null;
         }
         $before = self::find($assignmentId, $studentId);
-        if ($dueAtUtc === null && $extraMinutes === 0 && !$excused) {
+        $absent = $absent ?? (int) ($before['absent'] ?? 0) === 1;
+        if ($dueAtUtc === null && $extraMinutes === 0 && !$excused && !$absent) {
             self::remove($teacher, $assignment, $studentId);
             return;
         }
         Db::exec(
-            'INSERT INTO assignment_overrides (organization_id, assignment_id, student_id, due_at, extra_minutes, excused, created_by, created_at, updated_at)
-             VALUES (:o, :a, :u, :d, :m, :x, :by, :c, :t)
-             ON DUPLICATE KEY UPDATE due_at = VALUES(due_at), extra_minutes = VALUES(extra_minutes), excused = VALUES(excused), updated_at = VALUES(updated_at)',
+            'INSERT INTO assignment_overrides (organization_id, assignment_id, student_id, due_at, extra_minutes, excused, absent, created_by, created_at, updated_at)
+             VALUES (:o, :a, :u, :d, :m, :x, :ab, :by, :c, :t)
+             ON DUPLICATE KEY UPDATE due_at = VALUES(due_at), extra_minutes = VALUES(extra_minutes), excused = VALUES(excused), absent = VALUES(absent), updated_at = VALUES(updated_at)',
             ['o' => (int) $assignment['organization_id'], 'a' => $assignmentId, 'u' => $studentId, 'd' => $dueAtUtc, 'm' => $extraMinutes,
-             'x' => $excused ? 1 : 0, 'by' => (int) $teacher['id'], 'c' => Db::now(), 't' => Db::now()]
+             'x' => $excused ? 1 : 0, 'ab' => $absent ? 1 : 0, 'by' => (int) $teacher['id'], 'c' => Db::now(), 't' => Db::now()]
         );
         self::retimeOpenAttempts($assignment, $studentId);
         Audit::log('assignment.override_saved', 'assignment', $assignmentId, [
-            'student_id' => $studentId, 'own_due_date' => $dueAtUtc !== null, 'extra_minutes' => $extraMinutes, 'excused' => $excused,
+            'student_id' => $studentId, 'own_due_date' => $dueAtUtc !== null, 'extra_minutes' => $extraMinutes, 'excused' => $excused, 'absent' => $absent,
         ]);
         self::tellStudent($assignment, $studentId, $before, $dueAtUtc, $extraMinutes, $excused);
     }
@@ -198,7 +202,7 @@ final class Overrides
         if ($excused && (int) ($before['excused'] ?? 0) !== 1) {
             [$subject, $body] = [t('Excused: :title', ['title' => $title]), t('Your teacher excused you from this work. It is not counted and will not show as missing.')];
         } elseif ($dueAtUtc !== null && $dueAtUtc !== ($before['due_at'] ?? null)) {
-            [$subject, $body] = [t('New due date for :title', ['title' => $title]), Dates::due($dueAtUtc)['label']];
+            [$subject, $body] = [$assignment['kind'] === 'paper' ? t('Make-up date for :title', ['title' => $title]) : t('New due date for :title', ['title' => $title]), Dates::due($dueAtUtc, (string) $assignment['kind'])['label']];
         } elseif ($extraMinutes !== (int) ($before['extra_minutes'] ?? 0)) {
             [$subject, $body] = [t('More time for :title', ['title' => $title]), tp('You have :count extra minute on the time limit.', 'You have :count extra minutes on the time limit.', $extraMinutes)];
         } else {

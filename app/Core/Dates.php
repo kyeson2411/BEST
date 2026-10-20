@@ -147,10 +147,11 @@ final class Dates
     }
 
     /**
-     * Human due label with a tone: coral when overdue, amber when due within two days.
+     * Human due label with a tone: coral when overdue, amber when due within two days. Work done in class
+     * or on paper ($kind 'paper') is labelled by its day in class and is never overdue by itself.
      * @return array{label:string,tone:string,overdue:bool}
      */
-    public static function due(?string $utc): array
+    public static function due(?string $utc, string $kind = 'assignment'): array
     {
         $d = self::local($utc);
         if ($d === null) {
@@ -160,6 +161,18 @@ final class Dates
         $seconds = $d->getTimestamp() - $now->getTimestamp();
         $dayDiff = (int) $now->setTime(0, 0)->diff($d->setTime(0, 0))->format('%r%a');
         $time = $d->format('g:i A');
+        if ($kind === 'paper') {
+            if ($dayDiff < 0) {
+                return ['label' => t('Done in class :date', ['date' => self::format($utc, 'date')]), 'tone' => 'neutral', 'overdue' => false];
+            }
+            if ($dayDiff === 0) {
+                return ['label' => t('In class today'), 'tone' => 'amber', 'overdue' => false];
+            }
+            if ($dayDiff === 1) {
+                return ['label' => t('In class tomorrow'), 'tone' => 'amber', 'overdue' => false];
+            }
+            return ['label' => t('In class :date', ['date' => self::format($utc, 'date')]), 'tone' => 'neutral', 'overdue' => false];
+        }
         if ($seconds < 0) {
             $late = $now->setTime(0, 0)->diff($d->setTime(0, 0))->days;
             $label = $late === 0 ? t('Was due today at :time', ['time' => $time]) : tp('Overdue by :count day', 'Overdue by :count days', (int) $late);

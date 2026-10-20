@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { demoLogin } from './helpers.mjs';
+import { demoLogin, ids } from './helpers.mjs';
 
 // Structural accessibility checks on the main screens: one h1, a page language, unique ids,
 // a name for every form control, button and link, and alternative text for images.
@@ -51,6 +51,19 @@ for (const [role, paths] of Object.entries(pages)) {
     }
   });
 }
+
+test('paper work screens pass structural accessibility checks', async ({ page }) => {
+  const id = ids().paperTest;
+  await demoLogin(page, 'teacher');
+  for (const path of ['teacher/assignments/new?kind=paper', `teacher/assignments/${id}`, `teacher/assignments/${id}/scores`, `teacher/assignments/${id}/print`, `teacher/assignments/${id}/print?copy=key`]) {
+    await page.goto(path);
+    expect(await audit(page), path).toEqual([]);
+  }
+  await page.context().clearCookies();
+  await demoLogin(page, 'student');
+  await page.goto(`student/assignments/${id}`);
+  expect(await audit(page), 'student paper work').toEqual([]);
+});
 
 test('keyboard users can skip to the content', async ({ page }) => {
   await demoLogin(page, 'student');

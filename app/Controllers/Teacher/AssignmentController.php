@@ -36,7 +36,7 @@ final class AssignmentController extends Controller
         if ($classId !== null && !in_array($classId, $ids, true)) {
             $classId = null;
         }
-        $kind = in_array($this->request->str('kind'), ['assignment', 'quiz'], true) ? $this->request->str('kind') : '';
+        $kind = in_array($this->request->str('kind'), ['assignment', 'quiz', 'paper'], true) ? $this->request->str('kind') : '';
         $status = in_array($this->request->str('status'), ['draft', 'published', 'closed', 'archived'], true) ? $this->request->str('status') : '';
         $rows = [];
         if ($ids) {
@@ -60,7 +60,7 @@ final class AssignmentController extends Controller
             );
         }
         return $this->view('teacher/assignments', [
-            'title' => $kind === 'quiz' ? t('Quizzes') : t('Assignments'),
+            'title' => ['quiz' => t('Quizzes'), 'paper' => t('In class and on paper')][$kind] ?? t('Assignments'),
             'rows' => $rows, 'classes' => $classes, 'classId' => $classId, 'kind' => $kind, 'status' => $status,
         ]);
     }
@@ -74,10 +74,11 @@ final class AssignmentController extends Controller
     {
         $user = $this->user();
         $classes = array_values(array_filter(TeacherRepo::classes($user), static fn ($c) => $c['status'] === 'active'));
-        $kind = $this->request->str('kind') === 'quiz' ? 'quiz' : 'assignment';
+        $kind = in_array($this->request->str('kind'), ['quiz', 'paper'], true) ? $this->request->str('kind') : 'assignment';
+        $heading = ['quiz' => t('New quiz'), 'paper' => t('New work in class or on paper')][$kind] ?? t('New assignment');
         return $this->view('teacher/assignment_form', [
-            'title' => $kind === 'quiz' ? t('New quiz') : t('New assignment'),
-            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$kind === 'quiz' ? t('New quiz') : t('New assignment'), null]],
+            'title' => $heading,
+            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$heading, null]],
             'assignment' => null,
             'kind' => $kind,
             'classes' => $classes,
@@ -105,7 +106,10 @@ final class AssignmentController extends Controller
             'created_at' => Db::now(),
         ]);
         Audit::log('assignment.created', 'assignment', $id, ['kind' => $data['kind']]);
-        $this->flash('success', $data['kind'] === 'quiz' ? t('Quiz created as a draft. Add questions, then publish.') : t('Assignment created as a draft. Add a rubric if you use one, then publish.'));
+        $this->flash('success', [
+            'quiz' => t('Quiz created as a draft. Add questions, then publish.'),
+            'paper' => t('Created as a draft. Add questions if you want to print it, then publish so it appears for students.'),
+        ][$data['kind']] ?? t('Assignment created as a draft. Add a rubric if you use one, then publish.'));
         return $this->redirect('/teacher/assignments/' . $id . '/edit');
     }
 
@@ -401,6 +405,30 @@ final class AssignmentController extends Controller
         ]);
     }
 
+    /**
+     * A printable copy of any assignment or quiz: a blank copy for learners without a device, or the
+     * teacher's copy with the answer key. Teachers of the class only; students never reach this page.
+     */
+    public function printView(int $id): Response
+    {
+        $user = $this->user();
+        $a = Access::teacherAssignment($user, $id);
+        $key = $this->request->str('copy') === 'key';
+        $printable = Assessments::printable($id, $key);
+        Audit::log('assignment.printed', 'assignment', $id, ['copy' => $key ? 'key' : 'blank']);
+        return $this->view('teacher/assignment_print', [
+            'title' => $key ? t('Answer key: :title', ['title' => $a['title']]) : t('Print: :title', ['title' => $a['title']]),
+            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], '/teacher/assignments/' . $id], [t('Print'), null]],
+            'a' => $a,
+            'withKey' => $key,
+            'questions' => $printable['questions'],
+            'leftOut' => $printable['left_out'],
+            'rubric' => json_decode((string) ($a['rubric'] ?? ''), true) ?: [],
+            'page_class' => 'page--print',
+            'katex' => true,
+        ]);
+    }
+
     // ------------------------------------------------------------------ lifecycle
 
     public function publish(int $id): Response
@@ -518,7 +546,7 @@ final class AssignmentController extends Controller
     {
         $data = $this->validate([
             'class_id' => $existing ? 'nullable|int' : 'required|int',
-            'kind' => $existing ? 'nullable|in:assignment,quiz' : 'required|in:assignment,quiz',
+            'kind' => $existing ? 'nullable|in:assignment,quiz,paper' : 'required|in:assignment,quiz,paper',
             'module_id' => 'nullable|int',
             'title' => 'required|string|max:200',
             'instructions' => 'nullable|string|max:20000',
@@ -560,23 +588,25 @@ final class AssignmentController extends Controller
             $moduleId = null;
         }
         $isQuiz = $data['kind'] === 'quiz';
+        // Work done in class has no online submission, opening time, late rule or answers to show.
+        $online = $data['kind'] !== 'paper';
         $row = [
             'module_id' => $moduleId,
             'title' => $data['title'],
             'instructions' => $data['instructions'],
             'objectives' => $data['objectives'],
             'category' => $data['category'] ?: null,
-            'opens_at' => $data['opens_at_utc'],
+            'opens_at' => $online ? $data['opens_at_utc'] : null,
             'due_at' => $data['due_at_utc'],
-            'late_policy' => $data['late_policy'],
-            'late_penalty_pct' => $data['late_policy'] === 'penalty' ? (int) ($data['late_penalty_pct'] ?? 10) : 0,
+            'late_policy' => $online ? $data['late_policy'] : 'accepted',
+            'late_penalty_pct' => $online && $data['late_policy'] === 'penalty' ? (int) ($data['late_penalty_pct'] ?? 10) : 0,
             'max_attempts' => $isQuiz ? (int) ($data['max_attempts'] ?? 1) : 1,
             'time_limit_minutes' => $isQuiz && $data['time_limit_minutes'] ? (int) $data['time_limit_minutes'] : null,
-            'allow_text' => $isQuiz ? 0 : ((bool) $data['allow_text'] ? 1 : 0),
-            'allow_files' => $isQuiz ? 0 : ((bool) $data['allow_files'] ? 1 : 0),
-            'allow_resubmission' => $isQuiz ? 0 : ((bool) $data['allow_resubmission'] ? 1 : 0),
-            'feedback_release' => $data['feedback_release'],
-            'answer_key_release' => $data['answer_key_release'],
+            'allow_text' => $isQuiz || !$online ? 0 : ((bool) $data['allow_text'] ? 1 : 0),
+            'allow_files' => $isQuiz || !$online ? 0 : ((bool) $data['allow_files'] ? 1 : 0),
+            'allow_resubmission' => $isQuiz || !$online ? 0 : ((bool) $data['allow_resubmission'] ? 1 : 0),
+            'feedback_release' => $online ? $data['feedback_release'] : 'manual',
+            'answer_key_release' => $online ? $data['answer_key_release'] : 'never',
         ];
         if (!$isQuiz && $data['points_possible'] !== null) {
             $row['points_possible'] = (float) $data['points_possible'];

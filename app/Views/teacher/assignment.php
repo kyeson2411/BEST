@@ -2,6 +2,7 @@
 [$sl, $st] = assignment_status($a);
 $base = '/teacher/assignments/' . (int) $a['id'];
 $isQuiz = $a['kind'] === 'quiz';
+$isPaper = $a['kind'] === 'paper';
 $byId = [];
 foreach ($questionStats as $qs) {
     $byId[(int) $qs['id']] = $qs;
@@ -10,24 +11,32 @@ foreach ($questionStats as $qs) {
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e($a['title']) ?></h1>
-    <p class="page-lead"><?= e($a['class_name']) ?>, <?= e($isQuiz ? t('quiz') : t('assignment')) ?> <?= badge($sl, $st) ?></p>
+    <p class="page-lead"><?= e($a['class_name']) ?>, <?= e(work_kind((string) $a['kind'], true)) ?> <?= badge($sl, $st) ?></p>
   </div>
   <div class="page-actions">
     <a class="btn btn--secondary" href="<?= e(url($base . '/edit')) ?>"><?= icon('pencil', 'icon--sm') ?><?= e(t('Edit')) ?></a>
-    <a class="btn btn--secondary" href="<?= e(url($base . '/preview')) ?>"><?= icon('eye', 'icon--sm') ?><?= e(t('Student preview')) ?></a>
-    <?php if ($a['status'] !== 'draft'): ?><a class="btn btn--primary" href="<?= e(url($base . '/submissions')) ?>"><?= icon('inbox', 'icon--sm') ?><?= e(t('Submissions')) ?></a><?php endif; ?>
+    <a class="btn btn--secondary" href="<?= e(url($base . '/print')) ?>"><?= icon('printer', 'icon--sm') ?><?= e(t('Print')) ?></a>
+    <?php if (!$isPaper): ?><a class="btn btn--secondary" href="<?= e(url($base . '/preview')) ?>"><?= icon('eye', 'icon--sm') ?><?= e(t('Student preview')) ?></a><?php endif; ?>
+    <?php if ($a['status'] !== 'draft'): ?>
+      <?php if ($isPaper): ?>
+        <a class="btn btn--primary" href="<?= e(url($base . '/scores')) ?>"><?= icon('clipboard-pen', 'icon--sm') ?><?= e(t('Enter scores')) ?></a>
+      <?php else: ?>
+        <a class="btn btn--secondary" href="<?= e(url($base . '/scores')) ?>"><?= icon('clipboard-pen', 'icon--sm') ?><?= e(t('Paper scores')) ?></a>
+        <a class="btn btn--primary" href="<?= e(url($base . '/submissions')) ?>"><?= icon('inbox', 'icon--sm') ?><?= e(t('Submissions')) ?></a>
+      <?php endif; ?>
+    <?php endif; ?>
   </div>
 </div>
 
 <dl class="stat-line" style="margin-bottom: 24px">
-  <div class="stat"><dt class="stat__label"><?= e(t('Handed in')) ?></dt><dd style="margin:0"><span class="stat__value"><?= (int) $stats['submitted'] ?><span class="muted" style="font-size:1rem"> / <?= (int) $stats['enrolled'] ?></span></span><span class="stat__note"><?= e(implode(', ', array_filter([
+  <div class="stat"><dt class="stat__label"><?= e($isPaper ? t('Scores entered') : t('Handed in')) ?></dt><dd style="margin:0"><span class="stat__value"><?= (int) $stats['submitted'] ?><span class="muted" style="font-size:1rem"> / <?= (int) $stats['enrolled'] ?></span></span><span class="stat__note"><?= e(implode(', ', array_filter([
       tp(':count late', ':count late', (int) $stats['late']),
       (int) $stats['extended'] ? tp(':count with their own due date', ':count with their own due date', (int) $stats['extended']) : null,
       (int) $stats['excused'] ? tp(':count excused', ':count excused', (int) $stats['excused']) : null,
   ]))) ?></span></dd></div>
   <div class="stat"><dt class="stat__label"><?= e(t('To grade')) ?></dt><dd style="margin:0"><span class="stat__value"><?= (int) $stats['ungraded'] ?></span><span class="stat__note"><?= e(tp(':count graded, not released', ':count graded, not released', (int) $stats['unreleased'])) ?></span></dd></div>
   <div class="stat"><dt class="stat__label"><?= e(t('Average so far')) ?></dt><dd style="margin:0"><span class="stat__value"><?= $stats['avg_pct'] !== null ? e(fmt_number($stats['avg_pct'])) . '%' : '—' ?></span><span class="stat__note"><?= e(t('Graded work only')) ?></span></dd></div>
-  <div class="stat"><dt class="stat__label"><?= e(t('Due')) ?></dt><dd style="margin:0"><span class="stat__value" style="font-size:1.25rem"><?= $a['due_at'] ? e(fmt_date($a['due_at'], 'datetime_short')) : '—' ?></span><span class="stat__note"><?= $a['opens_at'] ? e(t('Opens :d', ['d' => fmt_date($a['opens_at'], 'datetime_short')])) : e(t('Open when published')) ?></span></dd></div>
+  <div class="stat"><dt class="stat__label"><?= e($isPaper ? t('In class') : t('Due')) ?></dt><dd style="margin:0"><span class="stat__value" style="font-size:1.25rem"><?= $a['due_at'] ? e(fmt_date($a['due_at'], 'datetime_short')) : '—' ?></span><span class="stat__note"><?= $isPaper ? e(t('Done in class or on paper')) : ($a['opens_at'] ? e(t('Opens :d', ['d' => fmt_date($a['opens_at'], 'datetime_short')])) : e(t('Open when published'))) ?></span></dd></div>
 </dl>
 
 <div class="layout-split">
@@ -82,7 +91,7 @@ foreach ($questionStats as $qs) {
         <?php endif; ?>
       </div>
       <dl class="dl" style="margin-top: 16px">
-        <dt><?= e(t('Late work')) ?></dt><dd><?= e(['not_accepted' => t('Not accepted'), 'accepted' => t('Accepted, marked late'), 'penalty' => t(':p% penalty', ['p' => (int) $a['late_penalty_pct']])][$a['late_policy']]) ?></dd>
+        <?php if (!$isPaper): ?><dt><?= e(t('Late work')) ?></dt><dd><?= e(['not_accepted' => t('Not accepted'), 'accepted' => t('Accepted, marked late'), 'penalty' => t(':p% penalty', ['p' => (int) $a['late_penalty_pct']])][$a['late_policy']]) ?></dd><?php endif; ?>
         <dt><?= e(t('Grades shown')) ?></dt><dd><?= e($a['feedback_release'] === 'manual' ? t('When you release them') : t('Immediately')) ?></dd>
         <?php if ($isQuiz): ?><dt><?= e(t('Answers shown')) ?></dt><dd><?= e($a['answers_released_at'] ? t('Released :d', ['d' => fmt_date($a['answers_released_at'])]) : ['never' => t('Never'), 'after_submit' => t('After submitting'), 'after_due' => t('After the due date'), 'manual' => t('When you release them')][$a['answer_key_release']]) ?>
           <?php if (!$a['answers_released_at'] && $a['answer_key_release'] === 'after_due' && $answersAt !== null && $answersAt !== $a['due_at']): ?><br><span class="meta"><?= e(t('Waiting for the latest extension: :date', ['date' => fmt_date($answersAt, 'datetime_short')])) ?></span><?php endif; ?></dd><?php endif; ?>

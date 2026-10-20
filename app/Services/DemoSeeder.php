@@ -763,6 +763,63 @@ final class DemoSeeder
         foreach (['bea', 'nicole', 'patricia', 'sofia'] as $k => $student) {
             $this->writtenSubmission($journal, $student, 'Story: "The Mango Tree". Clue 1: the grandmother waters the tree every evening. Inference: the tree is important to her family history. Clue 2: ... Clue 3: ...', $this->ago('-' . (5 + $k * 3) . ' hours'));
         }
+
+        $this->paperWork();
+    }
+
+    /**
+     * Science 9 – Narra on paper: a test taken in class three days ago (scores entered; Joshua was absent,
+     * Miguel is excused, Kyla's score is not released yet) and a performance task coming up in class.
+     */
+    private function paperWork(): void
+    {
+        $questions = [
+            ['qtype' => 'multiple_choice', 'prompt' => 'Which structure carries air from the larynx to the bronchi?', 'options' => ['Trachea', 'Alveoli', 'Diaphragm', 'Capillaries'], 'correct' => 'A', 'points' => 2, 'topic' => 'Breathing'],
+            ['qtype' => 'multiple_choice', 'prompt' => 'Which blood vessels carry blood back to the heart?', 'options' => ['Arteries', 'Veins', 'Capillaries', 'Alveoli'], 'correct' => 'B', 'points' => 2, 'topic' => 'Blood vessels'],
+            ['qtype' => 'multiple_choice', 'prompt' => 'What does the right ventricle pump blood to?', 'options' => ['The brain', 'The lungs', 'The liver', 'The arms and legs'], 'correct' => 'B', 'points' => 2, 'topic' => 'The heart'],
+            ['qtype' => 'true_false', 'prompt' => 'The diaphragm relaxes and moves up when you exhale.', 'correct' => 'true', 'points' => 2, 'topic' => 'Breathing'],
+            ['qtype' => 'true_false', 'prompt' => 'Capillary walls are many cells thick.', 'correct' => 'false', 'points' => 2, 'topic' => 'Blood vessels'],
+            ['qtype' => 'short_answer', 'prompt' => 'Name the gas that the blood picks up in the alveoli.', 'accepted' => 'oxygen', 'points' => 2, 'topic' => 'Gas exchange'],
+            ['qtype' => 'essay', 'prompt' => 'Explain how the respiratory and circulatory systems work together to deliver oxygen to a muscle cell.', 'points' => 8, 'topic' => 'Gas exchange'],
+        ];
+        $test = $this->makeAssignment('sci_paper_test', 'sci_narra', 'ramon', [
+            'kind' => 'paper', 'module_id' => $this->mod['sci_narra_1'], 'category' => 'periodic',
+            'title' => 'Short test on paper: breathing and circulation',
+            'instructions' => 'Written in class. Answer all questions on the test paper; the last question needs a short paragraph.',
+            'due_at' => $this->at('-3 days', '10:00'), 'late_policy' => 'accepted', 'allow_text' => 0, 'allow_files' => 0,
+            'feedback_release' => 'manual', 'answer_key_release' => 'never',
+        ], $questions);
+        $test = $this->publishAt('sci_paper_test', 'ramon', $this->at('-10 days', '07:00'));
+        $scores = [];
+        foreach ($this->sections['narra'] as $i => $student) {
+            if (!in_array($student, ['joshua', 'miguel'], true)) {
+                // Fixed offsets rather than mt_rand, so the rest of the seed stays as it was.
+                $scores[$this->u[$student]] = (string) max(4, min(20, round(20 * $this->ability[$student]) + ($i % 5) - 2));
+            }
+        }
+        $this->actAs('ramon');
+        PaperScores::save($this->users['ramon'], $test, $scores, [$this->u['joshua']], [$this->u['miguel']], false);
+        foreach (Db::all("SELECT * FROM submissions WHERE assignment_id = :a AND source = 'paper'", ['a' => (int) $test['id']]) as $sub) {
+            Db::update('submissions', ['graded_at' => $this->at('-2 days', '16:00')], ['id' => (int) $sub['id']]);
+            if ((int) $sub['student_id'] !== $this->u['kyla'] && (int) $sub['student_id'] !== $this->u['miguel']) {
+                Assessments::release($sub, $test, $this->u['ramon']);
+                Db::update('submissions', ['released_at' => $this->at('-1 days', '17:00')], ['id' => (int) $sub['id']]);
+            }
+        }
+
+        $this->makeAssignment('sci_paper_task', 'sci_narra', 'ramon', [
+            'kind' => 'paper', 'module_id' => $this->mod['sci_narra_1'], 'category' => 'performance',
+            'title' => 'Performance task in class: model of the lungs',
+            'instructions' => "In groups, you will build a working model of the lungs from a plastic bottle, balloons and a rubber sheet, then explain how it shows breathing in and out.\n\nBring: one 1.5-litre plastic bottle and two balloons.",
+            'due_at' => $this->at('+5 days', '13:00'), 'late_policy' => 'accepted', 'allow_text' => 0, 'allow_files' => 0,
+            'points_possible' => 20, 'feedback_release' => 'manual', 'answer_key_release' => 'never',
+            'rubric' => $this->rubric([
+                ['Working model', 8, 'The model shows the lungs filling and emptying as the sheet moves.'],
+                ['Explanation', 8, 'Explains how the diaphragm changes the space in the chest.'],
+                ['Teamwork and care', 4, 'Everyone takes part; materials are handled safely.'],
+            ]),
+        ]);
+        $this->publishAt('sci_paper_task', 'ramon', $this->at('-2 days', '07:00'));
     }
 
     // ---------------------------------------------------------------- activity, notifications, audit

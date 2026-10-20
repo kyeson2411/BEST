@@ -7,7 +7,9 @@ use Sibol\Core\Dates;
 use Sibol\Core\Uploads;
 
 $isQuiz = $assignment['kind'] === 'quiz';
-$due = Dates::due($assignment['due_at']);
+// Done in class or on paper: nothing to hand in here; the teacher enters the score.
+$isPaper = $assignment['kind'] === 'paper';
+$due = Dates::due($assignment['due_at'], (string) $assignment['kind']);
 [$statusLabel, $statusTone] = $state['status_label'];
 $released = $reviewSub && $reviewSub['feedback_status'] === 'released';
 $rubricScores = $released ? (json_decode((string) ($reviewSub['rubric_scores'] ?? ''), true) ?: []) : [];
@@ -30,7 +32,7 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e($assignment['title']) ?></h1>
-    <p class="page-lead"><?= e($assignment['class_name']) ?>, <?= e($isQuiz ? t('quiz') : t('assignment')) ?></p>
+    <p class="page-lead"><?= e($assignment['class_name']) ?>, <?= e(work_kind((string) $assignment['kind'], true)) ?></p>
   </div>
 </div>
 
@@ -131,7 +133,20 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
       </section>
     <?php endif; ?>
 
-    <?php if (!$isQuiz): ?>
+    <?php if ($isPaper): ?>
+      <section class="section" aria-labelledby="work-title" id="your-work">
+        <div class="section__head"><h2 class="section__title" id="work-title"><?= e(t('In class or on paper')) ?></h2></div>
+        <?php if ($state['excused']): ?>
+          <p class="meta"><?= e(t('You are excused, so there is nothing to make up.')) ?></p>
+        <?php elseif (!empty($assignment['absent'])): ?>
+          <div class="callout callout--coral"><?= icon('circle-alert') ?><p><?= e(t('Your teacher marked you absent for this. Talk to them about making it up.')) ?></p></div>
+        <?php elseif ($released): ?>
+          <p class="meta"><?= e(t('Your teacher entered this score from your work in class.')) ?></p>
+        <?php else: ?>
+          <p><?= e($state['past_due'] ? t('You did this in class or on paper. Your teacher will enter your score here; you get a notification when it is released.') : t('You will do this in class or on paper on :date. There is nothing to hand in here.', ['date' => fmt_date($assignment['due_at'], 'date_long')])) ?></p>
+        <?php endif; ?>
+      </section>
+    <?php elseif (!$isQuiz): ?>
       <section class="section" aria-labelledby="work-title" id="your-work">
         <div class="section__head"><h2 class="section__title" id="work-title"><?= e(t('Your work')) ?></h2></div>
         <?php if ($editable): ?>
@@ -281,7 +296,7 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
       <h2 class="panel__title" id="glance-title"><?= e(t('At a glance')) ?></h2>
       <dl class="dl">
         <dt><?= e(t('Status')) ?></dt><dd><?= badge($statusLabel, $statusTone) ?></dd>
-        <dt><?= e(t('Due')) ?></dt><dd><?= $assignment['due_at'] ? e(fmt_date($assignment['due_at'], 'date_long')) . '<br><span class="meta">' . e(fmt_date($assignment['due_at'], 'time') . ' (' . \Sibol\Core\Dates::tz() . ')') . '</span>' : e(t('No due date')) ?>
+        <dt><?= e($isPaper ? t('In class') : t('Due')) ?></dt><dd><?= $assignment['due_at'] ? e(fmt_date($assignment['due_at'], 'date_long')) . '<br><span class="meta">' . e(fmt_date($assignment['due_at'], 'time') . ' (' . \Sibol\Core\Dates::tz() . ')') . '</span>' : e(t('No due date')) ?>
           <?php if (!empty($assignment['extended'])): ?><br><span class="meta"><?= e($assignment['class_due_at'] ? t('Your own date. The class date is :date.', ['date' => fmt_date($assignment['class_due_at'], 'datetime_short')]) : t('Your own date.')) ?></span><?php endif; ?></dd>
         <dt><?= e(t('Points')) ?></dt><dd class="num"><?= e(fmt_number($assignment['points_possible'], 2)) ?></dd>
         <?php if ($isQuiz): ?>
@@ -289,7 +304,7 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
           <dt><?= e(t('Time limit')) ?></dt><dd><?= $minutes ? e(t(':n minutes', ['n' => $minutes])) . ((int) ($assignment['extra_minutes'] ?? 0) > 0 ? '<br><span class="meta">' . e(tp('Includes :count extra minute from your teacher', 'Includes :count extra minutes from your teacher', (int) $assignment['extra_minutes'])) . '</span>' : '') : e(t('None')) ?></dd>
           <dt><?= e(t('Attempts')) ?></dt><dd><?= e(t(':used of :max used', ['used' => (int) $state['submitted_count'], 'max' => (int) $assignment['max_attempts']])) ?></dd>
         <?php endif; ?>
-        <dt><?= e(t('Late work')) ?></dt><dd><?= e($latePolicy) ?></dd>
+        <?php if (!$isPaper): ?><dt><?= e(t('Late work')) ?></dt><dd><?= e($latePolicy) ?></dd><?php endif; ?>
         <dt><?= e(t('Feedback')) ?></dt><dd><?= e($assignment['feedback_release'] === 'immediate' ? t('Shown as soon as you submit, for automatically marked questions.') : t('Shown when your teacher releases it.')) ?></dd>
         <?php if ($isQuiz): ?><dt><?= e(t('Answers')) ?></dt><dd><?= e($answerRule) ?></dd><?php endif; ?>
       </dl>

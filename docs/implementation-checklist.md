@@ -17,7 +17,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 106 PHP tests, 62 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 113 PHP tests, 67 browser tests, all passing |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
 
@@ -75,6 +75,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Student preview, publish snapshots, locked questions after attempts | Done | |
 | Review queue, rubric grading, AI grading suggestions (advice only), release | Done | browser test releases a grade |
 | Gradebook with school grading model; CSV export with audit and formula-injection protection | Done | |
+| Scores for work done in class or on paper; printed blank copies and answer keys | Done | Migration 010: assignment kind `paper`, submissions `source`, overrides `absent`. Score grid per assignment (`Services/PaperScores.php`): score, absent, excused, held or released; paper scores count in the gradebook, CSV and progress like online work and respect make-up dates and excused work; never "missing" unless marked absent; audit-logged with counts. Print view of any assignment or quiz, blank or with the key (`Assessments::printable`). PHPUnit `PaperScoresTest`; browser `paper-scores.spec`. Grading periods (item 7) not built yet |
 | Insights with sample sizes and small-group caution | Done | |
 
 ## Administrators
@@ -97,9 +98,9 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Requirement | Status | Notes |
 |---|---|---|
 | Design direction ("field notes meets a learning studio"), Lucide icons, no fake analytics | Done | `docs/design-system.md`; usage and insight numbers come from real records only |
-| Layouts at 1440, 1024 and 390 px | Done | screenshots; phone test on 23 screens |
-| WCAG 2.2 AA structure and contrast | Partial | automated structural checks on 34 screens and contrast maths; no manual screen-reader test |
-| Filipino interface | Done (needs review) | all 2,536 strings translated; companion answers follow the session and question language, in demo mode too; drafted with AI, not yet reviewed by a Filipino teacher |
+| Layouts at 1440, 1024 and 390 px | Done | screenshots; phone test on 25 screens |
+| WCAG 2.2 AA structure and contrast | Partial | automated structural checks on 40 screens and contrast maths; no manual screen-reader test |
+| Filipino interface | Done (needs review) | all 2,634 strings translated; companion answers follow the session and question language, in demo mode too; drafted with AI, not yet reviewed by a Filipino teacher |
 | Text written by scripts is translated | Done | `Services/ScriptStrings.php` via `data-i18n`; `ScriptStringsTest` fails on English literals in `public/assets/js`; browser `script-text.spec` checks Filipino flashcard and companion text |
 | Email delivery, SSO, MFA | Not done | |
 | Virus scanning of uploads | Not done | |

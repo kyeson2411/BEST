@@ -96,6 +96,11 @@ final class AuditLabels
             case 'assignment.override_saved':
                 return !empty($meta['excused']) ? t('Excused a student from an assignment') : t('Gave a student their own due date or extra time');
             case 'assignment.override_removed': return t('Put a student back on the class due date');
+            case 'assignment.paper_scores_saved':
+                return $n('released') > 0
+                    ? tp('Saved scores for work on paper and released :count', 'Saved scores for work on paper and released :count', $n('released'))
+                    : t('Saved scores for work on paper');
+            case 'assignment.printed': return ($meta['copy'] ?? '') === 'key' ? t('Opened the answer key to print') : t('Opened a blank copy to print');
             case 'assignment.deleted': return t('Deleted a draft assignment');
             case 'assignment.answers_released': return t('Released correct answers');
             case 'assignment.ai_questions_drafted': return tp('Drafted :count question with AI', 'Drafted :count questions with AI', max(1, $n('count')));

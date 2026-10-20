@@ -290,9 +290,11 @@ reopening quiz attempts, the notification badge's count-only background check, r
 headings and numbers, the AI check (all 30 cases pass in demo mode and leave nothing behind; a scripted
 model that invents citations, ignores the language or writes graded work fails; one that follows the rules
 passes; its checks are unit-tested with good and bad answers), usernames made from names, sign-in slip codes and
-who may print them, sections and advisers, and the QR encoder (published Reed-Solomon examples, format and
-version bits, and every symbol read back by an independent decoder).
-Last run: **106 tests, all passing**.
+who may print them, sections and advisers, the QR encoder (published Reed-Solomon examples, format and
+version bits, and every symbol read back by an independent decoder), and scores for work on paper (held and
+released scores in the gradebook, absent and excused students, make-up dates, online work left untouched, and
+printed copies without answers or unapproved AI drafts).
+Last run: **113 tests, all passing**.
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -315,8 +317,10 @@ by the page scripts, copying a material, a quiz and a lesson to another section 
 excused student, quiz attempts in offline mode, the live notification badge, demo answers in the session's
 language (including a question written in Filipino), students imported without email setting up their account
 from a printed slip's typed code, an adviser's password slip, a subject teacher's roster slips (and a 404 for a
-student outside their classes), choosing a section adviser, phone-width layout of 23 screens and structural
-accessibility checks on 34 screens. Last run: **62 tests, all passing**.
+student outside their classes), choosing a section adviser, a teacher entering paper scores (a refused score,
+absent and excused students, held then released, seen by the student), the blank copy and the answer key, 404s
+for other teachers, phone-width layout of 25 screens and structural accessibility checks on 40 screens.
+Last run: **67 tests, all passing**.
 
 ## Project layout
 
@@ -440,6 +444,16 @@ tools/             asset scripts (fonts and icons, school images with their orig
   family details stay out of Sibol. The student's dashboard, calendar, reminders, timer and late rules use their
   own date; excused work is not counted and never shows as missing. Answers set to appear "after the due date"
   wait until the latest extension has passed, so they cannot reach a student who has not taken the quiz yet.
+- **Work done in class or on paper.** Tests, performance tasks and activities done on paper are a third kind
+  of work ("In class / on paper") with a date in class and no online submission. Afterwards the teacher types each
+  student's score into a grid (`/teacher/assignments/{id}/scores`), ticks who was absent or excused, and saves the
+  scores held or releases them. A score is stored as a submission marked `paper`, so it counts in the gradebook,
+  the CSV export and student progress exactly like online work, and respects extensions (a make-up date) and
+  excused work. Paper work never shows as missing by itself: until a score is entered it shows "—", and a student
+  marked absent counts as missing until they make it up. The same grid records paper scores for students who did
+  online work on a printed copy (their online submissions are never overwritten). Saving is audit-logged with
+  counts only. Any assignment or quiz prints as a blank copy (no answers; AI drafts not yet approved are left
+  out) or as the teacher's copy with the answer key, which only the class's teachers can open.
 - **Quizzes on weak connections.** Answers are sent about a second after each change and when the page is hidden.
   Until the server confirms them they are also kept in the browser's `sessionStorage` for that tab only (never
   in cookies or long-term storage), restored after a reload and sent again on reconnect; they are removed once
@@ -465,9 +479,9 @@ tools/             asset scripts (fonts and icons, school images with their orig
   labelled controls, error messages tied to their fields, status shown with words and icons, never colour alone,
   reduced-motion support, charts with table views, and layouts that work at 390 px.
 - The browser tests check structure (one heading level 1 per page, unique ids, names for every control and
-  link, image alternatives) on 34 screens and the absence of sideways scrolling on 23 phone screens.
+  link, image alternatives) on 40 screens and the absence of sideways scrolling on 25 phone screens.
   They are not a full audit; test with a screen reader before launch.
-- **Filipino:** every interface string is translated (2,536 of 2,536), for students, teachers and school
+- **Filipino:** every interface string is translated (2,634 of 2,634), for students, teachers and school
   administrators. That includes text written by scripts (save status, card counters, companion progress), which
   the server translates and hands to the page in `data-i18n` attributes, so the JavaScript holds no English.
   Strings added later fall back to English until they are added to `lang/fil.php`; run

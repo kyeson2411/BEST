@@ -10,6 +10,7 @@ use Sibol\Core\Dates;
 use Sibol\Core\Db;
 use Sibol\Core\HttpException;
 use Sibol\Core\Response;
+use Sibol\Core\ValidationException;
 use Sibol\Policies\Access;
 use Sibol\Repositories\TeacherRepo;
 use Sibol\Services\Ai\AiException;
@@ -19,6 +20,7 @@ use Sibol\Services\Ai\Usage;
 use Sibol\Services\Assessments;
 use Sibol\Services\Notifier;
 use Sibol\Services\Overrides;
+use Sibol\Services\PaperScores;
 
 final class SubmissionController extends Controller
 {
@@ -35,6 +37,11 @@ final class SubmissionController extends Controller
     {
         $user = $this->user();
         $a = Access::teacherAssignment($user, $id);
+        if ($a['kind'] === 'paper') {
+            // Nothing is handed in online: the score grid is this work's submissions page.
+            $student = $this->request->int('student');
+            return $this->redirect('/teacher/assignments/' . $id . '/scores' . ($student ? '?student=' . $student . '#adjust' : ''));
+        }
         $filter = $this->request->str('filter');
         $overrides = Overrides::forAssignment($id);
         $rows = Db::all(
@@ -74,12 +81,68 @@ final class SubmissionController extends Controller
         ]);
     }
 
+    /**
+     * The score grid: one row per student for work done in class or on paper (or a printed copy of online
+     * work), with absent and excused. Students who handed the work in online keep their online grading.
+     */
+    public function scores(int $id): Response
+    {
+        $user = $this->user();
+        $a = Access::teacherAssignment($user, $id);
+        $rows = PaperScores::grid($a);
+        $students = [];
+        foreach ($rows as $r) {
+            $students[(int) $r['student_id']] = user_name($r);
+        }
+        $overrides = Overrides::forAssignment($id);
+        $selected = $this->request->int('student');
+        return $this->view('teacher/scores', [
+            'title' => t('Scores: :title', ['title' => $a['title']]),
+            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], '/teacher/assignments/' . $id], [t('Scores'), null]],
+            'a' => $a,
+            'rows' => $rows,
+            'students' => $students,
+            'overrides' => array_intersect_key($overrides, $students),
+            'selected' => $selected !== null && isset($students[$selected]) ? $selected : null,
+        ]);
+    }
+
+    public function saveScores(int $id): Response
+    {
+        $user = $this->user();
+        $a = Access::teacherAssignment($user, $id);
+        $back = '/teacher/assignments/' . $id . '/scores';
+        if ($a['status'] === 'draft') {
+            $this->flash('error', t('Publish this work before entering scores.'));
+            return $this->redirect($back);
+        }
+        if ((float) $a['points_possible'] <= 0) {
+            $this->flash('error', t('Set the points this work is worth before entering scores.'));
+            return $this->redirect($back);
+        }
+        $scores = $this->request->arr('scores');
+        $problems = PaperScores::problems($a, PaperScores::grid($a), $scores);
+        if ($problems) {
+            $errors = [];
+            foreach ($problems as $studentId => $message) {
+                $errors['scores[' . $studentId . ']'] = $message;
+            }
+            throw new ValidationException($errors, $this->request->all(), $back);
+        }
+        $release = $this->request->str('action') === 'release';
+        $counts = PaperScores::save($user, $a, $scores, $this->request->arr('absent'), $this->request->arr('excused'), $release);
+        $this->flash('success', $release
+            ? tp('Scores saved. :count score released to its student.', 'Scores saved. :count scores released to their students.', $counts['released'])
+            : t('Scores saved. Students see them when you release them.'));
+        return $this->redirect($back);
+    }
+
     /** Gives one student their own due date, extra quiz minutes, or excuses them (all three optional). */
     public function saveOverride(int $id): Response
     {
         $user = $this->user();
         $a = Access::teacherAssignment($user, $id);
-        $back = '/teacher/assignments/' . $id . '/submissions';
+        $back = '/teacher/assignments/' . $id . ($a['kind'] === 'paper' ? '/scores' : '/submissions');
         $data = $this->validate([
             'student_id' => 'required|int',
             'due_at' => 'nullable|datetime',
@@ -108,7 +171,7 @@ final class SubmissionController extends Controller
         Overrides::remove($user, $a, $id);
         $name = user_name(Db::one('SELECT given_name, family_name, preferred_name FROM users WHERE id = :u', ['u' => $id]));
         $this->flash('success', t(':name follows the class settings again.', ['name' => $name]));
-        return $this->redirect('/teacher/assignments/' . $assignmentId . '/submissions#adjust');
+        return $this->redirect('/teacher/assignments/' . $assignmentId . ($a['kind'] === 'paper' ? '/scores' : '/submissions') . '#adjust');
     }
 
     /** The student must be active in the assignment's class; anyone else is not found. */
@@ -305,7 +368,11 @@ final class SubmissionController extends Controller
         }
         if ($r['id'] === null) {
             $due = $ov['due_at'] ?? $a['due_at'];
-            return ($due !== null && $due < Db::now()) ? 'missing' : 'not_started';
+            $past = $due !== null && $due < Db::now();
+            if ($ov && (int) $ov['absent'] === 1 && ($ov['due_at'] === null || $past)) {
+                return 'absent';
+            }
+            return $past ? 'missing' : 'not_started';
         }
         if ($r['status'] === 'in_progress') {
             return 'in_progress';

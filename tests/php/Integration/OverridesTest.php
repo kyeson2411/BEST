@@ -199,7 +199,7 @@ final class OverridesTest extends IntegrationTestCase
         $carlo = $this->person('carlo.reyes');
         Overrides::save($ramon, $quiz, (int) $carlo['id'], gmdate('Y-m-d H:i:s', time() + 86400), 0, false);
         $log = Db::one("SELECT * FROM audit_logs WHERE action = 'assignment.override_saved' AND target_id = :a ORDER BY id DESC LIMIT 1", ['a' => (int) $quiz['id']]);
-        self::assertSame(['student_id' => (int) $carlo['id'], 'own_due_date' => true, 'extra_minutes' => 0, 'excused' => false], json_decode((string) $log['metadata'], true));
+        self::assertSame(['student_id' => (int) $carlo['id'], 'own_due_date' => true, 'extra_minutes' => 0, 'excused' => false, 'absent' => false], json_decode((string) $log['metadata'], true));
 
         $path = Privacy::export((int) $carlo['id']);
         try {

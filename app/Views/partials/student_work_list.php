@@ -12,12 +12,19 @@ $labels = [
 ?>
 <ul class="entries">
   <?php foreach ($work as $w):
-      $d = Dates::due($w['due_at']);
+      $d = Dates::due($w['due_at'], (string) $w['kind']);
       $notOpen = (int) ($w['not_open'] ?? 0) === 1;
+      $paper = $w['kind'] === 'paper';
       [$label, $tone] = $labels[$w['bucket']];
       if ($w['bucket'] === 'upcoming' && in_array($w['sub_status'], ['in_progress', 'returned'], true)) {
           $label = $w['sub_status'] === 'returned' ? t('Returned for changes') : ($w['kind'] === 'quiz' ? t('In progress') : t('Draft saved'));
           $tone = 'amber';
+      } elseif ($paper && $w['bucket'] === 'submitted') {
+          $label = t('Waiting for your score');
+      } elseif ($paper && $w['bucket'] === 'overdue') {
+          $label = t('Absent');
+      } elseif ($paper && $w['bucket'] === 'upcoming') {
+          $label = t('In class');
       }
   ?>
     <li class="entry<?= $w['bucket'] === 'overdue' ? ' entry--alert' : '' ?>">
@@ -26,10 +33,10 @@ $labels = [
         <a class="row__title" href="<?= e(url('/student/assignments/' . (int) $w['id'])) ?>"><?= e($w['title']) ?></a>
         <div class="row__meta">
           <?php if ($showClass): ?><span><?= e($w['class_name']) ?></span><?php endif; ?>
-          <span><?= e($w['kind'] === 'quiz' ? t('Quiz') : t('Assignment')) ?></span>
+          <span><?= e(work_kind((string) $w['kind'])) ?></span>
           <?php if ($notOpen): ?>
             <span><?= e(t('Opens :when', ['when' => fmt_date($w['opens_at'], 'datetime_short')])) ?></span>
-          <?php elseif ($w['submitted_at']): ?>
+          <?php elseif ($w['submitted_at'] && !$paper): ?>
             <span><?= e(t('Submitted :when', ['when' => fmt_date($w['submitted_at'], 'datetime_short')])) ?></span>
           <?php else: ?>
             <span><?= e($d['label']) ?></span>

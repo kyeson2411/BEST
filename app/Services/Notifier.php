@@ -113,8 +113,8 @@ final class Notifier
                 $orgId,
                 [(int) $student['id']],
                 'reminder',
-                t('Due soon: :title', ['title' => $row['title']]),
-                \Sibol\Core\Dates::due((string) $row['due_at'])['label'],
+                $row['kind'] === 'paper' ? t('Coming up in class: :title', ['title' => $row['title']]) : t('Due soon: :title', ['title' => $row['title']]),
+                \Sibol\Core\Dates::due((string) $row['due_at'], (string) $row['kind'])['label'],
                 '/student/assignments/' . (int) $row['id'],
                 'due:' . (int) $row['id'] . ':' . (string) $row['due_at']
             );

@@ -122,6 +122,27 @@ final class Assessments
         }
     }
 
+    /**
+     * Questions for a printed copy. The blank copy is for students, so AI drafts the teacher has not
+     * approved are left out and no answer key or explanation is included; the teacher's copy has both.
+     * @return array{questions:list<array<string,mixed>>,left_out:int}
+     */
+    public static function printable(int $assignmentId, bool $withKey): array
+    {
+        $all = self::questions($assignmentId);
+        if ($withKey) {
+            return ['questions' => $all, 'left_out' => 0];
+        }
+        $reviewed = array_values(array_filter($all, static fn ($q) => (int) $q['reviewed'] === 1));
+        return [
+            'questions' => array_map(static function (array $q): array {
+                unset($q['answer_key'], $q['explanation']);
+                return $q;
+            }, $reviewed),
+            'left_out' => count($all) - count($reviewed),
+        ];
+    }
+
     /** Once any student has started, questions are locked (duplicate the assignment to change them). */
     public static function hasAttempts(int $assignmentId): bool
     {
@@ -198,12 +219,16 @@ final class Assessments
             $opens = $assignment['opens_at'] && $assignment['opens_at'] > Db::now()
                 ? t('Opens :date.', ['date' => Dates::format((string) $assignment['opens_at'], 'datetime_short')]) . ' '
                 : '';
+            $subject = [
+                'quiz' => t('New quiz: :title', ['title' => $assignment['title']]),
+                'paper' => t('Coming up in class: :title', ['title' => $assignment['title']]),
+            ][$assignment['kind']] ?? t('New assignment: :title', ['title' => $assignment['title']]);
             Notifier::send(
                 (int) $assignment['organization_id'],
                 Notifier::classStudents((int) $assignment['class_id']),
                 'assignment',
-                ($assignment['kind'] === 'quiz' ? t('New quiz: :title', ['title' => $assignment['title']]) : t('New assignment: :title', ['title' => $assignment['title']])),
-                $opens . $assignment['class_name'] . '. ' . Dates::due((string) $assignment['due_at'])['label'],
+                $subject,
+                $opens . $assignment['class_name'] . '. ' . Dates::due((string) $assignment['due_at'], (string) $assignment['kind'])['label'],
                 '/student/assignments/' . $assignmentId,
                 'assignment:' . $assignmentId
             );
@@ -311,6 +336,16 @@ final class Assessments
         $now = Db::now();
         if (!empty($assignment['excused'])) {
             return [t('Excused'), 'neutral'];
+        }
+        if ($assignment['kind'] === 'paper') {
+            // Done in class: never "missing" unless the teacher marked the student absent.
+            if ($latest && $latest['status'] === 'submitted') {
+                return $latest['feedback_status'] === 'released' ? [t('Graded'), 'leaf'] : [t('Waiting for your score'), 'neutral'];
+            }
+            if (!empty($assignment['absent'])) {
+                return [t('Absent'), 'coral'];
+            }
+            return $assignment['due_at'] !== null && $assignment['due_at'] < $now ? [t('Waiting for your score'), 'neutral'] : [t('Coming up in class'), 'neutral'];
         }
         if ($latest && $latest['status'] === 'returned') {
             return [t('Returned for changes'), 'amber'];

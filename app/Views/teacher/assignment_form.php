@@ -1,11 +1,20 @@
-<?php /** @var string $kind @var list<array> $classes */ ?>
+<?php /** @var string $kind @var list<array> $classes */
+$headings = ['quiz' => t('New quiz'), 'paper' => t('New work in class or on paper')];
+$leads = [
+    'quiz' => t('Set the rules first. You add questions, or draft them from your materials, on the next screen.'),
+    'paper' => t('A test, task or activity done in class or on paper. Students see it with its date; you type the scores into a grid afterwards.'),
+];
+$others = array_diff_key(['assignment' => t('Make an assignment instead'), 'quiz' => t('Make a quiz instead'), 'paper' => t('Done in class or on paper?')], [$kind => true]);
+?>
 <div class="page-head">
   <div class="page-head__text">
-    <h1 class="page-title"><?= e($kind === 'quiz' ? t('New quiz') : t('New assignment')) ?></h1>
-    <p class="page-lead"><?= e($kind === 'quiz' ? t('Set the rules first. You add questions, or draft them from your materials, on the next screen.') : t('Set the basics first. You can add a rubric on the next screen.')) ?></p>
+    <h1 class="page-title"><?= e($headings[$kind] ?? t('New assignment')) ?></h1>
+    <p class="page-lead"><?= e($leads[$kind] ?? t('Set the basics first. You can add a rubric on the next screen.')) ?></p>
   </div>
   <div class="page-actions">
-    <a class="btn btn--quiet" href="<?= e(url('/teacher/assignments/new', ['kind' => $kind === 'quiz' ? 'assignment' : 'quiz'])) ?>"><?= e($kind === 'quiz' ? t('Make an assignment instead') : t('Make a quiz instead')) ?></a>
+    <?php foreach ($others as $other => $label): ?>
+      <a class="btn btn--quiet" href="<?= e(url('/teacher/assignments/new', ['kind' => $other, 'class_id' => $selectedClass ?? null])) ?>"><?= e($label) ?></a>
+    <?php endforeach; ?>
   </div>
 </div>
 <?php if (!$classes): ?>

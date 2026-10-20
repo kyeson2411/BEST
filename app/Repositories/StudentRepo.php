@@ -32,6 +32,7 @@ final class StudentRepo
              WHERE " . Overrides::openSql('a') . ' AND ' . Overrides::notExcusedSql() . "
                AND $due IS NOT NULL
                AND $due BETWEEN UTC_TIMESTAMP() - INTERVAL " . $overdueDays . " DAY AND UTC_TIMESTAMP() + INTERVAL " . $aheadDays . " DAY
+               AND (a.kind <> 'paper' OR $due >= UTC_TIMESTAMP() OR COALESCE(ov.absent, 0) = 1)
                AND NOT EXISTS (SELECT 1 FROM submissions s2 WHERE s2.assignment_id = a.id AND s2.student_id = :u3 AND s2.status = 'submitted')
              ORDER BY ($due < UTC_TIMESTAMP()) DESC, $due ASC
              LIMIT " . $limit,
@@ -170,7 +171,7 @@ final class StudentRepo
         $due = Overrides::dueSql('a');
         $rows = Db::all(
             "SELECT a.id, a.title, a.kind, $due AS due_at, a.due_at AS class_due_at, a.opens_at, a.status, a.points_possible, a.late_policy, a.category, a.time_limit_minutes,
-                    c.id AS class_id, c.name AS class_name, COALESCE(ov.excused, 0) AS excused,
+                    c.id AS class_id, c.name AS class_name, COALESCE(ov.excused, 0) AS excused, COALESCE(ov.absent, 0) AS absent,
                     (a.opens_at IS NOT NULL AND a.opens_at > UTC_TIMESTAMP()) AS not_open,
                     (SELECT s.status FROM submissions s WHERE s.assignment_id = a.id AND s.student_id = :u1 ORDER BY s.attempt_no DESC LIMIT 1) AS sub_status,
                     (SELECT s.submitted_at FROM submissions s WHERE s.assignment_id = a.id AND s.student_id = :u2 AND s.status = 'submitted' ORDER BY s.attempt_no DESC LIMIT 1) AS submitted_at,
@@ -189,6 +190,11 @@ final class StudentRepo
             $submitted = $row['submitted_at'] !== null;
             $graded = $row['released_score'] !== null;
             $overdue = !$submitted && $row['due_at'] !== null && $row['due_at'] < $now;
+            if ($row['kind'] === 'paper' && $overdue && (int) $row['absent'] !== 1) {
+                // Done in class and waiting for its score; it only counts as overdue for a student marked absent.
+                $submitted = true;
+                $overdue = false;
+            }
             $row['bucket'] = (int) $row['excused'] === 1 ? 'excused' : ($graded ? 'graded' : ($submitted ? 'submitted' : ($overdue ? 'overdue' : 'upcoming')));
             if ($filter === 'all' || $filter === $row['bucket']) {
                 $out[] = $row;

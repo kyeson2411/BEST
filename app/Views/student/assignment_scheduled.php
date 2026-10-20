@@ -9,7 +9,7 @@
   <?= icon('clock') ?>
   <div>
     <p class="callout__title"><?= e(t('Opens :when', ['when' => fmt_date($assignment['opens_at'], 'date_long') . ', ' . fmt_date($assignment['opens_at'], 'time')])) ?></p>
-    <p><?= e(t('Your teacher has scheduled this :kind. The instructions and questions appear when it opens.', ['kind' => $assignment['kind'] === 'quiz' ? t('quiz') : t('assignment')])) ?>
+    <p><?= e(t('Your teacher has scheduled this :kind. The instructions and questions appear when it opens.', ['kind' => work_kind((string) $assignment['kind'], true)])) ?>
       <?php if ($assignment['due_at']): ?><?= e(\Sibol\Core\Dates::due($assignment['due_at'])['label']) ?>.<?php endif; ?></p>
   </div>
 </div>

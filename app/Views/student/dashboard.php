@@ -81,7 +81,7 @@ $next = $upcoming[0] ?? null;
       <?php else: ?>
         <ul class="entries">
           <?php foreach ($due as $item):
-              $d = Dates::due($item['due_at']);
+              $d = Dates::due($item['due_at'], (string) $item['kind']);
               $quiz = $item['kind'] === 'quiz';
               $started = in_array($item['sub_status'], ['in_progress', 'returned'], true);
               $action = $quiz ? ($started ? t('Resume quiz') : t('Start quiz')) : ($started ? t('Continue') : t('Open'));
@@ -94,7 +94,7 @@ $next = $upcoming[0] ?? null;
                 <a class="row__title" href="<?= e(url('/student/assignments/' . (int) $item['id'])) ?>"><?= e($item['title']) ?></a>
                 <div class="row__meta">
                   <span><?= e($item['class_name']) ?></span>
-                  <span><?= e($quiz ? t('Quiz') : t('Assignment')) ?><?php if ($quiz && $item['time_limit_minutes']): ?>, <?= e(t(':n minutes', ['n' => (int) $item['time_limit_minutes']])) ?><?php endif; ?></span>
+                  <span><?= e(work_kind((string) $item['kind'])) ?><?php if ($quiz && $item['time_limit_minutes']): ?>, <?= e(t(':n minutes', ['n' => (int) $item['time_limit_minutes']])) ?><?php endif; ?></span>
                 </div>
               </div>
               <div class="entry__aside">

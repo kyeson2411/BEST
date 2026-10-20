@@ -169,6 +169,9 @@ $router->group('/teacher', ['role:teacher'], static function ($r): void {
     $r->post('/assignments/{assignmentId}/questions/{id}/move', [Teacher\AssignmentController::class, 'moveQuestion']);
     $r->post('/assignments/{id}/rubric', [Teacher\AssignmentController::class, 'saveRubric']);
     $r->get('/assignments/{id}/preview', [Teacher\AssignmentController::class, 'preview']);
+    $r->get('/assignments/{id}/print', [Teacher\AssignmentController::class, 'printView']);
+    $r->get('/assignments/{id}/scores', [Teacher\SubmissionController::class, 'scores']);
+    $r->post('/assignments/{id}/scores', [Teacher\SubmissionController::class, 'saveScores']);
     $r->post('/assignments/{id}/publish', [Teacher\AssignmentController::class, 'publish']);
     $r->post('/assignments/{id}/close', [Teacher\AssignmentController::class, 'close']);
     $r->post('/assignments/{id}/reopen', [Teacher\AssignmentController::class, 'reopen']);

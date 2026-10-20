@@ -98,7 +98,7 @@ $materialRow = static function (array $m) use ($aiEnabled, $class): string {
                 <?= partial('entry_date', ['at' => $w['due_at']]) ?>
                 <div class="entry__main">
                   <a class="row__title" href="<?= e(url('/student/assignments/' . (int) $w['id'])) ?>"><?= e($w['title']) ?></a>
-                  <div class="row__meta"><span><?= e($w['kind'] === 'quiz' ? t('Quiz') : t('Assignment')) ?></span></div>
+                  <div class="row__meta"><span><?= e(work_kind((string) $w['kind'])) ?></span></div>
                 </div>
                 <div class="entry__aside"><?= (int) $w['not_open'] ? badge(t('Opens :when', ['when' => fmt_date($w['opens_at'], 'datetime_short')]), 'neutral') : badge($d['label'], $d['tone']) ?></div>
               </li>

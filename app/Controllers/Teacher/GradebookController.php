@@ -61,7 +61,7 @@ final class GradebookController extends Controller
             $row = [$s['family_name'], $s['given_name'], (string) $s['username'], (string) $s['email']];
             foreach ($book['assignments'] as $a) {
                 $cell = $book['cells'][(int) $s['id']][(int) $a['id']] ?? null;
-                $row[] = $cell === null ? '' : ($cell['state'] === 'graded' ? fmt_number($cell['score'], 2) : (['missing' => t('missing'), 'pending' => t('to grade'), 'excused' => t('excused')][$cell['state']] ?? ''));
+                $row[] = $cell === null ? '' : ($cell['state'] === 'graded' ? fmt_number($cell['score'], 2) : (['missing' => t('missing'), 'absent' => t('absent'), 'pending' => t('to grade'), 'excused' => t('excused')][$cell['state']] ?? ''));
             }
             $overall = $book['overall'][(int) $s['id']] ?? null;
             $row[] = $overall && $overall['percent'] !== null ? (string) $overall['percent'] : '';

@@ -106,7 +106,7 @@ $accuracy = percent($overview['correct'], $overview['answers']);
               <?= partial('entry_date', ['at' => $a['due_at']]) ?>
               <div class="entry__main">
                 <a class="row__title" href="<?= e(url('/teacher/assignments/' . (int) $a['id'])) ?>"><?= e($a['title']) ?></a>
-                <div class="row__meta"><span><?= e($a['class_name']) ?></span><span><?= e($a['kind'] === 'quiz' ? t('Quiz') : t('Assignment')) ?></span><span><?= e(fmt_date($a['due_at'], 'time')) ?></span></div>
+                <div class="row__meta"><span><?= e($a['class_name']) ?></span><span><?= e(work_kind((string) $a['kind'])) ?></span><span><?= e(fmt_date($a['due_at'], 'time')) ?></span></div>
               </div>
               <div class="entry__aside" style="min-width: 160px"><?= partial('meter', ['value' => percent($a['submitted'], $a['enrolled']), 'label' => t(':n of :m in', ['n' => (int) $a['submitted'], 'm' => (int) $a['enrolled']])]) ?></div>
             </li>

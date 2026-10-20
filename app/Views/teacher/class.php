@@ -50,7 +50,7 @@ $archived = $class['status'] !== 'active';
               <?= partial('entry_date', ['at' => $w['due_at']]) ?>
               <div class="entry__main">
                 <a class="row__title" href="<?= e(url('/teacher/assignments/' . (int) $w['id'])) ?>"><?= e($w['title']) ?></a>
-                <div class="row__meta"><span><?= e($w['kind'] === 'quiz' ? t('Quiz') : t('Assignment')) ?></span><span><?= e(assignment_status($w)[0]) ?></span>
+                <div class="row__meta"><span><?= e(work_kind((string) $w['kind'])) ?></span><span><?= e(assignment_status($w)[0]) ?></span>
                   <?php if ($w['status'] !== 'draft'): ?><span><?= e(t(':n of :m submitted', ['n' => (int) $w['submitted'], 'm' => count($activeStudents)])) ?></span><?php endif; ?></div>
               </div>
               <div class="entry__aside"><?php if ((int) $w['ungraded'] > 0): ?><a class="btn btn--secondary btn--sm" href="<?= e(url('/teacher/assignments/' . (int) $w['id'] . '/submissions')) ?>"><?= e(tp('Grade :count', 'Grade :count', (int) $w['ungraded'])) ?></a><?php endif; ?></div>

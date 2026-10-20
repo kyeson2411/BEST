@@ -5,6 +5,7 @@
  */
 $a = $assignment;
 $isQuiz = $kind === 'quiz';
+$isPaper = $kind === 'paper';
 [$statusLabel, $statusTone] = assignment_status($a);
 $unreviewed = count(array_filter($questions, static fn ($q) => !(int) $q['reviewed']));
 $typeLabels = ['multiple_choice' => t('Multiple choice'), 'true_false' => t('True or false'), 'short_answer' => t('Short answer'), 'essay' => t('Essay')];
@@ -13,10 +14,11 @@ $base = '/teacher/assignments/' . (int) $a['id'];
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e($a['title']) ?></h1>
-    <p class="page-lead"><?= e($a['class_name']) ?>, <?= e($isQuiz ? t('quiz') : t('assignment')) ?> <?= badge($statusLabel, $statusTone) ?></p>
+    <p class="page-lead"><?= e($a['class_name']) ?>, <?= e(work_kind($kind, true)) ?> <?= badge($statusLabel, $statusTone) ?></p>
   </div>
   <div class="page-actions">
     <a class="btn btn--secondary" href="<?= e(url($base . '/preview')) ?>"><?= icon('eye', 'icon--sm') ?><?= e(t('Preview as a student')) ?></a>
+    <a class="btn btn--secondary" href="<?= e(url($base . '/print')) ?>"><?= icon('printer', 'icon--sm') ?><?= e(t('Print')) ?></a>
     <a class="btn btn--secondary" href="<?= e(url($base)) ?>"><?= e(t('Overview')) ?></a>
     <?php if ($a['status'] === 'draft'): ?>
       <form method="post" action="<?= e(url($base . '/publish')) ?>" data-confirm="<?= e($a['opens_at'] ? t('Students will see it from the opening date and be notified now.') : t('Students in :class will see it now and get a notification.', ['class' => $a['class_name']])) ?>" data-confirm-title="<?= e(t('Publish?')) ?>" data-confirm-action="<?= e(t('Publish')) ?>">
@@ -36,12 +38,13 @@ $base = '/teacher/assignments/' . (int) $a['id'];
 
 <div class="layout-split">
   <div class="stack">
-    <?php if ($isQuiz || $questions): ?>
+    <?php if ($isQuiz || $isPaper || $questions): ?>
       <section class="section" id="questions" aria-labelledby="q-title">
         <div class="section__head">
           <h2 class="section__title" id="q-title"><?= e(t('Questions')) ?> <span class="count"><?= count($questions) ?></span></h2>
           <span class="meta"><?= e(t(':n points in total', ['n' => fmt_number($a['points_possible'], 2)])) ?></span>
         </div>
+        <?php if ($isPaper): ?><p class="section__intro"><?= e(t('Optional. Questions here are printed on the blank copy and the answer key; students do not answer them online.')) ?></p><?php endif; ?>
         <?php if ($unreviewed > 0 && !$locked): ?>
           <div class="callout callout--amber" style="margin-bottom:12px"><?= icon('square-pen') ?><div>
             <p><?= e(tp(':count AI-drafted question needs your review. Read it, correct anything, then approve it.', ':count AI-drafted questions need your review. Read each one, correct anything, then approve it.', $unreviewed)) ?></p>

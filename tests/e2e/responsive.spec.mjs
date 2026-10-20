@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { demoLogin } from './helpers.mjs';
+import { demoLogin, ids } from './helpers.mjs';
 
 // Runs in the "phone" project (390 × 844). Every main screen must fit without sideways
 // scrolling and keep the bottom navigation reachable.
@@ -20,6 +20,15 @@ for (const [role, paths] of Object.entries(screens)) {
     }
   });
 }
+
+test('the score grid and the printable copy fit a phone', async ({ page }) => {
+  await demoLogin(page, 'teacher');
+  for (const path of [`teacher/assignments/${ids().paperTest}/scores`, `teacher/assignments/${ids().paperTest}/print?copy=key`]) {
+    await page.goto(path);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(overflow, `${path} scrolls sideways by ${overflow}px`).toBeLessThanOrEqual(0);
+  }
+});
 
 test('the sign-in page fits a phone with the seal pinned to the photo', async ({ page }) => {
   await page.goto('');

@@ -162,6 +162,19 @@ function role_label(string $role): string
     }
 }
 
+/** "Quiz", "Assignment" or "In class / on paper" (lower case for mid-sentence use). */
+function work_kind(string $kind, bool $lower = false): string
+{
+    switch ($kind) {
+        case 'quiz':
+            return $lower ? t('quiz') : t('Quiz');
+        case 'paper':
+            return $lower ? t('in class / on paper') : t('In class / on paper');
+        default:
+            return $lower ? t('assignment') : t('Assignment');
+    }
+}
+
 /** Plain-language assignment status ("Scheduled" when published but not yet open). @return array{0:string,1:string} */
 function assignment_status(array $a): array
 {
