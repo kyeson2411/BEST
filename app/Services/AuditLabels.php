@@ -102,6 +102,7 @@ final class AuditLabels
             case 'submission.feedback_released':
                 return $n('count') > 1 ? tp('Released feedback to :count student', 'Released feedback to :count students', $n('count')) : t('Released feedback');
             case 'submission.returned': return t('Returned work for resubmission');
+            case 'submission.reopened': return t('Reopened a quiz attempt');
             case 'submission.ai_suggestion': return t('Asked for an AI grading suggestion');
             case 'gradebook.exported': return t('Exported a gradebook');
             case 'insights.ideas_requested': return t('Asked for reteaching ideas');

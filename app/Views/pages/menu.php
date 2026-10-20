@@ -11,7 +11,7 @@
   <li class="row">
     <span class="row__lead"><?= icon('log-out') ?></span>
     <div class="row__main">
-      <form method="post" action="<?= e(url('/logout')) ?>"><?= csrf_field() ?><button class="link-btn" type="submit"><?= e(t('Sign out')) ?></button></form>
+      <form method="post" action="<?= e(url('/logout')) ?>" data-signout><?= csrf_field() ?><button class="link-btn" type="submit"><?= e(t('Sign out')) ?></button></form>
     </div>
   </li>
 </ul>

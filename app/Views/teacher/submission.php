@@ -2,12 +2,13 @@
 /**
  * @var array $sub @var array $a @var array $student @var list<array> $questions @var array $answers @var list<array> $files @var array $rubric
  * @var array $rubricScores @var list<array> $history @var array|null $suggestion @var bool $aiAvailable @var int|null $prevId @var int|null $nextId
+ * @var bool $canReopen @var int $reopenMinutes
  */
 use Sibol\Core\Uploads;
 
 $released = $sub['feedback_status'] === 'released';
 $base = '/teacher/submissions/' . (int) $sub['id'];
-$historyLabels = ['submitted' => t('Submitted by the student'), 'graded' => t('Grade saved'), 'released' => t('Released to the student'), 'returned' => t('Returned for changes')];
+$historyLabels = ['submitted' => t('Submitted by the student'), 'graded' => t('Grade saved'), 'released' => t('Released to the student'), 'returned' => t('Returned for changes'), 'reopened' => t('Reopened for the student')];
 ?>
 <div class="page-head">
   <div class="page-head__text">
@@ -156,6 +157,17 @@ $historyLabels = ['submitted' => t('Submitted by the student'), 'graded' => t('G
         <?= csrf_field() ?>
         <?= field('textarea', 'note', t('What should the student change?'), ['rows' => 3, 'required' => true, 'attrs' => ['maxlength' => 2000]]) ?>
         <button class="btn btn--secondary" type="submit"><?= icon('rotate-ccw', 'icon--sm') ?><?= e(t('Return to student')) ?></button>
+      </form>
+    </section>
+  <?php endif; ?>
+  <?php if ($canReopen): ?>
+    <section class="panel" aria-labelledby="reopen-title">
+      <h2 class="panel__title" id="reopen-title"><?= e(t('Reopen this attempt')) ?></h2>
+      <p class="meta"><?= e(t('For example when time ran out while the student was offline. Their saved answers stay; marks are cleared until they submit again. The time starts when they open it.')) ?></p>
+      <form method="post" action="<?= e(url($base . '/reopen')) ?>" data-confirm="<?= e(t('The student can change their answers and submit again. Marks for this attempt are cleared until then.')) ?>" data-confirm-title="<?= e(t('Reopen this attempt?')) ?>" data-confirm-action="<?= e(t('Reopen')) ?>">
+        <?= csrf_field() ?>
+        <?= field('number', 'minutes', t('Minutes to finish'), ['value' => (string) $reopenMinutes, 'required' => true, 'attrs' => ['min' => 1, 'max' => \Sibol\Services\Overrides::MAX_EXTRA_MINUTES]]) ?>
+        <button class="btn btn--secondary" type="submit"><?= icon('timer', 'icon--sm') ?><?= e(t('Reopen for the student')) ?></button>
       </form>
     </section>
   <?php endif; ?>

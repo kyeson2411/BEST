@@ -1,4 +1,4 @@
-<?php /** @var array $assignment @var array $submission @var list<array> $files @var int $answered @var int $questionCount */
+<?php /** @var array $assignment @var array $submission @var list<array> $files @var int $answered @var int $questionCount @var list<array> $savedAnswers */
 use Sibol\Core\Uploads;
 ?>
 <div class="page-head">
@@ -26,6 +26,24 @@ use Sibol\Core\Uploads;
     <?php endif; ?>
   </dl>
 </section>
+
+<?php if ($savedAnswers): ?>
+  <section class="section" aria-labelledby="saved-title" style="max-width: 640px; margin-top: 32px">
+    <div class="section__head"><h2 class="section__title" id="saved-title"><?= e(t('Answers that reached your teacher')) ?></h2></div>
+    <?php if ($answered < $questionCount): ?>
+      <p class="meta"><?= e(t('Answers that never reached the server, for example because the connection dropped as time ran out, are not part of this attempt. If that happened, tell your teacher: they can reopen the attempt.')) ?></p>
+    <?php endif; ?>
+    <ul class="rows">
+      <?php foreach ($savedAnswers as $q): ?>
+        <li class="row" style="padding: 8px 0">
+          <div class="row__main"><span class="row__title"><?= e(t('Question :n', ['n' => $q['n']])) ?></span>
+            <div class="row__meta"><span><?= e(str_limit(trim(strip_tags(markdown($q['prompt']))), 90)) ?></span></div></div>
+          <span class="row__aside"><?= $q['saved'] ? badge(t('Saved'), 'leaf', 'check') : badge(t('No answer saved'), 'neutral') ?></span>
+        </li>
+      <?php endforeach; ?>
+    </ul>
+  </section>
+<?php endif; ?>
 
 <section class="section" aria-labelledby="next-title" style="max-width: 640px">
   <div class="section__head"><h2 class="section__title" id="next-title"><?= e(t('What happens next')) ?></h2></div>

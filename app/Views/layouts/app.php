@@ -125,7 +125,7 @@ $bottomItems = array_slice($bottomItems, 0, 4);
             <a class="menu__item" role="menuitem" href="<?= e(url('/privacy')) ?>"><?= icon('shield-check', 'icon--sm') ?><?= e(t('Privacy notice')) ?></a>
             <a class="menu__item" role="menuitem" href="<?= e(url('/help')) ?>"><?= icon('circle-help', 'icon--sm') ?><?= e(t('Help')) ?></a>
             <div class="menu__sep" role="separator"></div>
-            <form method="post" action="<?= e(url('/logout')) ?>">
+            <form method="post" action="<?= e(url('/logout')) ?>" data-signout>
               <?= csrf_field() ?>
               <button class="menu__item" role="menuitem" type="submit"><?= icon('log-out', 'icon--sm') ?><?= e(t('Sign out')) ?></button>
             </form>

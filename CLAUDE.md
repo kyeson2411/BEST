@@ -81,3 +81,6 @@ The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL m
 - `db:reset` and the browser tests delete stored uploads as well as tables.
 - Materials copied to other sections share stored files (`material_versions.stored_path`). Anything that deletes a
   material file must first check that no other version still points to it.
+- `quiz.js` keeps unsent answers in `sessionStorage` (`sibol.quiz.<submission id>`); `app.js` removes every
+  `sibol.*` key on sign-out (`form[data-signout]`) and on the sign-in pages (`body[data-signed-out]`). Page scripts
+  that handle a submit themselves call `preventDefault()`; `app.js` then skips its confirm and busy handling.

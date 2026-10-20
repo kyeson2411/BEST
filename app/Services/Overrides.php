@@ -185,7 +185,8 @@ final class Overrides
             return;
         }
         $view = self::apply($assignment, $studentId);
-        foreach (Db::all("SELECT id, started_at FROM submissions WHERE assignment_id = :a AND student_id = :u AND status = 'in_progress'", ['a' => (int) $assignment['id'], 'u' => $studentId]) as $sub) {
+        // A reopened attempt keeps the minutes its teacher gave it.
+        foreach (Db::all("SELECT id, started_at FROM submissions WHERE assignment_id = :a AND student_id = :u AND status = 'in_progress' AND resume_minutes IS NULL", ['a' => (int) $assignment['id'], 'u' => $studentId]) as $sub) {
             $deadline = Assessments::attemptDeadline($view, (int) strtotime($sub['started_at'] . ' UTC'));
             Db::update('submissions', ['deadline_at' => $deadline !== null ? gmdate('Y-m-d H:i:s', $deadline) : null, 'updated_at' => Db::now()], ['id' => (int) $sub['id']]);
         }

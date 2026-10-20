@@ -233,6 +233,7 @@ final class AssignmentController extends Controller
         if (!$snapshot) {
             throw new HttpException(409, t('This quiz has no published questions yet.'));
         }
+        $sub = Assessments::resumeReopened($sub);
         if ($this->expired($sub, 0)) {
             $sub = Assessments::submitAttempt($assignment, $sub, $snapshot);
             $this->flash('warning', t('Time was up, so your saved answers were submitted.'));
@@ -305,6 +306,7 @@ final class AssignmentController extends Controller
             'files' => Db::all('SELECT * FROM submission_files WHERE submission_id = :s ORDER BY id', ['s' => $id]),
             'answered' => (int) Db::value("SELECT COUNT(*) FROM submission_answers WHERE submission_id = :s AND response IS NOT NULL AND response <> ''", ['s' => $id]),
             'questionCount' => count((Assessments::snapshotFor($sub['assignment_version_id'] !== null ? (int) $sub['assignment_version_id'] : null) ?? [])['questions'] ?? []),
+            'savedAnswers' => $assignment['kind'] === 'quiz' ? Assessments::savedAnswers($sub) : [],
         ]);
     }
 

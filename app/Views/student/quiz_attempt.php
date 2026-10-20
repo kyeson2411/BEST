@@ -4,7 +4,8 @@ $deadline = $submission['deadline_at'] ? \Sibol\Core\Dates::format($submission['
 $answered = count(array_filter($saved, static fn ($v) => trim((string) $v) !== ''));
 ?>
 <form method="post" action="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/attempt')) ?>" id="quiz-form" data-quiz
-      data-autosave-url="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/attempt')) ?>" data-no-busy
+      data-attempt="<?= (int) $submission['id'] ?>" data-autosave-url="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/attempt')) ?>"
+      data-assignment-url="<?= e(url('/student/assignments/' . (int) $assignment['id'])) ?>" data-no-busy
       data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::quiz()) ?>">
   <?= csrf_field() ?>
   <div class="quiz-bar">
@@ -20,7 +21,11 @@ $answered = count(array_filter($saved, static fn ($v) => trim((string) $v) !== '
         </span>
       <?php endif; ?>
     </div>
+    <?php /* Connection notices from quiz.js (offline, answers restored, back online), kept in the sticky bar so
+             they stay in view; the same text goes to the live region below for screen readers. */ ?>
+    <div class="callout callout--amber" data-connection hidden style="flex: 1 1 100%"><?= icon('wifi-off') ?><p data-connection-text></p></div>
   </div>
+  <p class="sr-only" role="status" aria-live="polite" data-connection-live></p>
 
   <?php if (trim((string) $assignment['instructions']) !== ''): ?>
     <details class="how" style="margin-bottom: 16px">
@@ -71,6 +76,6 @@ $answered = count(array_filter($saved, static fn ($v) => trim((string) $v) !== '
     <button class="btn btn--secondary" type="submit" name="action" value="save"><?= icon('save', 'icon--sm') ?><?= e(t('Save answers')) ?></button>
     <button class="btn btn--primary" type="submit" name="action" value="submit"
             data-confirm="<?= e(t('You cannot change your answers after submitting.')) ?>" data-confirm-title="<?= e(t('Submit this quiz?')) ?>" data-confirm-action="<?= e(t('Submit quiz')) ?>"><?= icon('send', 'icon--sm') ?><?= e(t('Submit quiz')) ?></button>
-    <span class="meta"><?= e(t('Answers also save automatically every 30 seconds.')) ?></span>
+    <span class="meta"><?= e(t('Answers save as you go and stay on this device if the connection drops.')) ?></span>
   </div>
 </form>

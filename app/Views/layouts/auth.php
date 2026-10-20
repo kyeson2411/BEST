@@ -29,7 +29,7 @@ $photoAlt = trim((string) ($school['photo_alt'] ?? ''))
   <link rel="preload" href="<?= e(url('/assets/fonts/besley-latin-wght-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
 </head>
-<body data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::common()) ?>">
+<body data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::common()) ?>" data-signed-out>
 <a class="skip-link" href="#main"><?= e(t('Skip to content')) ?></a>
 <div class="auth">
   <div class="auth__photo">

@@ -155,6 +155,8 @@ final class SubmissionController extends Controller
             'aiAvailable' => !(Providers::make()->isDemo()),
             'prevId' => $pos !== false && $pos > 0 ? $ids[$pos - 1] : null,
             'nextId' => $pos !== false && $pos < count($ids) - 1 ? $ids[$pos + 1] : null,
+            'canReopen' => Assessments::canReopen($sub, $a),
+            'reopenMinutes' => max(10, (int) (Overrides::find((int) $a['id'], (int) $sub['student_id'])['extra_minutes'] ?? 0)),
             'katex' => true,
             'scripts' => ['grading.js'],
         ]);
@@ -247,6 +249,21 @@ final class SubmissionController extends Controller
         Notifier::send((int) $user['organization_id'], [(int) $sub['student_id']], 'feedback', t('Returned for changes: :title', ['title' => $a['title']]), t('Your teacher asked you to revise and resubmit.'), '/student/assignments/' . (int) $a['id']);
         Audit::log('submission.returned', 'submission', $id);
         $this->flash('success', t('Returned to the student with your note.'));
+        return $this->redirect('/teacher/assignments/' . (int) $a['id'] . '/submissions');
+    }
+
+    /** Reopens a student's latest quiz attempt with a few minutes to finish, starting when they open it. */
+    public function reopen(int $id): Response
+    {
+        $user = $this->user();
+        [$sub, $a] = Access::teacherSubmission($user, $id);
+        if (!Assessments::canReopen($sub, $a)) {
+            throw new HttpException(409, t('Only a student\'s latest submitted quiz attempt can be reopened.'));
+        }
+        $data = $this->validate(['minutes' => 'required|int|min:1|max:' . Overrides::MAX_EXTRA_MINUTES], ['minutes' => t('Minutes to finish')], '/teacher/submissions/' . $id . '#reopen-title');
+        Assessments::reopenAttempt($sub, $a, (int) $user['id'], (int) $data['minutes']);
+        $name = user_name(Db::one('SELECT given_name, family_name, preferred_name FROM users WHERE id = :u', ['u' => (int) $sub['student_id']]));
+        $this->flash('success', tp('Reopened for :name: :count minute to finish, starting when they open it.', 'Reopened for :name: :count minutes to finish, starting when they open it.', (int) $data['minutes'], ['name' => $name]));
         return $this->redirect('/teacher/assignments/' . (int) $a['id'] . '/submissions');
     }
 

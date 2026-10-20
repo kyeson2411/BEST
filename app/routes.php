@@ -174,6 +174,7 @@ $router->group('/teacher', ['role:teacher'], static function ($r): void {
     $r->post('/submissions/{id}/grade', [Teacher\SubmissionController::class, 'grade']);
     $r->post('/submissions/{id}/release', [Teacher\SubmissionController::class, 'release']);
     $r->post('/submissions/{id}/return', [Teacher\SubmissionController::class, 'returnForResubmission']);
+    $r->post('/submissions/{id}/reopen', [Teacher\SubmissionController::class, 'reopen']);
     $r->post('/submissions/{id}/suggest', [Teacher\SubmissionController::class, 'suggest']);
 
     $r->get('/gradebook', [Teacher\GradebookController::class, 'index']);

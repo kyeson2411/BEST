@@ -413,6 +413,79 @@ final class Assessments
         return $deadline;
     }
 
+    /**
+     * Reopens a submitted quiz attempt, for example when time ran out while the student was offline.
+     * Saved answers stay; marks and release are cleared until it is submitted again. The student gets
+     * $minutes from the moment they open it again (resumeReopened).
+     */
+    public static function reopenAttempt(array $submission, array $assignment, int $teacherId, int $minutes): void
+    {
+        $id = (int) $submission['id'];
+        Db::transaction(static function () use ($id, $teacherId, $minutes): void {
+            Db::update('submissions', [
+                'status' => 'in_progress', 'submitted_at' => null, 'deadline_at' => null, 'resume_minutes' => $minutes,
+                'is_late' => 0, 'auto_score' => null, 'score' => null, 'grading_status' => 'ungraded',
+                'feedback_status' => 'none', 'released_at' => null, 'graded_at' => null, 'updated_at' => Db::now(),
+            ], ['id' => $id]);
+            Db::exec('UPDATE submission_answers SET is_correct = NULL, points_awarded = NULL, needs_manual = 0 WHERE submission_id = :s', ['s' => $id]);
+            Db::insert('grading_history', [
+                'submission_id' => $id, 'actor_id' => $teacherId, 'action' => 'reopened',
+                'detail' => json_encode(['minutes' => $minutes]), 'created_at' => Db::now(),
+            ]);
+        });
+        Notifier::send(
+            (int) $assignment['organization_id'],
+            [(int) $submission['student_id']],
+            'reminder',
+            t('Reopened: :title', ['title' => $assignment['title']]),
+            tp('You have :count minute to finish, starting when you open it.', 'You have :count minutes to finish, starting when you open it.', $minutes),
+            '/student/assignments/' . (int) $assignment['id'],
+            'reopened:' . $id . ':' . time()
+        );
+        Audit::log('submission.reopened', 'submission', $id, ['minutes' => $minutes]);
+    }
+
+    /** Only a student's latest quiz attempt, once submitted, can be reopened. */
+    public static function canReopen(array $submission, array $assignment): bool
+    {
+        if ($assignment['kind'] !== 'quiz' || $submission['status'] !== 'submitted') {
+            return false;
+        }
+        $latest = (int) Db::value('SELECT MAX(attempt_no) FROM submissions WHERE assignment_id = :a AND student_id = :u', ['a' => (int) $assignment['id'], 'u' => (int) $submission['student_id']]);
+        return (int) $submission['attempt_no'] === $latest;
+    }
+
+    /** Starts the clock of a reopened attempt the first time the student opens it again. @return array<string,mixed> */
+    public static function resumeReopened(array $submission): array
+    {
+        if ($submission['status'] !== 'in_progress' || $submission['resume_minutes'] === null || $submission['deadline_at'] !== null) {
+            return $submission;
+        }
+        Db::update('submissions', [
+            'deadline_at' => gmdate('Y-m-d H:i:s', time() + (int) $submission['resume_minutes'] * 60),
+            'updated_at' => Db::now(),
+        ], ['id' => (int) $submission['id']]);
+        return Db::one('SELECT * FROM submissions WHERE id = :id', ['id' => (int) $submission['id']]);
+    }
+
+    /**
+     * For the receipt: every question of the attempt in order, and whether an answer reached the server.
+     * @return list<array{n:int,prompt:string,saved:bool}>
+     */
+    public static function savedAnswers(array $submission): array
+    {
+        $snapshot = self::snapshotFor($submission['assignment_version_id'] !== null ? (int) $submission['assignment_version_id'] : null);
+        $given = [];
+        foreach (Db::all("SELECT question_id FROM submission_answers WHERE submission_id = :s AND response IS NOT NULL AND response <> ''", ['s' => (int) $submission['id']]) as $row) {
+            $given[(int) $row['question_id']] = true;
+        }
+        $out = [];
+        foreach ($snapshot['questions'] ?? [] as $i => $q) {
+            $out[] = ['n' => $i + 1, 'prompt' => (string) $q['prompt'], 'saved' => isset($given[(int) $q['id']])];
+        }
+        return $out;
+    }
+
     /** Saves in-progress answers. @param array<int|string,mixed> $answers question id => response */
     public static function saveAnswers(array $submission, array $snapshot, array $answers): void
     {

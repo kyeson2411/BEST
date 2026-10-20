@@ -100,7 +100,8 @@
 
   doc.addEventListener('submit', function (event) {
     var form = event.target;
-    if (!(form instanceof HTMLFormElement)) return;
+    // A page script (quiz.js) already took care of this submission.
+    if (event.defaultPrevented || !(form instanceof HTMLFormElement)) return;
     var submitter = event.submitter || null;
     // A button can carry its own confirmation (e.g. "Submit" next to "Save draft").
     var source = submitter && submitter.hasAttribute('data-confirm') ? submitter : (form.hasAttribute('data-confirm') ? form : null);
@@ -136,7 +137,8 @@
 
   /* Busy state on submit: prevents double submission and says what is happening. */
   function markBusy(form, submitter) {
-    if (form.hasAttribute('data-no-busy') || form.method.toLowerCase() === 'get') return;
+    // Only forms that post to the server; a dialog's own form (method="dialog") just closes it.
+    if (form.hasAttribute('data-no-busy') || form.method.toLowerCase() !== 'post') return;
     var btn = submitter || $('button[type="submit"], button:not([type])', form);
     if (!btn || btn.classList.contains('is-busy')) return;
     var label = btn.getAttribute('data-busy') || S('busy');
@@ -303,7 +305,8 @@
       if (left === 0) {
         clearInterval(timer);
         var form = el.getAttribute('data-autosubmit-form') ? $(el.getAttribute('data-autosubmit-form')) : null;
-        if (form) {
+        // A page script can take over (quiz.js waits for the connection); otherwise hand the form in.
+        if (form && form.dispatchEvent(new CustomEvent('sibol:timeup', { cancelable: true }))) {
           var finalAction = doc.createElement('input');
           finalAction.type = 'hidden';
           finalAction.name = 'action';
@@ -327,6 +330,19 @@
       if (dirty) { event.preventDefault(); event.returnValue = ''; }
     });
   });
+
+  /* Answers a quiz kept in this tab for sending later are removed on sign-out, and on the sign-in
+     pages (an idle sign-out ends there too). */
+  function forgetKept() {
+    try {
+      for (var i = sessionStorage.length - 1; i >= 0; i--) {
+        var k = sessionStorage.key(i);
+        if (k && k.indexOf('sibol.') === 0) sessionStorage.removeItem(k);
+      }
+    } catch (e) { /* storage blocked: nothing was kept */ }
+  }
+  $all('form[data-signout]').forEach(function (f) { f.addEventListener('submit', forgetKept); });
+  if (doc.body.hasAttribute('data-signed-out')) forgetKept();
 
   /* Back buttons on error pages */
   $all('[data-history-back]').forEach(function (b) {

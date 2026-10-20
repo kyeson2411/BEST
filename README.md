@@ -248,7 +248,8 @@ source-wrapping, password rules, translations (including a check that the script
 against the database: class and record permissions,
 permission-filtered retrieval (other sections, drafts and scheduled materials never reach a prompt),
 a full demo companion turn, data export and erasure, daily limits and usage accounting, audit-log hygiene and
-retention purging, copying work to other sections without exposing drafts, and extensions and excused work. Last run: **69 tests, all passing**.
+retention purging, copying work to other sections without exposing drafts, extensions and excused work, and
+reopening quiz attempts. Last run: **72 tests, all passing**.
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -268,8 +269,8 @@ approved before publishing, a student taking it and receiving a receipt, grade r
 cited sources and answer reporting, administrator invitation and one-time links, CSV import with a preview,
 class setup, a policy switch, a data export downloaded only by its owner, the audit log, Filipino text written
 by the page scripts, copying a material, a quiz and a lesson to another section as drafts, an extension and an
-excused student, phone-width layout of 21 screens and structural accessibility checks on 31 screens.
-Last run: **50 tests, all passing**.
+excused student, quiz attempts in offline mode, phone-width layout of 21 screens and structural accessibility
+checks on 31 screens. Last run: **55 tests, all passing**.
 
 ## Project layout
 
@@ -374,6 +375,12 @@ tools/             asset scripts (fonts and icons, school images with their orig
   family details stay out of Sibol. The student's dashboard, calendar, reminders, timer and late rules use their
   own date; excused work is not counted and never shows as missing. Answers set to appear "after the due date"
   wait until the latest extension has passed, so they cannot reach a student who has not taken the quiz yet.
+- **Quizzes on weak connections.** Answers are sent about a second after each change and when the page is hidden.
+  Until the server confirms them they are also kept in the browser's `sessionStorage` for that tab only (never
+  in cookies or long-term storage), restored after a reload and sent again on reconnect; they are removed once
+  saved, on submit and on sign-out. Submitting while offline waits for the connection. If time runs out offline,
+  the receipt lists which answers reached the server, and the teacher can reopen the attempt with a few minutes
+  that start when the student opens it again.
 - People can ask for a copy of their data, a correction or deletion from their account settings.
   Administrators prepare exports (downloadable only by the requester, for 14 days) or erase personal data
   (the account is anonymised; school records are kept unless the administrator chooses to delete them too).

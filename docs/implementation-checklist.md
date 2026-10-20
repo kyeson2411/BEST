@@ -16,7 +16,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 69 PHP tests, 50 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 72 PHP tests, 55 browser tests, all passing |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
 
@@ -38,6 +38,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Assignment submission (text and files), receipts | Done | |
 | Extensions, extra quiz time and excused work per student | Done | `Services/Overrides.php`, set on the submissions page; own dates drive the dashboard, calendar, reminders, nav count, timers and late rules; excused work not counted or missing; "after the due date" answers wait for the latest extension (PHPUnit `OverridesTest`, browser `extensions.spec`) |
 | Quizzes: attempts, time limit, autosave, auto-marking | Done | browser quiz flow; `GradingTest` |
+| Quiz attempts that survive bad connections | Done | `quiz.js`: save after each change and on hide, unsent answers in `sessionStorage` (cleared on save, submit, sign-out), offline notice, resend on reconnect; receipt lists saved answers; teacher reopens with minutes (migration 008). PHPUnit `QuizAttemptsTest`; browser `quiz-offline.spec` in Playwright's offline mode |
 | Companion modes: explain, step-by-step, practice quiz, flashcards, summary, study plan, vocabulary EN/FIL, ask class materials | Done (demo mode) | live-model behaviour untested |
 | Streaming, stop, regenerate | Done (demo mode) | |
 | Citations to the exact source passage | Done | `Citations::resolve`; `CitationsTest`; browser test checks source tags |

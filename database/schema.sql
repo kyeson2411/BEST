@@ -836,3 +836,12 @@ CREATE TABLE assignment_overrides (
 
 INSERT INTO schema_migrations (version, applied_at) VALUES ('007_assignment_overrides.sql', UTC_TIMESTAMP());
 
+-- ---------------------------------------------------------------- 008_attempt_reopen.sql
+-- 008: a teacher can reopen a submitted quiz attempt (for example when time ran out while the
+-- student was offline). The student gets resume_minutes from the moment they open it again.
+
+ALTER TABLE submissions
+  ADD COLUMN resume_minutes SMALLINT UNSIGNED NULL AFTER deadline_at;
+
+INSERT INTO schema_migrations (version, applied_at) VALUES ('008_attempt_reopen.sql', UTC_TIMESTAMP());
+

@@ -19,6 +19,8 @@ $days = (int) ($privacy['ai_retention_days'] ?? 365);
   <ul>
     <li><?= e(t('Your account: name, school email, role, grade level, optional photo, language and accessibility preferences.')) ?></li>
     <li><?= e(t('Your classes, the work you submit (answers and files), and the grades and feedback your teachers release to you.')) ?></li>
+    <li><?= e(t('Changes your teachers make to your deadlines: your own due date, extra time on a quiz, or being excused. No reason is recorded.')) ?></li>
+    <li><?= e(t('While you take a quiz, answers that have not reached Sibol yet are kept in that browser tab only, and removed once they arrive, when you submit, or when you sign out.')) ?></li>
     <li><?= e(t('Your own study activity: which materials you opened, practice sets, flashcards and study sessions you planned.')) ?></li>
     <li><?= e(t('Your companion conversations: the questions you ask and the answers, with the sources they cite.')) ?></li>
     <li><?= e(t('Security records: when you signed in and important changes, with a scrambled network identifier. Passwords are stored only as one-way hashes.')) ?></li>
