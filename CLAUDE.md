@@ -75,3 +75,5 @@ The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL m
 - `Response::file()` adds a sandbox CSP; inline PDFs replace it with `frame-ancestors 'none'` so the viewer works.
 - Demo sign-in and `/setup` only work with `APP_ENV=local` from the same computer.
 - `db:reset` and the browser tests delete stored uploads as well as tables.
+- Materials copied to other sections share stored files (`material_versions.stored_path`). Anything that deletes a
+  material file must first check that no other version still points to it.

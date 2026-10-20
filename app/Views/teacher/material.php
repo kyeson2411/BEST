@@ -113,6 +113,7 @@ $working = in_array($status, ['uploaded', 'extracting', 'indexing'], true);
         </form>
       <?php endif; ?>
     </section>
+    <?= partial('copy_to_sections', $copyPanel) ?>
     <?php if ($isFile): ?>
       <section class="panel" aria-labelledby="ver-title">
         <h2 class="panel__title" id="ver-title"><?= e(t('Versions')) ?></h2>

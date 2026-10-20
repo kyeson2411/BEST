@@ -16,9 +16,12 @@ use Sibol\Policies\Access;
 use Sibol\Repositories\TeacherRepo;
 use Sibol\Services\Ingestion;
 use Sibol\Services\Materials;
+use Sibol\Services\SectionCopies;
 
 final class MaterialController extends Controller
 {
+    use CopiesToSections;
+
     public function index(): Response
     {
         $user = $this->user();
@@ -166,8 +169,17 @@ final class MaterialController extends Controller
             'views' => (int) Db::value("SELECT COUNT(DISTINCT user_id) FROM content_views WHERE content_type = 'material' AND content_id = :m", ['m' => $id]),
             'students' => (int) Db::value("SELECT COUNT(*) FROM class_memberships WHERE class_id = :c AND role = 'student' AND status = 'active'", ['c' => (int) $material['class_id']]),
             'maxMb' => (int) round(Uploads::maxBytes() / 1048576),
+            'copyPanel' => SectionCopies::panel($user, 'material', $material),
             'scripts' => ['materials.js'],
         ]);
+    }
+
+    /** Copies the material into other sections the teacher teaches, as drafts. */
+    public function copy(int $id): Response
+    {
+        Access::teacherMaterial($this->user(), $id);
+        $this->copyToSections('material', $id, '/teacher/materials/' . $id);
+        return $this->redirect('/teacher/materials/' . $id);
     }
 
     public function update(int $id): Response

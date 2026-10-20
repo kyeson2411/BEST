@@ -16,7 +16,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 47 PHP tests, 41 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 59 PHP tests, 45 browser tests, all passing |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
 
@@ -65,6 +65,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Dashboard, classes, roster, modules, announcements | Done | |
 | Materials library with processing states and versions | Done | PDF (per page), DOCX, PPTX (per slide), TXT, MD, links |
 | Lesson studio with AI draft and publish | Done | |
+| Copy materials, assignments/quizzes and lessons to other sections | Done | `Services/SectionCopies.php`; copies are drafts, modules matched by title, questions keep review state, linked materials remapped; copied passages carry the new class id so retrieval stays filtered in SQL (PHPUnit `SectionCopiesTest`, browser `section-copies.spec`) |
 | Assignment and quiz builder; AI question drafts must be approved | Done | browser quiz flow blocks publishing until approval |
 | Student preview, publish snapshots, locked questions after attempts | Done | |
 | Review queue, rubric grading, AI grading suggestions (advice only), release | Done | browser test releases a grade |

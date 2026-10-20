@@ -137,6 +137,7 @@ $router->group('/teacher', ['role:teacher'], static function ($r): void {
     $r->post('/materials/{id}/visibility', [Teacher\MaterialController::class, 'visibility']);
     $r->post('/materials/{id}/version', [Teacher\MaterialController::class, 'uploadVersion']);
     $r->post('/materials/{id}/process', [Teacher\MaterialController::class, 'process']);
+    $r->post('/materials/{id}/copy', [Teacher\MaterialController::class, 'copy']);
     $r->get('/materials/{id}/status', [Teacher\MaterialController::class, 'status']);
 
     $r->get('/assignments', [Teacher\AssignmentController::class, 'index']);
@@ -160,6 +161,7 @@ $router->group('/teacher', ['role:teacher'], static function ($r): void {
     $r->post('/assignments/{id}/reopen', [Teacher\AssignmentController::class, 'reopen']);
     $r->post('/assignments/{id}/archive', [Teacher\AssignmentController::class, 'archive']);
     $r->post('/assignments/{id}/duplicate', [Teacher\AssignmentController::class, 'duplicate']);
+    $r->post('/assignments/{id}/copy', [Teacher\AssignmentController::class, 'copy']);
     $r->post('/assignments/{id}/delete', [Teacher\AssignmentController::class, 'destroy']);
     $r->post('/assignments/{id}/release-answers', [Teacher\AssignmentController::class, 'releaseAnswers']);
     $r->post('/assignments/{id}/release-all', [Teacher\SubmissionController::class, 'releaseAll']);
@@ -190,6 +192,7 @@ $router->group('/teacher', ['role:teacher'], static function ($r): void {
     $r->post('/lessons/{id}/publish', [Teacher\LessonController::class, 'publish']);
     $r->post('/lessons/{id}/unpublish', [Teacher\LessonController::class, 'unpublish']);
     $r->post('/lessons/{id}/duplicate', [Teacher\LessonController::class, 'duplicate']);
+    $r->post('/lessons/{id}/copy', [Teacher\LessonController::class, 'copy']);
     $r->post('/lessons/{id}/archive', [Teacher\LessonController::class, 'archive']);
 });
 

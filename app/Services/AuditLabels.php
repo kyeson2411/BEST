@@ -73,7 +73,9 @@ final class AuditLabels
             case 'material.unpublished': return t('Unpublished a material');
             case 'material.archived': return t('Archived a material');
             case 'material.version_uploaded': return t('Uploaded a new version of a material');
+            case 'material.copied': return t('Copied a material to another section');
             case 'lesson.created': return t('Created a lesson');
+            case 'lesson.copied': return t('Copied a lesson to another section');
             case 'lesson.published': return t('Published a lesson');
             case 'lesson.unpublished': return t('Unpublished a lesson');
 
@@ -84,6 +86,7 @@ final class AuditLabels
             case 'assignment.reopened': return t('Reopened an assignment');
             case 'assignment.archived': return t('Archived an assignment');
             case 'assignment.duplicated': return t('Duplicated an assignment');
+            case 'assignment.copied': return t('Copied an assignment to another section');
             case 'assignment.deleted': return t('Deleted a draft assignment');
             case 'assignment.answers_released': return t('Released correct answers');
             case 'assignment.ai_questions_drafted': return tp('Drafted :count question with AI', 'Drafted :count questions with AI', max(1, $n('count')));

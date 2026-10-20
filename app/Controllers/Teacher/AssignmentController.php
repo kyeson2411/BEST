@@ -20,9 +20,12 @@ use Sibol\Services\Ai\Usage;
 use Sibol\Services\Assessments;
 use Sibol\Services\Grades;
 use Sibol\Services\Notifier;
+use Sibol\Services\SectionCopies;
 
 final class AssignmentController extends Controller
 {
+    use CopiesToSections;
+
     public function index(): Response
     {
         $user = $this->user();
@@ -128,8 +131,17 @@ final class AssignmentController extends Controller
             'problems' => $a['status'] === 'draft' ? Assessments::publishProblems($a) : [],
             'rubric' => json_decode((string) ($a['rubric'] ?? ''), true) ?: [],
             'questionStats' => \Sibol\Services\Insights::questions((int) $a['class_id'], $id),
+            'copyPanel' => SectionCopies::panel($user, 'assignment', $a),
             'katex' => true,
         ]);
+    }
+
+    /** Copies the assignment or quiz into other sections the teacher teaches, as drafts. */
+    public function copy(int $id): Response
+    {
+        Access::teacherAssignment($this->user(), $id);
+        $this->copyToSections('assignment', $id, '/teacher/assignments/' . $id);
+        return $this->redirect('/teacher/assignments/' . $id);
     }
 
     public function edit(int $id): Response
@@ -447,6 +459,7 @@ final class AssignmentController extends Controller
             }
             $copy['title'] = mb_substr(t(':title (copy)', ['title' => $a['title']]), 0, 200);
             $copy['status'] = 'draft';
+            $copy['copied_from_id'] = null;
             $copy['created_by'] = (int) $user['id'];
             $copy['created_at'] = Db::now();
             $copy['updated_at'] = Db::now();

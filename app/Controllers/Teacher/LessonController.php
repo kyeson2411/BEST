@@ -16,6 +16,7 @@ use Sibol\Services\Ai\Generators;
 use Sibol\Services\Ai\Retrieval;
 use Sibol\Services\Ai\Usage;
 use Sibol\Services\Notifier;
+use Sibol\Services\SectionCopies;
 
 /**
  * Lesson studio. The working draft (draft_content) is always separate from what students
@@ -23,6 +24,8 @@ use Sibol\Services\Notifier;
  */
 final class LessonController extends Controller
 {
+    use CopiesToSections;
+
     public const SECTIONS = ['objectives', 'prior_knowledge', 'explanation', 'worked_example', 'activities', 'checks', 'exit_ticket'];
 
     public function index(): Response
@@ -147,8 +150,17 @@ final class LessonController extends Controller
             'lesson' => $lesson,
             'content' => json_decode((string) $lesson['draft_content'], true) ?: [],
             'modules' => Db::all('SELECT id, title FROM modules WHERE class_id = :c ORDER BY position', ['c' => (int) $lesson['class_id']]),
+            'copyPanel' => SectionCopies::panel($user, 'lesson', $lesson),
             'katex' => true,
         ]);
+    }
+
+    /** Copies the lesson's current draft into other sections the teacher teaches, as drafts. */
+    public function copy(int $id): Response
+    {
+        $this->lesson($this->user(), $id);
+        $this->copyToSections('lesson', $id, '/teacher/lessons/' . $id);
+        return $this->redirect('/teacher/lessons/' . $id);
     }
 
     public function update(int $id): Response
@@ -238,6 +250,7 @@ final class LessonController extends Controller
         }
         $copy['title'] = mb_substr(t(':title (copy)', ['title' => $lesson['title']]), 0, 200);
         $copy['status'] = 'draft';
+        $copy['copied_from_id'] = null;
         $copy['has_unpublished_changes'] = 0;
         $copy['created_by'] = (int) $user['id'];
         $copy['created_at'] = Db::now();

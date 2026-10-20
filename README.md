@@ -4,7 +4,8 @@ Sibol ("to sprout") is the learning companion of **B.E.S.T. College of Polomolok
 Its sign-in page shows the school's seal and a photograph of its students. Students get their classes,
 assignments, quizzes, feedback, a study calendar and a private AI companion that explains, quizzes
 and cites their teachers' own materials. Teachers manage classes, materials, lessons, assignments,
-quizzes, grading and class insights, with AI drafting that always waits for their review.
+quizzes, grading and class insights, with AI drafting that always waits for their review, and copy
+what they build in one section to the other sections they teach.
 School administrators manage people, classes, policies, AI limits, privacy requests and the audit log,
 without access to students' private conversations.
 
@@ -247,7 +248,7 @@ source-wrapping, password rules, translations (including a check that the script
 against the database: class and record permissions,
 permission-filtered retrieval (other sections, drafts and scheduled materials never reach a prompt),
 a full demo companion turn, data export and erasure, daily limits and usage accounting, audit-log hygiene and
-retention purging. Last run: **47 tests, all passing**.
+retention purging, and copying work to other sections without exposing drafts. Last run: **59 tests, all passing**.
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -266,8 +267,8 @@ areas, 404 for records outside your classes, CSRF), a teacher building a quiz wi
 approved before publishing, a student taking it and receiving a receipt, grade release, the companion with
 cited sources and answer reporting, administrator invitation and one-time links, CSV import with a preview,
 class setup, a policy switch, a data export downloaded only by its owner, the audit log, Filipino text written
-by the page scripts, phone-width layout of 21 screens and structural accessibility checks on 31 screens.
-Last run: **41 tests, all passing**.
+by the page scripts, copying a material, a quiz and a lesson to another section as drafts, phone-width layout
+of 21 screens and structural accessibility checks on 31 screens. Last run: **45 tests, all passing**.
 
 ## Project layout
 
@@ -341,6 +342,13 @@ tools/             asset scripts (fonts and icons, school images with their orig
   (PDFs get a framing-only CSP so the browser's PDF viewer can run). Camera and location metadata is removed
   from uploaded photos and logos.
 - Uploads are **not** virus-scanned. Add a scanner (for example ClamAV) before accepting files from the public.
+- **Copy to other sections.** A teacher can copy a material, an assignment or quiz, or a lesson to their other
+  active sections from its page. Copies arrive as drafts; modules are matched by name (otherwise the copy is
+  listed under "Other materials"); questions keep their review state, so unapproved AI drafts stay unapproved;
+  rubrics come along, and linked materials point to the section's own copy (copied as a draft if it has none).
+  A copied file reuses the stored file and its extracted text, but its passages are stored again under the new
+  section, so retrieval still filters by class inside the query and a copy follows its own section's draft,
+  release date and companion settings.
 
 **AI**
 - Keys, prompts and provider addresses stay on the server.

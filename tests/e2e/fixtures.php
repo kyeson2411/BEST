@@ -26,6 +26,7 @@ echo json_encode([
     ],
     'classes' => [
         'sciNarra' => $class('Science 9 – Narra'),
+        'sciMolave' => $class('Science 9 – Molave'),
         'mathNarra' => $class('Mathematics 9 – Narra'),
         'mathMolave' => $class('Mathematics 9 – Molave'),
     ],

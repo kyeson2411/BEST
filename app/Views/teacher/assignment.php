@@ -90,5 +90,6 @@ foreach ($questionStats as $qs) {
         <ul class="rows"><?php foreach ($rubric as $c): ?><li class="row" style="padding:8px 0"><div class="row__main"><span class="row__title"><?= e($c['title']) ?></span><div class="row__meta"><span><?= e($c['description']) ?></span></div></div><span class="row__aside num"><?= e(fmt_number($c['points'], 2)) ?></span></li><?php endforeach; ?></ul>
       </section>
     <?php endif; ?>
+    <?= partial('copy_to_sections', $copyPanel) ?>
   </aside>
 </div>
