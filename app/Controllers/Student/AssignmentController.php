@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sibol\Controllers\Student;
 
+use DateTimeImmutable;
 use Sibol\Controllers\Controller;
 use Sibol\Core\Audit;
 use Sibol\Core\Db;
@@ -14,6 +15,8 @@ use Sibol\Core\ValidationException;
 use Sibol\Policies\Access;
 use Sibol\Repositories\StudentRepo;
 use Sibol\Services\Assessments;
+use Sibol\Services\Settings;
+use Sibol\Services\SpacedReview;
 
 final class AssignmentController extends Controller
 {
@@ -81,6 +84,10 @@ final class AssignmentController extends Controller
             ['a' => $id]
         );
         $files = $latest ? Db::all('SELECT * FROM submission_files WHERE submission_id = :s ORDER BY id', ['s' => (int) $latest['id']]) : [];
+        // Before a quiz the student has not taken yet: how many questions from this class wait in their review queue.
+        $toReview = $assignment['kind'] === 'quiz' && $state['can_start'] && !$state['submitted_count'] && Settings::get((int) $user['organization_id'], 'features.spaced_review', true)
+            ? count(SpacedReview::queue($user, new DateTimeImmutable('now'), (int) $assignment['class_id']))
+            : 0;
 
         return $this->view('student/assignment', [
             'title' => $assignment['title'],
@@ -96,6 +103,7 @@ final class AssignmentController extends Controller
             'files' => $files,
             'rubric' => json_decode((string) ($assignment['rubric'] ?? ''), true) ?: [],
             'maxFileMb' => min(self::MAX_FILE_MB, (int) (Uploads::maxBytes() / 1048576)),
+            'toReview' => $toReview,
             'katex' => true,
         ]);
     }

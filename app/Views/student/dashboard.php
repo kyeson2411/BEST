@@ -170,6 +170,18 @@ $next = $upcoming[0] ?? null;
       </section>
     <?php endif; ?>
 
+    <?php if ($reviewDue !== null): ?>
+      <section class="section" aria-labelledby="review-title">
+        <div class="section__head"><h2 class="section__title" id="review-title"><?= e(t('Review today')) ?><?php if ($reviewDue): ?><span class="count"><?= (int) $reviewDue ?></span><?php endif; ?></h2></div>
+        <?php if ($reviewDue): ?>
+          <p class="muted" style="font-size:.9375rem"><?= e(tp(':count question you missed is back for review.', ':count questions you missed are back for review.', (int) $reviewDue)) ?></p>
+          <a class="btn btn--secondary btn--sm" href="<?= e(url('/student/review')) ?>"><?= icon('rotate-ccw', 'icon--sm') ?><?= e(t('Start reviewing')) ?></a>
+        <?php else: ?>
+          <p class="meta"><?= e(t('Nothing to review today. Questions you miss come back here on a schedule.')) ?></p>
+        <?php endif; ?>
+      </section>
+    <?php endif; ?>
+
     <?php if ($practiceOn && $classes): ?>
       <section class="section" aria-labelledby="practice-title">
         <div class="section__head">

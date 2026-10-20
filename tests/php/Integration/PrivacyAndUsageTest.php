@@ -23,6 +23,7 @@ final class PrivacyAndUsageTest extends IntegrationTestCase
 
         self::assertSame('nicole.tan', $data['account']['username']);
         self::assertNull($data['account']['email'], 'students here have no email');
+        self::assertArrayHasKey('review_queue', $data, 'the review queue is the student\'s own data too');
         self::assertStringNotContainsString('andrea.cruz', $json);
         self::assertArrayNotHasKey('password_hash', $data['account']);
         foreach ($data['submissions'] as $s) {
@@ -40,8 +41,13 @@ final class PrivacyAndUsageTest extends IntegrationTestCase
         self::assertGreaterThan(0, $submissions);
         self::assertSame(2, (int) Db::value('SELECT COUNT(*) FROM notice_acknowledgments WHERE user_id = :u', ['u' => (int) $bea['id']]));
         self::assertGreaterThan(0, (int) Db::value('SELECT COUNT(*) FROM site_feedback WHERE user_id = :u', ['u' => (int) $bea['id']]));
+        $class = (int) Db::value("SELECT class_id FROM class_memberships WHERE user_id = :u AND role = 'student' AND status = 'active' LIMIT 1", ['u' => (int) $bea['id']]);
+        Db::insert('review_items', ['organization_id' => (int) $bea['organization_id'], 'user_id' => (int) $bea['id'], 'class_id' => $class, 'source' => 'practice',
+            'source_key' => 'practice:0:0', 'kind' => 'card', 'content' => '{"kind":"card","prompt":"Front","back":"Back"}', 'due_on' => '2026-10-21']);
 
         $counts = Privacy::erase((int) $bea['id'], false);
+        self::assertSame(1, $counts['review_items'], 'the review queue is private study data');
+        self::assertSame(0, (int) Db::value('SELECT COUNT(*) FROM review_items WHERE user_id = :u', ['u' => (int) $bea['id']]));
 
         $after = Db::one('SELECT * FROM users WHERE id = :u', ['u' => (int) $bea['id']]);
         self::assertSame('deactivated', $after['status']);

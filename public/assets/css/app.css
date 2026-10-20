@@ -1135,6 +1135,15 @@ input[type="file"]::file-selector-button:hover { background: var(--sage-soft); }
 .print-sheet__blanks { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); margin-top: var(--s-3); font-weight: 600; }
 .print-sheet__section { margin-bottom: var(--s-4); }
 .print-sheet__subhead { margin: 0 0 var(--s-2); font-size: var(--step-1); }
+/* Review queue: one question at a time. */
+.review-result { margin-bottom: var(--s-4); }
+.review-item { max-width: 720px; }
+.review-item__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-3); margin: 0 0 var(--s-3); font-size: 0.875rem; color: var(--ink-3); }
+.review-item__left { margin-left: auto; font-variant-numeric: tabular-nums; }
+.review-item__prompt { margin: 0 0 var(--s-3); padding: 0; font-size: 1.0625rem; font-weight: 600; color: var(--ink); }
+.review-item__prompt p:last-child { margin-bottom: 0; }
+.review-item__back { margin: 0 0 var(--s-3); }
+
 /* Progress reports: one sheet per student, each printed on its own page. */
 .report + .report { margin-top: var(--s-6); }
 .report__school { display: flex; align-items: center; gap: var(--s-2); margin: 0 0 var(--s-2); font-weight: 600; color: var(--ink-2); }

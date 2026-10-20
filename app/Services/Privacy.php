@@ -42,6 +42,10 @@ final class Privacy
                 return $c;
             }, Db::all('SELECT id, title, mode, created_at, last_message_at FROM ai_conversations WHERE user_id = :u', ['u' => $userId])),
             'practice' => Db::all('SELECT title, kind, score, total, created_at, completed_at FROM practice_sets WHERE user_id = :u', ['u' => $userId]),
+            'review_queue' => array_map(static function (array $r): array {
+                $r['item'] = json_decode((string) $r['item'], true);
+                return $r;
+            }, Db::all('SELECT source, content AS item, step, reviews, lapses, due_on, last_reviewed_on, done_at, created_at FROM review_items WHERE user_id = :u ORDER BY id', ['u' => $userId])),
             'study_sessions' => Db::all('SELECT title, notes, starts_at, duration_minutes, completed_at FROM study_sessions WHERE user_id = :u', ['u' => $userId]),
             'shared_with_teachers' => Db::all('SELECT kind, content, student_note, created_at FROM shared_excerpts WHERE student_id = :u', ['u' => $userId]),
             'notifications' => Db::all('SELECT title, body, created_at, read_at FROM notifications WHERE user_id = :u ORDER BY created_at DESC LIMIT 500', ['u' => $userId]),
@@ -71,6 +75,7 @@ final class Privacy
         $counts = [];
         Db::transaction(static function () use ($user, $userId, $includeRecords, &$counts): void {
             $counts['conversations'] = Db::exec('DELETE FROM ai_conversations WHERE user_id = :u', ['u' => $userId]);
+            $counts['review_items'] = Db::exec('DELETE FROM review_items WHERE user_id = :u', ['u' => $userId]);
             $counts['practice_sets'] = Db::exec('DELETE FROM practice_sets WHERE user_id = :u', ['u' => $userId]);
             $counts['study_sessions'] = Db::exec('DELETE FROM study_sessions WHERE user_id = :u', ['u' => $userId]);
             $counts['shared_excerpts'] = Db::exec('DELETE FROM shared_excerpts WHERE student_id = :u', ['u' => $userId]);

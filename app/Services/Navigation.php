@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sibol\Services;
 
+use DateTimeImmutable;
 use Sibol\Core\Db;
 
 /** Role-aware navigation. Hiding items is for clarity only; routes enforce access. */
@@ -23,6 +24,9 @@ final class Navigation
                     ['label' => t('Assignments'), 'icon' => 'clipboard-list', 'url' => '/student/assignments', 'count' => self::studentDueCount($id), 'bottom' => true],
                     $ai ? ['label' => t('Companion'), 'icon' => 'messages-square', 'url' => '/companion', 'bottom' => true] : null,
                     $ai ? ['label' => t('Practice'), 'icon' => 'repeat', 'url' => '/student/learning'] : null,
+                    Settings::get((int) $user['organization_id'], 'features.spaced_review', true)
+                        ? ['label' => t('Review'), 'icon' => 'rotate-ccw', 'url' => '/student/review', 'count' => SpacedReview::dueCount($user, new DateTimeImmutable('now'))]
+                        : null,
                     ['label' => t('Progress'), 'icon' => 'chart-line', 'url' => '/student/progress'],
                     ['label' => t('Calendar'), 'icon' => 'calendar-days', 'url' => '/student/calendar', 'bottom' => true],
                 ]));

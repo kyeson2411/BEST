@@ -218,6 +218,9 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
             <button class="btn btn--primary" type="submit" data-busy="<?= e(t('Starting…')) ?>"><?= icon('play', 'icon--sm') ?><?= e($state['submitted_count'] ? t('Start another attempt') : t('Start quiz')) ?></button>
             <span class="meta" style="margin-left:8px"><?= e(tp(':count attempt left', ':count attempts left', (int) $state['attempts_left'])) ?></span>
           </form>
+          <?php if (!empty($toReview)): ?>
+            <p class="meta" style="margin:-4px 0 16px"><?= icon('rotate-ccw', 'icon--sm') ?> <a href="<?= e(url('/student/review', ['class' => (int) $assignment['class_id']])) ?>"><?= e(tp('Review the :count question you missed in this class first', 'Review the :count questions you missed in this class first', (int) $toReview)) ?></a></p>
+          <?php endif; ?>
         <?php elseif (!$state['submissions']): ?>
           <div class="callout callout--coral"><?= icon('circle-alert') ?><p><?= e($state['closed'] ? t('This quiz is closed.') : t('The due date has passed and this quiz no longer accepts attempts.')) ?></p></div>
         <?php endif; ?>

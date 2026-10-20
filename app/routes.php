@@ -163,6 +163,10 @@ $router->group('/student', ['role:student', 'notices'], static function ($r): vo
         $l->post('/{id}/delete', [Student\PracticeController::class, 'destroy']);
     });
 
+    // Missed questions come back on a schedule. Not behind the AI switch: quiz questions are the teacher's own.
+    $r->get('/review', [Student\ReviewController::class, 'index']);
+    $r->post('/review/{id}', [Student\ReviewController::class, 'answer']);
+
     $r->get('/progress', [Student\ProgressController::class, 'index']);
     $r->get('/progress/report', [Student\ProgressController::class, 'report']);
 

@@ -66,6 +66,11 @@ final class Settings
                 'practice_quizzes' => true,
                 'study_plans' => true,
                 'share_with_teacher' => true,
+                'spaced_review' => true,
+            ],
+            // Missed questions come back on a schedule; this caps how many a student sees a day (0: no cap).
+            'review' => [
+                'daily_cap' => 20,
             ],
             'privacy' => [
                 'ai_retention_days' => 365,
@@ -84,7 +89,6 @@ final class Settings
         ];
     }
 
-    /** Optional starting points an administrator can load and then edit. */
     /**
      * Starting points an administrator can load and then check against the school's policy. The two DepEd
      * ones follow the orders as published: DO 8 s. 2015 with its transmutation table (off until confirmed),

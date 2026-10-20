@@ -308,8 +308,12 @@ a pasted table and refusing a broken one, which period work counts in, overlappi
 splitting a year, and a test school whose period, final and transmuted grades are checked number by number,
 with the table on and off, with subject-group weights, and without periods), and progress reports (released
 results from one period only, missing and late counts, comments left out until released, the year so far
-without periods, and an adviser's reports limited to the section's classes and its students).
-Last run: **138 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
+without periods, and an adviser's reports limited to the section's classes and its students), and the review
+queue (intervals of 1, 3, 7, 14 and 30 days with the clock moved day by day, quiz questions added only once their
+answers are released and only once, answers checked by Sibol, due reviews before new ones within the daily
+number, reviewing early before a quiz, practice questions leaving while the student's AI is off or their
+material is unpublished, and the queue in the data export and erasure).
+Last run: **142 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -343,8 +347,10 @@ with KaTeX that is downloaded only when a page shows maths, an administrator loa
 (the table is refused until it is checked, then switched on, and the page still fits a phone), a teacher's
 quarter and final grades, CSV columns and work placed in another quarter, a student's quarter grades, a
 student's own progress report and an adviser's reports for the section (a 404 for a teacher who is not the
-adviser, and an audit entry), phone-width layout of 33 screens and structural accessibility checks on 49 screens.
-Last run: **82 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
+adviser, and an audit entry), a student's review queue (a missed quiz question checked and rescheduled, reviewing
+a class before its quiz, a missed practice set joining the queue, and a 403 for teachers), phone-width layout of
+34 screens and structural accessibility checks on 50 screens.
+Last run: **86 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
 
 ## Versions and performance
 
@@ -598,6 +604,20 @@ tools/             asset scripts (fonts and icons, school images with their orig
   official report card (SF9). Students print their own from **Progress**; the section's adviser prints one
   student's report or the whole section, one page per student, from **Advisory**, covering the section's classes
   only. Other teachers get a 404. Opening reports as an adviser is audit-logged with the number of students only.
+- **Review today.** Questions a student missed come back on a schedule in a private queue (**Review** in the
+  student menu, with a card on the home page). These are wrong answers in practice sets, flashcards not known yet,
+  and wrong or blank answers in quizzes once that student can see the answers.
+  - **Checking:** Sibol checks choice and typed answers with the same rules as quiz marking; only flashcards are
+    self-rated.
+  - **Schedule:** a right answer moves a question to the next interval (1, 3, 7, 14, 30 days), and after the last
+    one it leaves the queue. A miss moves it back one interval and brings it back the next day.
+  - **Daily number:** questions that are due come before new ones, up to the school's daily number (**Policies →
+    Features**, 20 by default; 0 for no limit).
+  - **Before a quiz:** the queue lists quizzes due in the next two weeks, and a quiz page links to them too.
+    Reviewing everything from that class, due or not, does not push questions further out.
+  - **Privacy:** only the student's current classes count. Practice questions drop out while the student's AI is
+    off or when their material is no longer released. Teachers never see reviews, and nothing is graded. The
+    queue is in the student's data export and is erased with their other private study data.
 - **Quizzes on weak connections.** Answers are sent about a second after each change and when the page is hidden.
   Until the server confirms them they are also kept in the browser's `sessionStorage` for that tab only (never
   in cookies or long-term storage), restored after a reload and sent again on reconnect; they are removed once
@@ -657,9 +677,9 @@ tools/             asset scripts (fonts and icons, school images with their orig
   labelled controls, error messages tied to their fields, status shown with words and icons, never colour alone,
   reduced-motion support, charts with table views, and layouts that work at 390 px.
 - The browser tests check structure (one heading level 1 per page, unique ids, names for every control and
-  link, image alternatives) on 49 screens and the absence of sideways scrolling on 33 phone screens.
+  link, image alternatives) on 50 screens and the absence of sideways scrolling on 34 phone screens.
   They are not a full audit; test with a screen reader before launch.
-- **Filipino:** every interface string is translated (2,970 of 2,970), for students, teachers and school
+- **Filipino:** every interface string is translated (3,018 of 3,018), for students, teachers and school
   administrators. That includes text written by scripts (save status, card counters, companion progress), which
   the server translates and hands to the page in `data-i18n` attributes, so the JavaScript holds no English.
   Strings added later fall back to English until they are added to `lang/fil.php`; run

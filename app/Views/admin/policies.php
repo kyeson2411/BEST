@@ -3,6 +3,7 @@ use Sibol\Services\Settings;
 
 $ai = $settings['ai'];
 $features = $settings['features'];
+$review = $settings['review'];
 $codes = $settings['class_codes'];
 $privacy = $settings['privacy'];
 $notify = $settings['notifications'];
@@ -64,6 +65,8 @@ $modes = (array) $ai['student_modes'];
       <div>
         <?= checkbox('study_plans', t('Study plans'), (bool) $features['study_plans'], t('The companion breaks a test into sessions students can add to their calendar.')) ?>
         <?= checkbox('share_with_teacher', t('Students can share an excerpt with their teacher'), (bool) $features['share_with_teacher'], t('Only when a student chooses to. Teachers never see conversations otherwise.')) ?>
+        <?= checkbox('spaced_review', t('Students\' review of missed questions'),(bool) $features['spaced_review'], t('Questions a student missed in practice and in quizzes with released answers come back on a schedule. Private, never graded, never seen by teachers.')) ?>
+        <?= field('number', 'review_daily_cap', t('Reviews per student per day'), ['value' => (string) $review['daily_cap'], 'required' => true, 'hint' => t('Questions that are due come first. 0 means no daily limit.'), 'attrs' => ['min' => 0, 'max' => 200]]) ?>
       </div>
     </div>
   </section>

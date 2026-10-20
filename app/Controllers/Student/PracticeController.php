@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sibol\Controllers\Student;
 
+use DateTimeImmutable;
 use Sibol\Controllers\Controller;
 use Sibol\Core\Db;
 use Sibol\Core\HttpException;
@@ -15,6 +16,7 @@ use Sibol\Services\Ai\Generators;
 use Sibol\Services\Ai\Retrieval;
 use Sibol\Services\Ai\Usage;
 use Sibol\Services\Settings;
+use Sibol\Services\SpacedReview;
 
 /** Self-study practice sets and flashcards built from released class materials. Private to the student. */
 final class PracticeController extends Controller
@@ -163,9 +165,14 @@ final class PracticeController extends Controller
             'last_reviewed_at' => Db::now(),
             'updated_at' => Db::now(),
         ], ['id' => $id]);
-        $this->flash('success', $set['kind'] === 'quiz'
+        // Missed questions and cards not known yet come back in the student's review queue.
+        $queued = Settings::get((int) $user['organization_id'], 'features.spaced_review', true)
+            ? SpacedReview::fromPractice($user, $set, $items, $results, new DateTimeImmutable('now'))
+            : 0;
+        $this->flash('success', ($set['kind'] === 'quiz'
             ? t('You got :score of :total. Check the explanations below.', ['score' => $score, 'total' => count($items)])
-            : t('You knew :score of :total cards. Review the others again later.', ['score' => $score, 'total' => count($items)]));
+            : t('You knew :score of :total cards. Review the others again later.', ['score' => $score, 'total' => count($items)]))
+            . ($queued ? ' ' . tp(':count item is in your review queue for today.', ':count items are in your review queue for today.', $queued) : ''));
         return $this->redirect('/student/learning/' . $id);
     }
 
