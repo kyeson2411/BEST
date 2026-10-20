@@ -45,7 +45,7 @@ final class ClassController extends Controller
             "SELECT c.id, c.name, c.section, c.grade_level, c.status, s.name AS subject_name, ap.name AS period_name,
                     (SELECT COUNT(*) FROM class_memberships m WHERE m.class_id = c.id AND m.role = 'student' AND m.status = 'active') AS students,
                     (SELECT GROUP_CONCAT(CONCAT(COALESCE(NULLIF(u.preferred_name, ''), u.given_name), ' ', u.family_name) ORDER BY u.family_name SEPARATOR ', ')
-                       FROM class_memberships m JOIN users u ON u.id = m.user_id WHERE m.class_id = c.id AND m.role = 'teacher' AND m.status = 'active') AS teachers"
+                       FROM class_memberships m STRAIGHT_JOIN users u ON u.id = m.user_id WHERE m.class_id = c.id AND m.role = 'teacher' AND m.status = 'active') AS teachers"
             . $sql . ' ORDER BY s.name, c.name' . $pager->limitSql(),
             $params
         );

@@ -19,6 +19,7 @@ final class PilotReport
     public const WEEK_CHOICES = [4, 8, 12, 26];
     /** Shares of the online work due that week; empty when nothing was due. */
     public const RATES = ['on_time', 'late', 'missing'];
+    private const EPOCH = '2000-01-01 00:00:00';
 
     /**
      * Week boundaries, oldest first: $count weeks ending with the current one.
@@ -166,11 +167,12 @@ final class PilotReport
         foreach ($sources as $p => [$column, $person, $from, $where]) {
             [$bucket, $bp] = self::bucket($column, $bounds, $p);
             [$range, $rp] = self::range($column, $bounds, $p);
-            $parts[] = "SELECT $bucket AS wk, $person AS uid FROM $from WHERE $where AND $range";
+            $parts[] = "SELECT DISTINCT $bucket AS wk, $person AS uid FROM $from WHERE $where AND $range";
             $params += $bp + $rp + [$p . 'o' => $orgId];
         }
+        // UNION (not UNION ALL) leaves one row per person and week, so COUNT(*) counts people.
         return Db::all(
-            'SELECT x.wk, u.role, COUNT(DISTINCT x.uid) AS people FROM (' . implode(' UNION ALL ', $parts) . ") x
+            'SELECT x.wk, u.role, COUNT(*) AS people FROM (' . implode(' UNION ', $parts) . ") x
              JOIN users u ON u.id = x.uid AND u.role IN ('student','teacher')
              GROUP BY x.wk, u.role",
             $params
@@ -198,20 +200,40 @@ final class PilotReport
         $due = 'COALESCE(ov.due_at, a.due_at)';
         [$bucket, $bp] = self::bucket($due, $bounds, 'd');
         [$range, $rp] = self::range($due, $bounds, 'd');
+        // Work whose due date can fall in the report: the class's date or a student's own date is in it.
+        $tasks = static function (string $a, string $p) use ($bounds): array {
+            [$classRange, $cp] = self::range("$a.due_at", $bounds, $p . 'k');
+            [$ownRange, $op] = self::range("{$a}o.due_at", $bounds, $p . 'x');
+            return [
+                "$a.organization_id = :{$p}o AND $a.status IN ('published','closed') AND $a.kind IN ('assignment','quiz')
+                 AND ($classRange OR EXISTS (SELECT 1 FROM assignment_overrides {$a}o WHERE {$a}o.assignment_id = $a.id AND $ownRange))",
+                $cp + $op,
+            ];
+        };
+        [$pairTasks, $pp] = $tasks('a', 'p');
+        [$doneTasks, $dp] = $tasks('w', 'q');
+        // One row per student and task (memberships and own dates are unique per pair), joined to one summary
+        // per pair of what was handed in; reading submissions once through an index is much cheaper than
+        // looking each pair up.
         return Db::all(
-            "SELECT $bucket AS wk, COUNT(*) AS expected, COUNT(DISTINCT cm.user_id) AS students,
-                    SUM(sub.late IS NOT NULL AND sub.late = 0) AS on_time, SUM(sub.late IS NOT NULL AND sub.late = 1) AS late
-             FROM assignments a
-             JOIN classes c ON c.id = a.class_id AND c.status = 'active'
-             JOIN class_memberships cm ON cm.class_id = a.class_id AND cm.role = 'student' AND cm.status = 'active'
-             LEFT JOIN assignment_overrides ov ON ov.assignment_id = a.id AND ov.student_id = cm.user_id
-             LEFT JOIN (SELECT assignment_id, student_id, MIN(is_late) AS late FROM submissions
-                        WHERE organization_id = :so AND status = 'submitted' GROUP BY assignment_id, student_id) sub
-                    ON sub.assignment_id = a.id AND sub.student_id = cm.user_id
-             WHERE a.organization_id = :o AND a.status IN ('published','closed') AND a.kind IN ('assignment','quiz')
-               AND COALESCE(ov.excused, 0) = 0 AND $range AND $due < :now
-             GROUP BY wk",
-            $bp + $rp + ['o' => $orgId, 'so' => $orgId, 'now' => $nowUtc]
+            "SELECT pairs.wk, COUNT(*) AS expected, COUNT(DISTINCT pairs.student) AS students,
+                    SUM(done.late = 0) AS on_time, SUM(done.late = 1) AS late
+             FROM (
+                SELECT $bucket AS wk, a.id AS task, cm.user_id AS student
+                FROM assignments a
+                JOIN classes c ON c.id = a.class_id AND c.status = 'active'
+                JOIN class_memberships cm ON cm.class_id = a.class_id AND cm.role = 'student' AND cm.status = 'active'
+                LEFT JOIN assignment_overrides ov ON ov.assignment_id = a.id AND ov.student_id = cm.user_id
+                WHERE $pairTasks AND COALESCE(ov.excused, 0) = 0 AND $range AND $due < :now
+             ) pairs
+             LEFT JOIN (
+                SELECT s.assignment_id, s.student_id, MIN(s.is_late) AS late
+                FROM submissions s JOIN assignments w ON w.id = s.assignment_id
+                WHERE $doneTasks AND s.status = 'submitted'
+                GROUP BY s.assignment_id, s.student_id
+             ) done ON done.assignment_id = pairs.task AND done.student_id = pairs.student
+             GROUP BY pairs.wk",
+            $bp + $rp + $pp + $dp + ['po' => $orgId, 'qo' => $orgId, 'now' => $nowUtc]
         );
     }
 
@@ -254,9 +276,10 @@ final class PilotReport
 
     /**
      * SQL giving the week number (0 = oldest) of a UTC time column, with its parameters (prefix $p, so
-     * several can share one query).
+     * several can share one query). INTERVAL() finds the week by binary search on seconds counted from a
+     * fixed date, so it stays exact in time zones with daylight saving time.
      * @param list<string> $bounds week starts in UTC, then the end of the last week
-     * @return array{0:string,1:array<string,string>}
+     * @return array{0:string,1:array<string,int>}
      */
     private static function bucket(string $column, array $bounds, string $p): array
     {
@@ -264,13 +287,14 @@ final class PilotReport
         if ($last === 0) {
             return ['0', []];
         }
-        $sql = 'CASE';
+        $epoch = new DateTimeImmutable(self::EPOCH, new DateTimeZone('UTC'));
+        $names = [];
         $params = [];
         for ($i = 1; $i <= $last; $i++) {
-            $sql .= " WHEN $column < :{$p}b$i THEN " . ($i - 1);
-            $params[$p . 'b' . $i] = $bounds[$i];
+            $names[] = ":{$p}b$i";
+            $params[$p . 'b' . $i] = (new DateTimeImmutable($bounds[$i], new DateTimeZone('UTC')))->getTimestamp() - $epoch->getTimestamp();
         }
-        return [$sql . " ELSE $last END", $params];
+        return ["INTERVAL(TIMESTAMPDIFF(SECOND, '" . self::EPOCH . "', $column), " . implode(', ', $names) . ')', $params];
     }
 
     /** @return array{0:string,1:array<string,string>} */

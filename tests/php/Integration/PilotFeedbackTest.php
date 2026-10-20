@@ -12,6 +12,7 @@ use Sibol\Core\Uploads;
 use Sibol\Policies\Access;
 use Sibol\Services\AuditLabels;
 use Sibol\Services\PilotReport;
+use Sibol\Services\PilotSeeder;
 use Sibol\Services\Privacy;
 use Sibol\Services\SiteFeedback;
 
@@ -97,6 +98,13 @@ final class PilotFeedbackTest extends IntegrationTestCase
         $data = json_decode((string) file_get_contents(Uploads::absolute($path)), true);
         Uploads::delete($path);
         self::assertSame(['Where do I see my study plan?'], array_column($data['feedback_sent'], 'body'));
+    }
+
+    public function testThePilotSizeSchoolIsOnlyLoadedIntoAnEmptyDatabase(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('already contains a school');
+        (new PilotSeeder())->run();
     }
 
     public function testWeeksRunMondayToSundayInTheSchoolsTimeZone(): void

@@ -47,7 +47,7 @@ final class StudentRepo
         return Db::all(
             "SELECT c.id, c.name, c.section, c.grade_level, s.name AS subject_name,
                     (SELECT GROUP_CONCAT(CONCAT(COALESCE(t.preferred_name, t.given_name), ' ', t.family_name) ORDER BY t.family_name SEPARATOR ', ')
-                       FROM class_memberships tm JOIN users t ON t.id = tm.user_id
+                       FROM class_memberships tm STRAIGHT_JOIN users t ON t.id = tm.user_id
                       WHERE tm.class_id = c.id AND tm.role = 'teacher' AND tm.status = 'active') AS teachers,
                     (SELECT COUNT(*) FROM assignments a" . Overrides::joinSql('a', 'u4') . "
                       WHERE a.class_id = c.id AND " . Overrides::openSql('a') . ' AND ' . Overrides::notExcusedSql() . "

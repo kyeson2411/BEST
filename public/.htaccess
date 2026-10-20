@@ -14,10 +14,19 @@ Options -Indexes -MultiViews
 </IfModule>
 
 <IfModule mod_headers.c>
-    <FilesMatch "\.(css|js|woff2|svg|png|ico|webmanifest)$">
+    <FilesMatch "\.(css|js|woff2|svg|png|webp|jpg|ico|webmanifest)$">
         Header set Cache-Control "public, max-age=604800"
     </FilesMatch>
     Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# Compress the stylesheet, scripts and icons when Apache's mod_deflate is loaded (XAMPP ships it switched
+# off; see README). Pages themselves are left uncompressed: they hold form tokens next to text people type,
+# which compression can leak over HTTPS (the BREACH attack).
+<IfModule mod_deflate.c>
+    <FilesMatch "\.(css|js|svg|webmanifest)$">
+        SetOutputFilter DEFLATE
+    </FilesMatch>
 </IfModule>
 
 # PHP settings for uploads under mod_php (php.ini limits still apply).

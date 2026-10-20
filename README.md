@@ -29,11 +29,12 @@ with no build step and no Node.js at runtime.
 6. [AI provider](#ai-provider)
 7. [Command-line tools](#command-line-tools)
 8. [Tests](#tests)
-9. [Project layout](#project-layout)
-10. [Deploying for real use](#deploying-for-real-use)
-11. [Security and Privacy Notes](#security-and-privacy-notes)
-12. [Accessibility and languages](#accessibility-and-languages)
-13. [Known limitations](#known-limitations)
+9. [Versions and performance](#versions-and-performance)
+10. [Project layout](#project-layout)
+11. [Deploying for real use](#deploying-for-real-use)
+12. [Security and Privacy Notes](#security-and-privacy-notes)
+13. [Accessibility and languages](#accessibility-and-languages)
+14. [Known limitations](#known-limitations)
 
 ---
 
@@ -41,8 +42,8 @@ with no build step and no Node.js at runtime.
 
 | | Minimum | Recommended |
 |---|---|---|
-| PHP | 8.0 (what current XAMPP 8.0.x ships) | **8.2 or newer**: PHP 8.0 and 8.1 no longer receive security fixes |
-| Database | MariaDB 10.4 (XAMPP) or MySQL 8.0 | same |
+| PHP | 8.0 (what current XAMPP 8.0.x ships) | **8.3** (both test suites pass on 8.0.30 and 8.3.35): PHP 8.0 and 8.1 no longer receive security fixes |
+| Database | MariaDB 10.4 (XAMPP) | a supported release such as MariaDB 10.11 or MySQL 8.4; so far Sibol has only been tested on MariaDB 10.4 |
 | Web server | Apache 2.4 with `mod_rewrite` and `.htaccess` (`AllowOverride All`, the XAMPP default) | same |
 | PHP extensions | `pdo_mysql`, `mbstring`, `json`, `fileinfo` | plus `curl` (live AI), `zip` (Word/PowerPoint materials), `openssl` |
 | Composer | for PDF text extraction (`smalot/pdfparser`) and PHPUnit | |
@@ -263,8 +264,8 @@ C:\xampp\php\php.exe bin\sibol.php <command>
 | `check` | Configuration report: PHP version and extensions, database, folders, AI provider, cookies, DB user, email. |
 | `db:create` | Create the database named in `.env`. |
 | `migrate` / `migrate:status` | Apply or list migrations. |
-| `db:seed` | Load the demo school into an empty database. |
-| `db:reset` | Drop all tables and stored files, migrate and seed again (local only). |
+| `db:seed [--size=pilot]` | Load the demo school into an empty database; `--size=pilot` loads the pilot-size school instead (see [Versions and performance](#versions-and-performance)). |
+| `db:reset [--size=pilot]` | Drop all tables and stored files, migrate and seed again (local only). |
 | `schema:build` | Regenerate `database/schema.sql` for phpMyAdmin. |
 | `materials:process` | Extract and index materials still waiting (normally done right after upload). |
 | `privacy:purge` | Delete companion conversations past each school's retention period. It also runs automatically once a day when an administrator opens the overview, so cron is optional. |
@@ -335,6 +336,68 @@ reply, a teacher's feedback without its page, the weekly pilot report as a page 
 layout of 29 screens and structural accessibility checks on 44 screens.
 Last run: **74 tests, all passing**.
 
+## Versions and performance
+
+**PHP.** Both test suites pass on PHP 8.0.30 (XAMPP) and PHP 8.3.35 with every error, warning and deprecation
+reported: PHPUnit turns deprecations into failures, and the app turns any reported PHP message into an error.
+Sibol still runs on 8.0; production should use 8.3. To run the browser tests on another PHP without touching
+Apache, serve the app with that PHP's built-in server in one window:
+
+```bat
+set APP_URL=http://127.0.0.1:8083
+C:\tools\php83\php.exe -d error_reporting=-1 -S 127.0.0.1:8083 -t public tools\dev-server.php
+```
+
+Then run the tests in another window. PHPUnit on that PHP is simply `C:\tools\php83\php.exe vendor\bin\phpunit`.
+
+```bat
+set SIBOL_URL=http://127.0.0.1:8083
+set SIBOL_PHP=C:/tools/php83/php.exe
+npx playwright test
+```
+
+**Database.** Sibol has only been tested on MariaDB 10.4 (XAMPP). The migrations avoid features that differ
+between MariaDB and MySQL 8, but a run on MariaDB 10.11 or MySQL 8.4 is still to be done.
+
+**A pilot-size school.** `bin\sibol.php db:reset --size=pilot` replaces the demo data with a larger fictional
+school in about 15 seconds:
+- 1,200 students in 24 sections (Grades 7 to 10), 60 teachers and 2 administrators;
+- 192 classes and ten weeks of work: 2,304 assignments, quizzes and tasks on paper, and about 94,000 submissions;
+- sign-ins, opened materials, notifications, companion and practice counts, and feedback.
+
+The demo buttons sign in as its first student, teacher and administrator. Its materials are links, so the
+companion has nothing to search in this school. `db:reset` brings back the normal demo school.
+
+**Page times.** `node tools/timings.mjs role:/path …` prints the median server time of five loads. The numbers
+below come from the pilot-size school on the development laptop (Apache, PHP 8.0, MariaDB 10.4), before and after
+the fixes in this build. Runs vary by about a third.
+
+| Page | Before | After | What changed |
+|---|---|---|---|
+| Administrator: classes | 393 ms | 37 ms | teacher names were found by scanning every account once per class |
+| Administrator: weekly pilot report, 8 weeks | 1,214 ms | 659 ms | two covering indexes (migration 013), one pass over submissions, weeks found by binary search |
+| Administrator: weekly pilot report, 26 weeks | 1,869 ms | 863 ms | the same |
+| Administrator: overview | 223 ms | 113 ms | |
+| Teacher: insights | 164 ms | 160 ms | |
+| Student: progress | 137 ms | 86 ms | |
+| Every other page timed (dashboards, gradebook, submissions, review, advisory, users, usage, audit) | 34–107 ms | 29–69 ms | |
+
+**Page weight.** `node tools/page-weight.mjs role:/path …` loads pages at phone width over Lighthouse's "Slow 4G"
+(1.6 Mbps, 150 ms round trip). The main student pages download:
+
+| | Before | After |
+|---|---|---|
+| First visit (empty cache) | 255–307 KB | 218–270 KB |
+| Return visit | 16–70 KB | 16–70 KB |
+| First visit load time | 1.7–1.8 s | 1.5–1.6 s |
+
+The saving comes from the count beside a menu item: its number was drawn in italics, so every page downloaded a
+37 KB italic font just for that. Compression would save about 90 KB more on a first visit: the stylesheet goes
+from 76 to 15 KB, the main script from 20 to 6 KB and the icons from 23 to 5 KB. XAMPP ships `mod_deflate`
+switched off; to turn it on, remove the `#` in front of `LoadModule deflate_module modules/mod_deflate.so` in
+`C:\xampp\apache\conf\httpd.conf` and restart Apache. Pages themselves stay uncompressed on purpose: they hold
+form tokens next to text people type, which compression over HTTPS can leak (the BREACH attack).
+
 ## Project layout
 
 ```
@@ -350,14 +413,16 @@ database/          migrations, combined schema.sql, demo materials
 storage/           uploads, exports, logs, cache (blocked from the web)
 tests/php, tests/e2e   PHPUnit and Playwright tests
 docs/              design-system.md, implementation-checklist.md
-tools/             asset scripts (fonts and icons, school images with their originals in school-assets/), screenshots
+tools/             asset scripts (fonts and icons, school images with their originals in school-assets/), screenshots,
+                   page timings and page weight, and a router for PHP's built-in server (dev-server.php)
 ```
 
 `CLAUDE.md` has conventions for anyone (or any AI assistant) changing the code.
 
 ## Deploying for real use
 
-1. Use **PHP 8.2+** and keep it updated.
+1. Use **PHP 8.3** (tested) and keep it updated. Turn on compression for the stylesheet, scripts and icons
+   (Apache `mod_deflate`; `public/.htaccess` already asks for it when the module is loaded).
 2. In `.env` (or real environment variables): `APP_ENV=production`, `APP_DEMO_LOGIN=false`, the real `APP_URL`,
    `SESSION_SECURE_COOKIE=true`.
 3. Serve over **HTTPS** only.

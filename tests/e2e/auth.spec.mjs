@@ -50,7 +50,8 @@ test.describe('Signing in and out', () => {
   test('guests are sent to sign in and private files are not served', async ({ page }) => {
     await page.goto('teacher/gradebook');
     await expect(page).toHaveURL(/\/login$/);
-    expect(await statusOf(page, '../.env')).toBe(403);
-    expect(await statusOf(page, '../storage/logs/sibol.log')).toBe(403);
+    // Apache refuses them (403); a server whose document root is public/ cannot reach them at all (404).
+    expect([403, 404]).toContain(await statusOf(page, '../.env'));
+    expect([403, 404]).toContain(await statusOf(page, '../storage/logs/sibol.log'));
   });
 });

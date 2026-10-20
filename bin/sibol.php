@@ -11,7 +11,8 @@ declare(strict_types=1);
  *   migrate            Apply pending migrations
  *   migrate:status     List applied and pending migrations
  *   db:seed            Load the fictional demo school (only into an empty database)
- *   db:reset           Drop all tables, migrate, and seed again (APP_ENV=local only)
+ *                      --size=pilot loads a pilot-size fictional school instead (1,200 students, 60 teachers)
+ *   db:reset           Drop all tables, migrate, and seed again (APP_ENV=local only; --size=pilot as above)
  *   schema:build       Regenerate database/schema.sql for phpMyAdmin import
  *   materials:process  Extract and index uploaded materials that are waiting
  *   privacy:purge      Delete AI conversations older than each school's retention period
@@ -29,6 +30,9 @@ require BASE_PATH . '/app/bootstrap.php';
 use Sibol\Services\Migrator;
 
 $command = $argv[1] ?? 'help';
+$seeder = static function () use ($argv) {
+    return in_array('--size=pilot', $argv, true) ? new Sibol\Services\PilotSeeder() : new Sibol\Services\DemoSeeder();
+};
 $out = static function (string $line): void {
     fwrite(STDOUT, $line . PHP_EOL);
 };
@@ -53,8 +57,7 @@ try {
             break;
 
         case 'db:seed':
-            $summary = (new Sibol\Services\DemoSeeder())->run();
-            $out($summary);
+            $out($seeder()->run());
             break;
 
         case 'db:reset':
@@ -63,7 +66,7 @@ try {
             $out('Removed ' . Migrator::clearUploads() . ' stored file(s).');
             Migrator::migrate();
             $out('Tables recreated.');
-            $out((new Sibol\Services\DemoSeeder())->run());
+            $out($seeder()->run());
             break;
 
         case 'schema:build':

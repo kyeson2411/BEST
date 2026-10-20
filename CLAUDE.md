@@ -13,14 +13,20 @@ npx playwright test                               :: browser tests; RESET the si
 C:\xampp\php\php.exe -l path\to\file.php          :: lint one file
 node tools/screens.mjs admin:/admin:a-home        :: screenshots at 1440/1024/390 into storage/cache/screens
 C:\xampp\php\php.exe bin\sibol.php ai:eval --demo :: AI check: 30 companion cases on the demo school (sibol database)
+C:\xampp\php\php.exe bin\sibol.php db:reset --size=pilot :: pilot-size school (1,200 students, 60 teachers) for timing
+node tools/timings.mjs teacher:/teacher/gradebook/1      :: median server time per page (aim: under 1 s)
+node tools/page-weight.mjs student:/student              :: bytes per page on "Slow 4G" (aim: under 500 KB)
+C:\tools\php83\php.exe vendor\bin\phpunit              :: the same tests on PHP 8.3 (README: browser tests on 8.3)
 ```
 
 The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL must be running.
 
 ## Hard rules
 
-- **PHP 8.0 compatible.** XAMPP ships 8.0.30. No enums, `readonly`, `never`, first-class callables,
-  `new` in initialisers, or pure intersection types. Composer's platform is pinned to 8.0.30.
+- **PHP 8.0 compatible, and clean on PHP 8.3.** XAMPP ships 8.0.30; production should run 8.3. No enums,
+  `readonly`, `never`, first-class callables, `new` in initialisers, or pure intersection types, and no
+  deprecation notices on 8.3 (dynamic properties, `${var}` in strings, null passed to string functions).
+  Composer's platform is pinned to 8.0.30.
 - **No inline JavaScript or event handlers.** The CSP is `script-src 'self'`. Behaviour goes in
   `public/assets/js/*.js` and hooks onto `data-*` attributes (`data-confirm`, `data-autosubmit`, `data-copy`,
   `data-toggle`, `data-dialog-open`, `data-goto`, …). Inline `style` attributes are allowed.

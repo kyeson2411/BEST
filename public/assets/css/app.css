@@ -211,7 +211,7 @@ small { font-size: var(--step--1); }
   border-radius: 0 4px 4px 0; background: var(--leaf);
 }
 .nav-link__count {
-  margin-left: auto; min-width: 22px; padding: 0 6px; border-radius: 999px;
+  margin-left: auto; min-width: 22px; padding: 0 6px; border-radius: 999px; font-style: normal;
   background: var(--leaf); color: var(--forest); font-size: 0.75rem; font-weight: 700; text-align: center; line-height: 20px;
 }
 .spine__foot { margin-top: auto; padding-top: var(--s-4); border-top: 1px solid rgba(233, 240, 228, 0.12); }

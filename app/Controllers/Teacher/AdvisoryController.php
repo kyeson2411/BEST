@@ -48,7 +48,7 @@ final class AdvisoryController extends Controller
             'classes' => Db::all(
                 "SELECT c.id, c.name, s.name AS subject_name,
                         (SELECT GROUP_CONCAT(CONCAT(COALESCE(NULLIF(u.preferred_name, ''), u.given_name), ' ', u.family_name) ORDER BY u.family_name SEPARATOR ', ')
-                           FROM class_memberships m JOIN users u ON u.id = m.user_id WHERE m.class_id = c.id AND m.role = 'teacher' AND m.status = 'active') AS teachers
+                           FROM class_memberships m STRAIGHT_JOIN users u ON u.id = m.user_id WHERE m.class_id = c.id AND m.role = 'teacher' AND m.status = 'active') AS teachers
                  FROM classes c JOIN subjects s ON s.id = c.subject_id
                  WHERE c.section_id = :s AND c.status = 'active' ORDER BY s.name",
                 ['s' => $id]

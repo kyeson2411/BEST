@@ -100,9 +100,13 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Requirement | Status | Notes |
 |---|---|---|
 | Design direction ("field notes meets a learning studio"), Lucide icons, no fake analytics | Done | `docs/design-system.md`; usage and insight numbers come from real records only |
-| Layouts at 1440, 1024 and 390 px | Done | screenshots; phone test on 25 screens |
-| WCAG 2.2 AA structure and contrast | Partial | automated structural checks on 40 screens and contrast maths; no manual screen-reader test |
-| Filipino interface | Done (needs review) | all 2,634 strings translated; companion answers follow the session and question language, in demo mode too; drafted with AI, not yet reviewed by a Filipino teacher |
+| Layouts at 1440, 1024 and 390 px | Done | screenshots; phone test on 29 screens |
+| WCAG 2.2 AA structure and contrast | Partial | automated structural checks on 44 screens and contrast maths; no manual screen-reader test |
+| Filipino interface | Done (needs review) | all 2,830 strings translated; companion answers follow the session and question language, in demo mode too; drafted with AI, not yet reviewed by a Filipino teacher |
 | Text written by scripts is translated | Done | `Services/ScriptStrings.php` via `data-i18n`; `ScriptStringsTest` fails on English literals in `public/assets/js`; browser `script-text.spec` checks Filipino flashcard and companion text |
+| Current PHP: suites on PHP 8.3 while keeping 8.0 | Done | PHPUnit and Playwright pass on PHP 8.0.30 (XAMPP Apache) and PHP 8.3.35 (built-in server with `tools/dev-server.php`), with every error and deprecation reported; README "Versions and performance" |
+| Current database: suites on MySQL 8.4 or MariaDB 10.11+ | Not done | only MariaDB 10.4 is installed here; a portable MariaDB 10.11 or MySQL 8.4 needs a download, which waits for the owner's OK |
+| Pilot-size performance: `db:seed --size=pilot`, heaviest pages under 1 s | Done | `Services/PilotSeeder.php` (1,200 students, 60 teachers, ten weeks of work, about 94,000 submissions); `tools/timings.mjs`; slowest page 659 ms (weekly report) after migration 013 and query fixes; before and after in README |
+| Student pages under 500 KB on throttled 4G | Done | `tools/page-weight.mjs` (Lighthouse "Slow 4G"): first visits 218–270 KB, return visits 16–70 KB; compression rules in `public/.htaccess` for servers with `mod_deflate` |
 | Email delivery, SSO, MFA | Not done | |
 | Virus scanning of uploads | Not done | |
