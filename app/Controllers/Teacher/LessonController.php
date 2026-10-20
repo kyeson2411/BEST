@@ -15,6 +15,8 @@ use Sibol\Services\Ai\AiException;
 use Sibol\Services\Ai\Generators;
 use Sibol\Services\Ai\Retrieval;
 use Sibol\Services\Ai\Usage;
+use Sibol\Services\GradingPeriods;
+use Sibol\Services\LessonPlans;
 use Sibol\Services\Notifier;
 use Sibol\Services\SectionCopies;
 
@@ -204,6 +206,39 @@ final class LessonController extends Controller
             'lesson' => $lesson,
             'class' => $class,
             'content' => json_decode((string) $lesson['draft_content'], true) ?: [],
+            'katex' => true,
+        ]);
+    }
+
+    /** The lesson in the DepEd Daily Lesson Log layout, to print. Teachers of the class only. */
+    public function dll(int $id): Response
+    {
+        $user = $this->user();
+        $lesson = $this->lesson($user, $id);
+        $class = Db::one(
+            'SELECT c.*, s.name AS subject_name, o.name AS org_name FROM classes c JOIN subjects s ON s.id = c.subject_id
+             JOIN organizations o ON o.id = c.organization_id WHERE c.id = :c',
+            ['c' => (int) $lesson['class_id']]
+        );
+        $content = json_decode((string) $lesson['draft_content'], true) ?: [];
+        // The current quarter or term, when the school year has grading periods.
+        $periods = GradingPeriods::forClass((int) $class['id']);
+        $current = $periods ? GradingPeriods::current($periods, GradingPeriods::zone((int) $class['organization_id'])) : null;
+        $author = $lesson['created_by'] ? Db::one('SELECT given_name, family_name, preferred_name FROM users WHERE id = :u', ['u' => (int) $lesson['created_by']]) : null;
+        return $this->view('teacher/lesson_dll', [
+            'title' => t('Daily Lesson Log: :title', ['title' => $lesson['title']]),
+            'crumbs' => [[t('Lessons'), '/teacher/lessons'], [$lesson['title'], '/teacher/lessons/' . $id], [t('Daily Lesson Log'), null]],
+            'lesson' => $lesson,
+            'content' => $content,
+            'dll' => LessonPlans::dll($lesson, $content),
+            'info' => [
+                'school' => (string) $class['org_name'],
+                'grade' => (string) ($lesson['grade_level'] ?: $class['grade_level']),
+                'teacher' => user_name($author ?: $user),
+                'area' => (string) $class['subject_name'],
+                'quarter' => $current !== null ? (string) (array_column($periods, 'name', 'id')[$current] ?? '') : '',
+            ],
+            'page_class' => 'page--print',
             'katex' => true,
         ]);
     }

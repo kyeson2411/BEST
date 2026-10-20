@@ -7,6 +7,7 @@ namespace Sibol\Services;
 use DateTimeImmutable;
 use DateTimeZone;
 use Sibol\Core\Db;
+use Sibol\Core\Translator;
 
 /**
  * An opt-in daily email listing the titles of a person's unread notifications. Titles only: never notification
@@ -56,7 +57,7 @@ final class EmailDigest
             if (!$titles) {
                 continue;
             }
-            $ok = Mailer::inLanguage((string) ($person['language'] ?? ''), static function () use ($person, $titles): bool {
+            $ok = Translator::with((string) ($person['language'] ?? ''), static function () use ($person, $titles): bool {
                 $text = t('Hello :name,', ['name' => user_name($person)]) . "\n\n"
                     . tp('You have :count new notification in Sibol:', 'You have :count new notifications in Sibol:', count($titles)) . "\n\n"
                     . implode("\n", array_map(static fn ($t): string => '- ' . $t, $titles)) . "\n\n"

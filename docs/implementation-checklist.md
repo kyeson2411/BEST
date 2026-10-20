@@ -73,6 +73,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Dashboard, classes, roster, modules, announcements | Done | |
 | Materials library with processing states and versions | Done | PDF (per page), DOCX, PPTX (per slide), TXT, MD, links |
 | Lesson studio with AI draft and publish | Done | |
+| Lesson plan in the DepEd Daily Lesson Log layout | Print view done; template export waits for the school's file | `Services/LessonPlans.php` maps the lesson's sections onto the DLL rows of DepEd Order No. 42, s. 2016 (blank rows to write in), labels in the lesson's language (`Translator::with`); `/teacher/lessons/{id}/dll`, teachers of the class only. One lesson, not a weekly log; a DOCX or XLSX export needs the school's DLL template. PHPUnit `LessonPlansTest`; browser `lesson-dll.spec` |
 | Copy materials, assignments/quizzes and lessons to other sections | Done | `Services/SectionCopies.php`; copies are drafts, modules matched by title, questions keep review state, linked materials remapped; copied passages carry the new class id so retrieval stays filtered in SQL (PHPUnit `SectionCopiesTest`, browser `section-copies.spec`) |
 | Assignment and quiz builder; AI question drafts must be approved | Done | browser quiz flow blocks publishing until approval |
 | Student preview, publish snapshots, locked questions after attempts | Done | |

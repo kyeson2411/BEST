@@ -276,6 +276,7 @@ $router->group('/teacher', ['role:teacher', 'notices'], static function ($r): vo
     $r->get('/lessons/{id}', [Teacher\LessonController::class, 'edit']);
     $r->post('/lessons/{id}', [Teacher\LessonController::class, 'update']);
     $r->get('/lessons/{id}/preview', [Teacher\LessonController::class, 'preview']);
+    $r->get('/lessons/{id}/dll', [Teacher\LessonController::class, 'dll']);
     $r->post('/lessons/{id}/publish', [Teacher\LessonController::class, 'publish']);
     $r->post('/lessons/{id}/unpublish', [Teacher\LessonController::class, 'unpublish']);
     $r->post('/lessons/{id}/duplicate', [Teacher\LessonController::class, 'duplicate']);

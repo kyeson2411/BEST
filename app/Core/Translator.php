@@ -33,6 +33,27 @@ final class Translator
         return self::$locale;
     }
 
+    /**
+     * Runs $fn in another language (an email to someone, a document in its own language), then puts the current one
+     * back. An empty or unknown language keeps the current one.
+     * @return mixed what $fn returns
+     */
+    public static function with(string $locale, callable $fn)
+    {
+        $current = self::$locale;
+        $switch = $locale !== '' && $locale !== $current && isset(((array) Config::get('app.locales', []))[$locale]);
+        if ($switch) {
+            self::setLocale($locale);
+        }
+        try {
+            return $fn();
+        } finally {
+            if ($switch) {
+                self::setLocale($current);
+            }
+        }
+    }
+
     /** @param array<string,string|int|float> $params */
     public static function get(string $text, array $params = []): string
     {

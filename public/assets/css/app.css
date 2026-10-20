@@ -1144,6 +1144,29 @@ input[type="file"]::file-selector-button:hover { background: var(--sage-soft); }
 .review-item__prompt p:last-child { margin-bottom: 0; }
 .review-item__back { margin: 0 0 var(--s-3); }
 
+/* Daily Lesson Log: a lesson in the DepEd DLL layout, with ruled cells to print. */
+.dll__head, .dll__table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.dll__head { margin: var(--s-3) 0 var(--s-4); }
+.dll__head th, .dll__head td, .dll__table th, .dll__table td { padding: 6px 8px; border: 1px solid var(--rule-strong); text-align: left; vertical-align: top; }
+.dll__head th { width: 18%; font-weight: 600; color: var(--ink-2); background: var(--paper-sunken); }
+.dll__head td { width: 32%; }
+.dll__table th[scope="row"] { width: 34%; font-weight: 600; color: var(--ink); background: var(--paper-sunken); }
+.dll__part th { font-weight: 700; color: var(--ink); background: var(--sage-soft); }
+.dll__table .prose { font-size: inherit; }
+.dll__table .prose > :last-child { margin-bottom: 0; }
+.dll__sources { margin: 0; padding-left: 1.25em; }
+.dll__blank { display: block; min-height: 2.5em; }
+@media print {
+  .dll__head th, .dll__table th[scope="row"], .dll__part th { background: none; }
+  .dll__table tr { break-inside: avoid; }
+}
+/* Phone screens: the four header cells per row become two. Screens only, so the printed log keeps its table. */
+@media screen and (max-width: 759px) {
+  .dll__head, .dll__head tbody { display: block; }
+  .dll__head tr { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .dll__head th, .dll__head td { width: auto; margin: 0 0 -1px; }
+}
+
 /* Comment bank: a teacher's saved feedback comments, inserted while grading. */
 .comment-bank { margin-top: var(--s-3); border: 1px solid var(--rule); border-radius: var(--radius-control); background: var(--paper-raised); }
 .comment-bank > summary { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-2) var(--s-3); font-weight: 700; cursor: pointer; }

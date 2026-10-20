@@ -110,7 +110,7 @@ final class Mailer
         if ($email === '' || !self::enabled()) {
             return false;
         }
-        return self::inLanguage((string) ($person['language'] ?? ''), static function () use ($person, $purpose, $url, $expires, $school, $email): bool {
+        return Translator::with((string) ($person['language'] ?? ''), static function () use ($person, $purpose, $url, $expires, $school, $email): bool {
             $name = user_name($person);
             if ($purpose === 'invitation') {
                 $subject = t('Your Sibol account at :school', ['school' => $school]);
@@ -128,21 +128,6 @@ final class Mailer
             }
             return self::send($email, $subject, $text);
         });
-    }
-
-    /** Runs $compose with the person's language, then puts the current one back. @return mixed */
-    public static function inLanguage(string $language, callable $compose)
-    {
-        $current = Translator::locale();
-        $locales = (array) Config::get('app.locales', []);
-        if ($language !== '' && isset($locales[$language])) {
-            Translator::setLocale($language);
-        }
-        try {
-            return $compose();
-        } finally {
-            Translator::setLocale($current);
-        }
     }
 
     /** tls (STARTTLS), ssl, or none for a local test server only. */

@@ -50,6 +50,7 @@ echo json_encode([
     'mathAssignment' => (int) Db::value("SELECT a.id FROM assignments a WHERE a.class_id = :c ORDER BY a.id LIMIT 1", ['c' => $class('Mathematics 9 – Narra')]),
     'sciPastQuiz' => (int) Db::value("SELECT a.id FROM assignments a WHERE a.class_id = :c AND a.title = 'Respiratory and circulatory systems check'", ['c' => $class('Science 9 – Narra')]),
     'paperTest' => (int) Db::value("SELECT id FROM assignments WHERE title = 'Short test on paper: breathing and circulation'"),
+    'lessonGasExchange' => (int) Db::value("SELECT id FROM lessons WHERE title = 'Gas exchange in the alveoli'"),
     'exportRequest' => (int) Db::value("SELECT id FROM privacy_requests WHERE request_type = 'export' ORDER BY id LIMIT 1"),
     'report' => (int) Db::value('SELECT id FROM ai_reports ORDER BY id LIMIT 1'),
 ], JSON_PRETTY_PRINT) . PHP_EOL;

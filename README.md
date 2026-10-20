@@ -357,8 +357,9 @@ and who may need a nudge (two missing or late in 14 days, by name; excused work,
 work in class and absences handled as in the gradebook; one reminder a day, none when the student turned them off),
 and email (off without `MAIL_HOST` and never showing the password; invitation and reset links emailed in the
 person's language and not without an address; the daily summary with unread titles only, never bodies, at most once
-in 20 hours and only what is new since the last one).
-Last run: **151 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
+in 20 hours and only what is new since the last one), and the Daily Lesson Log (every lesson section in exactly one
+row, the rows Sibol has nothing for left blank, and labels in the lesson's language with the page's language put back).
+Last run: **153 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -397,9 +398,10 @@ a class before its quiz, a missed practice set joining the queue, and a 403 for 
 (inserted into the overall comment and into a question's comment, saved from the grading page without leaving it,
 and a 404 for another teacher), a teacher nudging a student who missed two tasks (listed by name, reminded once a
 day, the reminder in the student's notifications, a 403 for students), email switched off (links still copied, no
-promise of an email, no password shown, no daily summary offered), phone-width layout of 36 screens and
-structural accessibility checks on 53 screens.
-Last run: **92 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
+promise of an email, no password shown, no daily summary offered), a lesson printed as a Daily Lesson Log (and a
+404 for a teacher of another class), phone-width layout of 37 screens and structural accessibility checks on 54
+screens.
+Last run: **93 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
 
 ## Versions and performance
 
@@ -461,6 +463,17 @@ the fixes in this build. Runs vary by about a third.
 | Teacher: insights | 164 ms | 160 ms | |
 | Student: progress | 137 ms | 86 ms | |
 | Every other page timed (dashboards, gradebook, submissions, review, advisory, users, usage, audit) | 34–107 ms | 29–69 ms | |
+
+Pages added later, on the same pilot-size school (measured on a slower day: the earlier code took 45–103 ms on the
+small demo school that day, against 29–69 ms above):
+
+| Page | Server time |
+|---|---|
+| Student: home (adds missed quiz questions to the review queue) | 122 ms |
+| Student: review queue, progress, progress report | 90–105 ms |
+| Teacher: class page with who may need a nudge | 68 ms |
+| Teacher: comment bank | 45 ms |
+| Adviser: progress reports for a whole section (50 students, 8 subjects) | 584 ms (1.3 s to load) |
 
 **Page weight.** `node tools/page-weight.mjs role:/path …` loads pages at phone width over Lighthouse's "Slow 4G"
 (1.6 Mbps, 150 ms round trip). The main student pages download:
@@ -674,6 +687,16 @@ tools/             asset scripts (fonts and icons, school images with their orig
   are writing** adds the selected text, or the whole box, without leaving the page. The most used comments come
   first. Only their owner sees them; another teacher gets a 404. They are in the teacher's data export and are
   erased with their account.
+- **Daily Lesson Log.** A lesson's **Daily Lesson Log** button prints it in the DepEd DLL layout (the rows of
+  DepEd Order No. 42, s. 2016), from the lesson's current draft, in the lesson's language.
+  - **Filled rows:** objectives go under I.C. Prior knowledge, the worked example, the explanation, activities,
+    checks for understanding and the exit ticket go under procedures A, C, D, E, F and I. The sources go under
+    references.
+  - **Blank rows:** content and performance standards, procedures B, G, H and J, remarks and the reflection are
+    left blank to write in. The current quarter fills in when the school year has grading periods.
+  - **Not done yet:** the school's own DLL template file has not been provided, so this is one lesson, not a week
+    with a column per day. A DOCX or XLSX export waits for that file.
+  - **Access:** teachers of the class only; others get a 404.
 - **Who may need a nudge.** A class's overview lists, by name, students with two or more pieces of work missing
   or handed in late among those due in the last 14 days. Each student's own due dates count, excused work is left
   out, and a student marked absent from work done in class counts as missing, as in the gradebook. The list is
@@ -742,9 +765,9 @@ tools/             asset scripts (fonts and icons, school images with their orig
   labelled controls, error messages tied to their fields, status shown with words and icons, never colour alone,
   reduced-motion support, charts with table views, and layouts that work at 390 px.
 - The browser tests check structure (one heading level 1 per page, unique ids, names for every control and
-  link, image alternatives) on 53 screens and the absence of sideways scrolling on 36 phone screens.
+  link, image alternatives) on 54 screens and the absence of sideways scrolling on 37 phone screens.
   They are not a full audit; test with a screen reader before launch.
-- **Filipino:** every interface string is translated (3,111 of 3,111), for students, teachers and school
+- **Filipino:** every interface string is translated (3,150 of 3,150), for students, teachers and school
   administrators. That includes text written by scripts (save status, card counters, companion progress), which
   the server translates and hands to the page in `data-i18n` attributes, so the JavaScript holds no English.
   Strings added later fall back to English until they are added to `lang/fil.php`; run

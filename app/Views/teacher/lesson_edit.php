@@ -21,6 +21,7 @@ $published = $lesson['status'] === 'published';
   </div>
   <div class="page-actions">
     <a class="btn btn--secondary" href="<?= e(url($base . '/preview')) ?>"><?= icon('eye', 'icon--sm') ?><?= e(t('Preview')) ?></a>
+    <a class="btn btn--secondary" href="<?= e(url($base . '/dll')) ?>"><?= icon('printer', 'icon--sm') ?><?= e(t('Daily Lesson Log')) ?></a>
     <?php if (!$published || (int) $lesson['has_unpublished_changes']): ?>
       <form method="post" action="<?= e(url($base . '/publish')) ?>" data-confirm="<?= e($published ? t('Students will see the updated version.') : t('Students in :class will see this lesson and get a notification.', ['class' => $lesson['class_name']])) ?>" data-confirm-title="<?= e($published ? t('Publish changes?') : t('Publish lesson?')) ?>" data-confirm-action="<?= e(t('Publish')) ?>">
         <?= csrf_field() ?><button class="btn btn--primary" type="submit"><?= icon('send', 'icon--sm') ?><?= e($published ? t('Publish changes') : t('Publish')) ?></button></form>
