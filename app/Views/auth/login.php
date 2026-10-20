@@ -9,6 +9,11 @@
   <button class="btn btn--primary btn--block" type="submit" data-busy="<?= e(t('Signing in…')) ?>"><?= e(t('Sign in')) ?></button>
 </form>
 
+<?php if (\Sibol\Services\GoogleSignIn::configured()): ?>
+  <p class="auth__or"><span><?= e(t('or')) ?></span></p>
+  <a class="btn btn--secondary btn--block" href="<?= e(url('/auth/google')) ?>"><?= icon('school', 'icon--sm') ?><?= e(t('Sign in with your school Google account')) ?></a>
+<?php endif; ?>
+
 <p class="auth__help">
   <a href="<?= e(url('/start')) ?>"><?= e(t('Have a sign-in slip? Type its code')) ?></a><br>
   <?= e(t('Forgot your password? Ask your teacher, adviser or school administrator for a new sign-in slip.')) ?>

@@ -28,15 +28,16 @@ with no build step and no Node.js at runtime.
 5. [Configuration (.env)](#configuration-env)
 6. [AI provider](#ai-provider)
 7. [Email (optional)](#email-optional)
-8. [Command-line tools](#command-line-tools)
-9. [Tests](#tests)
-10. [Versions and performance](#versions-and-performance)
-11. [Project layout](#project-layout)
-12. [Deploying for real use](#deploying-for-real-use)
-13. [Backups and restoring](#backups-and-restoring)
-14. [Security and Privacy Notes](#security-and-privacy-notes)
-15. [Accessibility and languages](#accessibility-and-languages)
-16. [Known limitations](#known-limitations)
+8. [Google sign-in (optional)](#google-sign-in-optional)
+9. [Command-line tools](#command-line-tools)
+10. [Tests](#tests)
+11. [Versions and performance](#versions-and-performance)
+12. [Project layout](#project-layout)
+13. [Deploying for real use](#deploying-for-real-use)
+14. [Backups and restoring](#backups-and-restoring)
+15. [Security and Privacy Notes](#security-and-privacy-notes)
+16. [Accessibility and languages](#accessibility-and-languages)
+17. [Known limitations](#known-limitations)
 
 ---
 
@@ -160,6 +161,8 @@ of files on disk.
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_ENCRYPTION` | empty, `587`, `tls` | Optional SMTP server; empty host keeps email off (see [Email](#email-optional)). `ssl` for port 465; `none` only for a test server on this computer. |
 | `MAIL_USERNAME`, `MAIL_PASSWORD` | empty | SMTP sign-in. The password is read only on the server, never shown or logged. |
 | `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | empty, `Sibol` | The sender people see. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty | Optional Google sign-in (see [Google sign-in](#google-sign-in-optional)). The secret is read only on the server, never shown or logged. |
+| `GOOGLE_WORKSPACE_DOMAINS` | empty | The school's Workspace domains, comma-separated (`school.edu.ph`). Google accounts on other domains are refused; all three `GOOGLE_` settings are needed to turn it on. |
 | `UPLOAD_MAX_MB` | `20` | Largest upload; also raise `upload_max_filesize` and `post_max_size` in `php.ini`. |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warning` or `error`. Logs go to `storage/logs/sibol.log`. |
 
@@ -295,6 +298,36 @@ Google limits how many messages one account can send in a day; check its current
 school at once. This build was tested against a local SMTP test server, not Google's servers: run step 3 before
 relying on it.
 
+## Google sign-in (optional)
+
+Schools on Google Workspace can let people sign in with their school Google account. Sibol finds the existing
+account with the same email address: it never creates accounts or changes roles, passwords and sign-in slips keep
+working, and people who turned on two-step sign-in are still asked for their code. An invited account that has not
+been set up yet is set up by its first Google sign-in (its invitation link then stops working). Students without a
+school email keep using their username.
+
+Setting it up takes a Workspace administrator about ten minutes:
+
+1. Open the Google Cloud console (`console.cloud.google.com`) with a school administrator account and create a
+   project, for example "Sibol".
+2. **APIs & Services → OAuth consent screen**: choose **Internal** (only your school's accounts can use it), the app
+   name "Sibol" and a support email. Sibol asks only for `openid`, `email` and `profile`.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID**, type **Web application**. Under
+   **Authorized redirect URIs** add the address shown on Sibol's **Integrations** page, for example
+   `https://sibol.school.edu.ph/auth/google/callback`. Google accepts only `https` addresses (and `http://localhost`
+   for trying it on the server itself).
+4. Put the client ID, the client secret and your Workspace domain in `.env`:
+   ```
+   GOOGLE_CLIENT_ID=1234567890-abc123.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=the-secret-from-google
+   GOOGLE_WORKSPACE_DOMAINS=school.edu.ph
+   ```
+5. Open **Integrations** (or run `check`): Google sign-in shows as on, and the sign-in page now offers
+   **Sign in with your school Google account**. Try it once with a staff account before telling everyone.
+
+This build was tested with a fake Google that hands out ID tokens signed by a test key, not with Google itself:
+step 5 is the first real round trip.
+
 ## Command-line tools
 
 ```bat
@@ -372,8 +405,12 @@ Keep offline only for files), and two-step sign-in (the published RFC 6238 and R
 either side and each code once, recovery codes kept only as hashes and working once, the secret unreadable without
 `APP_KEY`, a waiting sign-in ending after five minutes or when the person is signed out everywhere, and a person
 told when someone else switches it off), and backups (the database, every uploaded file and no secrets in the zip,
-and only older Sibol archives removed).
-Last run: **168 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
+and only older Sibol archives removed), and Google sign-in against a fake Google (the request's state, nonce and
+PKCE challenge; ID tokens refused for another client, issuer, nonce or school, an expired or future time, an
+unverified email, no signature, a changed payload or an unknown key; a state used once and only within ten
+minutes; Google's keys cached; existing accounts only, invited ones set up, roles untouched; and two-step sign-in
+still asking for its code).
+Last run: **188 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -417,9 +454,9 @@ promise of an email, no password shown, no daily summary offered), a lesson prin
 pages, a quiz and files not kept show the offline page in the person's language; the offline page carries no
 name, message or form token; signing out removes the kept file), a teacher turning on two-step sign-in (the code
 step after the password and after a reset link, each app code and recovery code working once, and an
-administrator switching it off with the teacher told), phone-width layout of 41 screens and structural
-accessibility checks on 58 screens.
-Last run: **103 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
+administrator switching it off with the teacher told), Google sign-in staying off until it is set up (no button,
+its addresses not found), phone-width layout of 41 screens and structural accessibility checks on 58 screens.
+Last run: **104 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
 
 ## Versions and performance
 
@@ -640,6 +677,14 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   and audit-logged. An administrator can switch it off for someone else who has lost their phone, from that
   person's page; the person gets a notification. If the only administrator is locked out, run
   `bin\sibol.php two-step:off their-username` on the server. Demo sign-in on this computer skips it.
+- **Google sign-in (optional).** OpenID Connect with the authorization code, PKCE (S256), and a `state` and `nonce`
+  kept in the person's session for ten minutes and used once; written with curl and OpenSSL, no library. Sibol
+  checks the ID token itself: Google's RS256 signature with Google's published keys (cached for as long as Google's
+  headers allow), the issuer, that it was issued to this client, its time, the nonce from this session, a verified
+  email, and the `hd` claim against `GOOGLE_WORKSPACE_DOMAINS`, so personal Gmail accounts and other schools are
+  refused. The account is then found by that email; nothing is created, and roles stay as the school set them.
+  The client secret is used only in the server's request to Google; tokens and codes are not stored or logged.
+  Two-step sign-in still asks for its code, since Google vouches only for the first step.
 - The session ID is regenerated at sign-in and sign-out. Cookies are `HttpOnly`, `SameSite=Lax`, and `Secure`
   when configured. The signed-in user is reloaded on every request, so deactivation, role changes and
   "sign out other devices" take effect immediately. Idle sessions end after `SESSION_IDLE_MINUTES`; the
@@ -860,9 +905,10 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
 
 ## Known limitations
 
-- No single sign-on yet. Two-step sign-in is optional, for administrators and teachers only; it was tested with
-  codes computed the way authenticator apps compute them (RFC 6238 test values), not yet with a real phone app.
-  People without email use printed sign-in slips.
+- Google sign-in was tested against a fake Google with ID tokens signed by a test key, not against Google itself
+  (no OAuth client was available); Microsoft 365 sign-in is not offered. Two-step sign-in is optional, for
+  administrators and teachers only; it was tested with codes computed the way authenticator apps compute them (RFC
+  6238 test values), not yet with a real phone app. People without email use printed sign-in slips.
 - Uploaded files are not scanned for viruses (a scanning hook was not chosen for this phase). They are kept
   outside the web folder and served only as downloads or inside a sandbox.
 - Email was tested with PHPMailer against a local SMTP test server and with messages kept in memory, not against

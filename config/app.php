@@ -27,6 +27,14 @@ return [
         // Describe the photograph if you replace it; empty uses the description of the current photo.
         'photo_alt' => Env::get('SCHOOL_PHOTO_ALT', ''),
     ],
+    // "Sign in with Google" for a school on Google Workspace (Services/GoogleSignIn); off while any is empty.
+    'google' => [
+        'client_id' => Env::get('GOOGLE_CLIENT_ID', ''),
+        // Server-side only: sent to Google in the token request, never shown or logged.
+        'client_secret' => Env::get('GOOGLE_CLIENT_SECRET', ''),
+        // The school's Workspace domains, comma-separated; other Google accounts are refused.
+        'domains' => Env::get('GOOGLE_WORKSPACE_DOMAINS', ''),
+    ],
     'db' => [
         'host' => Env::get('DB_HOST', '127.0.0.1'),
         'port' => Env::int('DB_PORT', 3306),

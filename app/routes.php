@@ -12,6 +12,7 @@ use Sibol\Controllers\AuthController;
 use Sibol\Controllers\CompanionController;
 use Sibol\Controllers\FeedbackController;
 use Sibol\Controllers\FileController;
+use Sibol\Controllers\GoogleController;
 use Sibol\Controllers\NoticeController;
 use Sibol\Controllers\NotificationController;
 use Sibol\Controllers\PageController;
@@ -66,6 +67,9 @@ $router->post('/demo-login', [AuthController::class, 'demoLogin'], ['guest']);
 // The code step for people who turned on two-step sign-in: the password alone signs nobody in.
 $router->get('/login/code', [TwoStepController::class, 'showChallenge'], ['guest']);
 $router->post('/login/code', [TwoStepController::class, 'challenge'], ['guest']);
+// "Sign in with Google" for existing accounts (not found until GOOGLE_* are set in .env).
+$router->get('/auth/google', [GoogleController::class, 'start'], ['guest']);
+$router->get('/auth/google/callback', [GoogleController::class, 'callback'], ['guest']);
 $router->post('/logout', [AuthController::class, 'logout']);
 $router->get('/invite/{token}', [AuthController::class, 'showInvite']);
 $router->post('/invite/{token}', [AuthController::class, 'acceptInvite']);

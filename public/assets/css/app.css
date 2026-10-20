@@ -637,6 +637,9 @@ dialog.dialog::backdrop { background: rgba(26, 38, 32, 0.45); }
 .dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px var(--s-5); margin: 0; }
 .dl dt { color: var(--ink-3); font-size: 0.875rem; font-weight: 600; }
 .dl dd { margin: 0; }
+/* Labels above values, for long names in narrow panels. */
+.dl--stack { grid-template-columns: 1fr; gap: 2px; }
+.dl--stack dd { margin-bottom: var(--s-2); overflow-wrap: anywhere; }
 
 /* Companion ---------------------------------------------------------------------- */
 .companion { display: grid; grid-template-columns: 284px minmax(0, 1fr); height: calc(100vh - var(--topbar-h)); min-height: 520px; }
@@ -793,6 +796,8 @@ dialog.dialog::backdrop { background: rgba(26, 38, 32, 0.45); }
 .auth__main:focus { outline: none; }
 .auth__title { margin: 0 0 var(--s-2); font-family: var(--font-display); font-size: 2rem; font-weight: 650; line-height: 1.15; }
 .auth__sub { margin: 0 0 var(--s-5); color: var(--ink-2); }
+.auth__or { display: flex; align-items: center; gap: var(--s-3); margin: var(--s-4) 0; color: var(--ink-3); font-size: 0.875rem; }
+.auth__or::before, .auth__or::after { content: ""; flex: 1; border-top: 1px solid var(--rule); }
 .auth__help { margin: var(--s-4) 0 0; font-size: 0.875rem; color: var(--ink-3); }
 .auth__notes { list-style: none; margin: var(--s-5) 0 0; padding: 0; font-size: 0.875rem; color: var(--ink-2); }
 .auth__notes li { display: flex; gap: 10px; padding: 9px 0; border-top: 1px solid var(--rule); }

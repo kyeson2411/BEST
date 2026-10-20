@@ -64,6 +64,10 @@ final class SystemCheck
         $rows[] = AppKey::available()
             ? ['label' => 'App key (APP_KEY)', 'ok' => true, 'detail' => 'Set (hidden). Staff can turn on two-step sign-in. Keep a copy apart from database backups.']
             : ['label' => 'App key (APP_KEY)', 'ok' => false, 'detail' => 'Missing, so two-step sign-in cannot be turned on. Run "php bin/sibol.php key:generate".'];
+        $google = GoogleSignIn::status();
+        $rows[] = $google['configured']
+            ? ['label' => 'Google sign-in', 'ok' => true, 'detail' => 'On for ' . implode(', ', $google['domains']) . ' (client secret hidden). Redirect URI: ' . $google['redirect_uri']]
+            : ['label' => 'Google sign-in', 'ok' => true, 'detail' => 'Off (optional). Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and GOOGLE_WORKSPACE_DOMAINS to offer it (see README).'];
         $backups = glob(BASE_PATH . '/storage/backups/' . Backup::PREFIX . '*.zip') ?: [];
         rsort($backups);
         $latest = $backups[0] ?? null;

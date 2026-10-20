@@ -241,6 +241,7 @@ final class SettingsController extends Controller
                 'base_url_host' => (string) parse_url((string) Config::get('ai.base_url', ''), PHP_URL_HOST),
             ],
             'mail' => Mailer::status(),
+            'google' => \Sibol\Services\GoogleSignIn::status(),
             'user' => $this->user(),
         ]);
     }

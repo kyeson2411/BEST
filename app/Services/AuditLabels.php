@@ -37,11 +37,15 @@ final class AuditLabels
         $meta = json_decode((string) ($row['metadata'] ?? ''), true) ?: [];
         $n = static fn (string $key): int => (int) ($meta[$key] ?? 0);
         switch ((string) $row['action']) {
-            case 'auth.login': return ($meta['second_step'] ?? '') === 'recovery' ? t('Signed in with a recovery code')
-                : (($meta['second_step'] ?? '') === 'app' ? t('Signed in with a code from their app') : t('Signed in'));
+            case 'auth.login':
+                if (($meta['via'] ?? '') === 'google') {
+                    return t('Signed in with Google');
+                }
+                return ($meta['second_step'] ?? '') === 'recovery' ? t('Signed in with a recovery code')
+                    : (($meta['second_step'] ?? '') === 'app' ? t('Signed in with a code from their app') : t('Signed in'));
             case 'auth.demo_login': return t('Signed in with a demo account');
             case 'auth.logout': return t('Signed out');
-            case 'auth.invitation_accepted': return t('Accepted an invitation and set a password');
+            case 'auth.invitation_accepted': return ($meta['via'] ?? '') === 'google' ? t('Set up their account by signing in with Google') : t('Accepted an invitation and set a password');
             case 'auth.password_reset': return t('Set a new password with a reset link');
             case 'auth.password_changed': return t('Changed their password');
             case 'auth.sessions_revoked': return t('Signed out their other sessions');

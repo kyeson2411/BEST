@@ -1,4 +1,4 @@
-<?php /** @var list<array> $checks @var array $ai */
+<?php /** @var list<array> $checks @var array $ai @var array $mail @var array $google @var array $user */
 $problems = count(array_filter($checks, static fn ($c) => !$c['ok']));
 ?>
 <div class="page-head">
@@ -58,6 +58,19 @@ $problems = count(array_filter($checks, static fn ($c) => !$c['ok']));
         <?php endif; ?>
         <p class="meta"><?= e(t('Links are still shown to copy, in case an email does not arrive. The password is never shown here or written to the logs.')) ?></p>
       <?php endif; ?>
+    </section>
+    <section class="panel" aria-labelledby="google-title">
+      <h2 class="panel__title" id="google-title"><?= e(t('Google sign-in')) ?></h2>
+      <dl class="dl dl--stack">
+        <dt><?= e(t('Status')) ?></dt><dd><?= e($google['configured'] ? t('On: people with a Sibol account on :domains can sign in with Google.', ['domains' => implode(', ', $google['domains'])]) : t('Off')) ?></dd>
+        <dt>GOOGLE_CLIENT_ID</dt><dd style="overflow-wrap:anywhere"><?= $google['client_id'] !== '' ? '<code>' . e($google['client_id']) . '</code>' : e(t('Not set')) ?></dd>
+        <dt>GOOGLE_CLIENT_SECRET</dt><dd><?= e($google['has_secret'] ? t('Set (hidden)') : t('Not set')) ?></dd>
+        <dt>GOOGLE_WORKSPACE_DOMAINS</dt><dd><?= e($google['domains'] ? implode(', ', $google['domains']) : t('Not set')) ?></dd>
+      </dl>
+      <p class="meta" style="margin-bottom:4px"><?= e(t('Authorized redirect URI to enter in Google Cloud:')) ?></p>
+      <p class="code-text" id="google-redirect" style="overflow-wrap:anywhere; margin:0 0 8px"><?= e($google['redirect_uri']) ?></p>
+      <button type="button" class="btn btn--secondary btn--sm" data-copy="#google-redirect"><?= icon('copy', 'icon--sm') ?><?= e(t('Copy address')) ?></button>
+      <p class="meta"><?= e(t('Only existing accounts can sign in this way, found by their email; roles stay as they are here, and two-step sign-in still asks for its code. The README explains how to create the client in Google Cloud.')) ?></p>
     </section>
   </aside>
 </div>
