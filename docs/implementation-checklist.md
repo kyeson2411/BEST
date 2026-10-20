@@ -17,7 +17,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 129 PHP tests, 74 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 130 PHP tests, 75 browser tests, all passing |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
 
@@ -105,8 +105,8 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Filipino interface | Done (needs review) | all 2,830 strings translated; companion answers follow the session and question language, in demo mode too; drafted with AI, not yet reviewed by a Filipino teacher |
 | Text written by scripts is translated | Done | `Services/ScriptStrings.php` via `data-i18n`; `ScriptStringsTest` fails on English literals in `public/assets/js`; browser `script-text.spec` checks Filipino flashcard and companion text |
 | Current PHP: suites on PHP 8.3 while keeping 8.0 | Done | PHPUnit and Playwright pass on PHP 8.0.30 (XAMPP Apache) and PHP 8.3.35 (built-in server with `tools/dev-server.php`), with every error and deprecation reported; README "Versions and performance" |
-| Current database: suites on MySQL 8.4 or MariaDB 10.11+ | Not done | only MariaDB 10.4 is installed here; a portable MariaDB 10.11 or MySQL 8.4 needs a download, which waits for the owner's OK |
+| Current database: suites on MySQL 8.4 or MariaDB 10.11+ | Done (MariaDB) | PHPUnit (PHP 8.0 and 8.3) and Playwright (PHP 8.3) pass on a portable MariaDB 10.11.19 with default settings, and PHPUnit also with `ONLY_FULL_GROUP_BY`; MySQL 8.4 not tried; README "Versions and performance" |
 | Pilot-size performance: `db:seed --size=pilot`, heaviest pages under 1 s | Done | `Services/PilotSeeder.php` (1,200 students, 60 teachers, ten weeks of work, about 94,000 submissions); `tools/timings.mjs`; slowest page 659 ms (weekly report) after migration 013 and query fixes; before and after in README |
-| Student pages under 500 KB on throttled 4G | Done | `tools/page-weight.mjs` (Lighthouse "Slow 4G"): first visits 218–270 KB, return visits 16–70 KB; compression rules in `public/.htaccess` for servers with `mod_deflate` |
+| Student pages under 500 KB on throttled 4G | Done | `tools/page-weight.mjs` (Lighthouse "Slow 4G"): first visits 218–270 KB (assignment and quiz pages were 519–524 KB until KaTeX loaded only when maths appears), return visits 16–70 KB; a page that shows maths adds KaTeX once (about 300 KB, 90 KB compressed); compression rules in `public/.htaccess` for servers with `mod_deflate`; browser `maths.spec` |
 | Email delivery, SSO, MFA | Not done | |
 | Virus scanning of uploads | Not done | |

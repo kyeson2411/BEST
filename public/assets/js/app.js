@@ -403,11 +403,13 @@
   /* Wide tables over time open at their newest end (the right) on narrow screens. */
   $all('[data-scroll-end]').forEach(function (el) { el.scrollLeft = el.scrollWidth; });
 
-  /* KaTeX for maths, when the page loaded it. */
-  window.Sibol.renderMath = function (root) {
-    if (typeof window.renderMathInElement !== 'function') return;
+  /* KaTeX for maths. Pages that can show maths name its files on <body>; they are fetched only once maths
+     (\( … \) or \[ … \]) actually appears, so pages without maths stay light on mobile data. */
+  var mathJs = doc.body.getAttribute('data-katex-js');
+  var mathWaiting = null;
+  function typeset(root) {
     try {
-      window.renderMathInElement(root || doc.body, {
+      window.renderMathInElement(root, {
         delimiters: [
           { left: '\\[', right: '\\]', display: true },
           { left: '\\(', right: '\\)', display: false }
@@ -417,6 +419,29 @@
         ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option', 'input']
       });
     } catch (e) { /* leave the TeX source readable */ }
+  }
+  function loadScript(src, done) {
+    var s = doc.createElement('script');
+    s.src = src;
+    s.onload = done;
+    s.onerror = function () { mathWaiting = []; }; // the TeX source stays readable
+    doc.head.appendChild(s);
+  }
+  window.Sibol.renderMath = function (root) {
+    root = root || doc.body;
+    if (!mathJs || !/\\\(|\\\[/.test(root.textContent || '')) return;
+    if (typeof window.renderMathInElement === 'function') { typeset(root); return; }
+    if (mathWaiting) { mathWaiting.push(root); return; }
+    mathWaiting = [root];
+    var css = doc.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = doc.body.getAttribute('data-katex-css');
+    doc.head.appendChild(css);
+    loadScript(mathJs, function () {
+      loadScript(doc.body.getAttribute('data-katex-render'), function () {
+        mathWaiting.splice(0).forEach(typeset);
+      });
+    });
   };
   window.addEventListener('load', function () { window.Sibol.renderMath(doc.querySelector('main')); });
 

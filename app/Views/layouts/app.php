@@ -36,11 +36,9 @@ $bottomItems = array_slice($bottomItems, 0, 4);
   <link rel="apple-touch-icon" href="<?= e(asset('school/apple-touch-icon.png')) ?>">
   <link rel="preload" href="<?= e(url('/assets/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
-  <?php if (!empty($katex)): ?>
-  <link rel="stylesheet" href="<?= e(asset('vendor/katex/katex.min.css')) ?>">
-  <?php endif; ?>
 </head>
-<body class="<?= e(trim(($page_class ?? '') . ($isDemoOrg || $aiDemo ? ' has-demo-band' : ''))) ?>" data-role="<?= e($user['role'] ?? '') ?>" data-i18n="<?= json_attr(ScriptStrings::common()) ?>">
+<?php /* Pages that can show maths name the KaTeX files here; app.js fetches them only once maths appears. */ ?>
+<body class="<?= e(trim(($page_class ?? '') . ($isDemoOrg || $aiDemo ? ' has-demo-band' : ''))) ?>" data-role="<?= e($user['role'] ?? '') ?>" data-i18n="<?= json_attr(ScriptStrings::common()) ?>"<?php if (!empty($katex)): ?> data-katex-css="<?= e(asset('vendor/katex/katex.min.css')) ?>" data-katex-js="<?= e(asset('vendor/katex/katex.min.js')) ?>" data-katex-render="<?= e(asset('vendor/katex/auto-render.min.js')) ?>"<?php endif; ?>>
 <a class="skip-link" href="#main"><?= e(t('Skip to content')) ?></a>
 <div class="shell">
   <aside class="spine" id="spine" aria-label="<?= e(t('Main navigation')) ?>">
@@ -176,10 +174,6 @@ $bottomItems = array_slice($bottomItems, 0, 4);
 <?= partial('confirm_dialog') ?>
 
 <script src="<?= e(asset('js/app.js')) ?>" defer></script>
-<?php if (!empty($katex)): ?>
-<script src="<?= e(asset('vendor/katex/katex.min.js')) ?>" defer></script>
-<script src="<?= e(asset('vendor/katex/auto-render.min.js')) ?>" defer></script>
-<?php endif; ?>
 <?php foreach (($scripts ?? []) as $script): ?>
 <script src="<?= e(asset('js/' . $script)) ?>" defer></script>
 <?php endforeach; ?>

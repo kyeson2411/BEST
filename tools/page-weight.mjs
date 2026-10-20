@@ -42,8 +42,11 @@ try {
       cdp.on('Network.responseReceived', onResponse);
       cdp.on('Network.loadingFinished', onFinished);
       const started = Date.now();
-      await page.goto(base + path, { waitUntil: 'load' });
+      const response = await page.goto(base + path, { waitUntil: 'load' });
       const seconds = (Date.now() - started) / 1000;
+      if (!response || response.status() !== 200) {
+        throw new Error(`${path} answered ${response ? response.status() : 'nothing'}`);
+      }
       await page.waitForTimeout(300);
       cdp.off('Network.responseReceived', onResponse);
       cdp.off('Network.loadingFinished', onFinished);

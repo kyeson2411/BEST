@@ -259,8 +259,10 @@ final class PilotSeeder
             foreach ($questions as $p => $q) {
                 $q['id'] = Db::insert('questions', $q['row'] + ['assignment_id' => $assignmentId, 'position' => $p + 1, 'reviewed' => 1]);
                 $questions[$p] = $q;
+                // Snapshots hold options and keys decoded, as Assessments::snapshot() writes them.
                 $snapshot[] = ['id' => $q['id'], 'qtype' => $q['row']['qtype'], 'prompt' => $q['row']['prompt'], 'points' => (float) $q['row']['points'],
-                    'options' => $q['row']['options'], 'answer_key' => $q['row']['answer_key'], 'explanation' => null, 'topic' => $q['row']['topic']];
+                    'options' => json_decode((string) $q['row']['options'], true) ?: [], 'answer_key' => json_decode((string) $q['row']['answer_key'], true) ?: [],
+                    'explanation' => null, 'topic' => $q['row']['topic']];
             }
             $version = Db::insert('assignment_versions', [
                 'assignment_id' => $assignmentId, 'version_no' => 1, 'published_by' => $teacher, 'created_at' => $published,

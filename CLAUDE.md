@@ -99,6 +99,9 @@ The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL m
 - `Response::file()` adds a sandbox CSP; inline PDFs replace it with `frame-ancestors 'none'` so the viewer works.
 - Demo sign-in and `/setup` only work with `APP_ENV=local` from the same computer.
 - `db:reset` and the browser tests delete stored uploads as well as tables.
+- KaTeX is not in the page: a controller passes `'katex' => true` for pages that may show maths, and `app.js`
+  fetches KaTeX only when `\( … \)` or `\[ … \]` appears. Scripts that insert content call
+  `Sibol.renderMath(root)` afterwards. Keep student pages under 500 KB (`node tools/page-weight.mjs`).
 - Students accept the privacy notice and the rules before any other page opens (router guard `notices`), so a new
   student in a browser test lands on `/welcome` first (`acceptNotices()` in `tests/e2e/helpers.mjs`). Raise
   `Notices::VERSIONS` when the wording of `partials/privacy_notice.php` or `partials/rules_of_use.php` changes.

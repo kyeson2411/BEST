@@ -43,7 +43,7 @@ with no build step and no Node.js at runtime.
 | | Minimum | Recommended |
 |---|---|---|
 | PHP | 8.0 (what current XAMPP 8.0.x ships) | **8.3** (both test suites pass on 8.0.30 and 8.3.35): PHP 8.0 and 8.1 no longer receive security fixes |
-| Database | MariaDB 10.4 (XAMPP) | a supported release such as MariaDB 10.11 or MySQL 8.4; so far Sibol has only been tested on MariaDB 10.4 |
+| Database | MariaDB 10.4 (XAMPP) | **MariaDB 10.11** (both test suites pass on 10.4 and 10.11.19); MySQL 8.4 should work but has not been tried |
 | Web server | Apache 2.4 with `mod_rewrite` and `.htaccess` (`AllowOverride All`, the XAMPP default) | same |
 | PHP extensions | `pdo_mysql`, `mbstring`, `json`, `fileinfo` | plus `curl` (live AI), `zip` (Word/PowerPoint materials), `openssl` |
 | Composer | for PDF text extraction (`smalot/pdfparser`) and PHPUnit | |
@@ -302,8 +302,9 @@ starting value, a guardian's yes or no, only the section's adviser or an adminis
 before anything reaches a provider, reteaching topics without that student, and the data export), and pilot
 feedback and the weekly report (only the page's path is kept, a reply is sent once as a notification, audit
 entries without text, feedback stays inside its school, weeks from Monday in the school's time zone, and a test
-school whose counts, rates and hidden small groups are checked number by number, in the page data and the CSV).
-Last run: **129 tests, all passing**.
+school whose counts, rates and hidden small groups are checked number by number, in the page data and the CSV;
+the pilot-size school loads only into an empty database).
+Last run: **130 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -332,9 +333,10 @@ for other teachers, a new student accepting the privacy notice and the rules bef
 after the administrator asks everyone, without interrupting work already under way), an adviser recording a
 guardian's no so the companion and practice disappear for that student (403, other pages unaffected, 404 for a
 teacher who is not the adviser), a student sending feedback from a class page and reading the administrator's
-reply, a teacher's feedback without its page, the weekly pilot report as a page and CSV (no names), phone-width
-layout of 29 screens and structural accessibility checks on 44 screens.
-Last run: **74 tests, all passing**.
+reply, a teacher's feedback without its page, the weekly pilot report as a page and CSV (no names), maths typeset
+with KaTeX that is downloaded only when a page shows maths, phone-width layout of 29 screens and structural
+accessibility checks on 44 screens.
+Last run: **75 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
 
 ## Versions and performance
 
@@ -356,8 +358,23 @@ set SIBOL_PHP=C:/tools/php83/php.exe
 npx playwright test
 ```
 
-**Database.** Sibol has only been tested on MariaDB 10.4 (XAMPP). The migrations avoid features that differ
-between MariaDB and MySQL 8, but a run on MariaDB 10.11 or MySQL 8.4 is still to be done.
+**Database.** Both suites pass on MariaDB 10.4 (XAMPP) and on MariaDB 10.11.19, the long-term release. On
+10.11, PHPUnit ran on PHP 8.0 and 8.3 and the browser tests on PHP 8.3, all with the server's default settings.
+PHPUnit also passes with `ONLY_FULL_GROUP_BY` forced on. MySQL 8 has that mode on by default, though Sibol sets
+its own SQL mode on every connection anyway. MySQL 8.4 itself has not been tried.
+
+To test against another database server, run it on another port and set `DB_HOST` and `DB_PORT` in the
+environment; real environment variables win over `.env`. For PHPUnit that is enough:
+
+```bat
+set DB_HOST=127.0.0.1
+set DB_PORT=3307
+C:\xampp\php\php.exe vendor\bin\phpunit
+```
+
+The browser tests also need the built-in server above, started with the same two variables, because Apache
+reads `.env`. The browser tests' setup deletes stored uploads, which the XAMPP demo database also uses: run
+`bin\sibol.php db:reset` afterwards.
 
 **A pilot-size school.** `bin\sibol.php db:reset --size=pilot` replaces the demo data with a larger fictional
 school in about 15 seconds:
@@ -387,16 +404,23 @@ the fixes in this build. Runs vary by about a third.
 
 | | Before | After |
 |---|---|---|
-| First visit (empty cache) | 255–307 KB | 218–270 KB |
-| Return visit | 16–70 KB | 16–70 KB |
-| First visit load time | 1.7–1.8 s | 1.5–1.6 s |
+| First visit: home, classes, lists, progress, calendar, companion, practice, settings, feedback | 255–307 KB, 1.7–1.8 s | 218–270 KB, 1.5–1.7 s |
+| First visit: an assignment or quiz | 519–524 KB, 2.8 s (measured after the font fix below; about 37 KB more before it) | 224–230 KB, 1.5 s |
+| Return visit (cached files) | 16–70 KB | 16–70 KB |
 
-The saving comes from the count beside a menu item: its number was drawn in italics, so every page downloaded a
-37 KB italic font just for that. Compression would save about 90 KB more on a first visit: the stylesheet goes
-from 76 to 15 KB, the main script from 20 to 6 KB and the icons from 23 to 5 KB. XAMPP ships `mod_deflate`
-switched off; to turn it on, remove the `#` in front of `LoadModule deflate_module modules/mod_deflate.so` in
-`C:\xampp\apache\conf\httpd.conf` and restart Apache. Pages themselves stay uncompressed on purpose: they hold
-form tokens next to text people type, which compression over HTTPS can leak (the BREACH attack).
+Two changes made the difference:
+- **The maths library.** Assignment, quiz, lesson, class and companion pages loaded KaTeX (about 300 KB) whether
+  or not they showed maths. Those pages now only name its files, and `app.js` fetches them when maths
+  (`\( … \)` or `\[ … \]`) actually appears, including in companion answers that arrive later. A page that does
+  show maths still downloads them once, about 90 KB with compression.
+- **The menu count.** The count beside a menu item was drawn in italics, so every page downloaded a 37 KB italic
+  font just for that.
+
+Compression would save about 90 KB more on a first visit: the stylesheet goes from 76 to 15 KB, the main script
+from 20 to 6 KB and the icons from 23 to 5 KB. XAMPP ships `mod_deflate` switched off; to turn it on, remove the
+`#` in front of `LoadModule deflate_module modules/mod_deflate.so` in `C:\xampp\apache\conf\httpd.conf` and
+restart Apache. Pages themselves stay uncompressed on purpose: they hold form tokens next to text people type,
+which compression over HTTPS can leak (the BREACH attack).
 
 ## Project layout
 
