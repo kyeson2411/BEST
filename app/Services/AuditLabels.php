@@ -22,6 +22,7 @@ final class AuditLabels
             'submission' => t('Submissions and grading'),
             'settings' => t('Settings and policies'),
             'grading_period' => t('Grading periods'),
+            'progress_report' => t('Progress reports'),
             'privacy' => t('Privacy'),
             'notices' => t('Privacy notice and rules'),
             'feedback' => t('Feedback about Sibol'),
@@ -64,6 +65,7 @@ final class AuditLabels
                 return tp('Printed :count sign-in or password slip', 'Printed :count sign-in or password slips', $n('setup') + $n('reset'));
             case 'section.adviser_changed': return !empty($meta['has_adviser']) ? t('Chose a section adviser') : t('Removed a section adviser');
             case 'section.removed': return t('Removed an empty section');
+            case 'progress_report.opened': return tp('Opened :count progress report', 'Opened :count progress reports', $n('students'));
 
             case 'class.created': return t('Created a class');
             case 'class.updated': return t('Updated class details');

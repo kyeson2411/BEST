@@ -5,7 +5,7 @@ import { demoLogin, ids } from './helpers.mjs';
 // a name for every form control, button and link, and alternative text for images.
 const pages = {
   guest: ['', 'login', 'start', 'privacy', 'help', 'login?lang=fil'],
-  student: ['student', 'student/assignments', 'student/classes', 'companion/new', 'student/progress', 'student/calendar', 'student/learning', 'settings', 'feedback'],
+  student: ['student', 'student/assignments', 'student/classes', 'companion/new', 'student/progress', 'student/progress/report', 'student/calendar', 'student/learning', 'settings', 'feedback'],
   teacher: ['teacher', 'teacher/review', 'teacher/assignments/new', 'teacher/materials/new', 'teacher/lessons', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback'],
   admin: ['admin', 'admin/users', 'admin/users/new', 'admin/users/import', 'admin/classes/new', 'admin/subjects', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/settings', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot', 'admin/grading', 'admin/academic-periods'],
 };
@@ -63,6 +63,15 @@ test('paper work screens pass structural accessibility checks', async ({ page })
   await demoLogin(page, 'student');
   await page.goto(`student/assignments/${id}`);
   expect(await audit(page), 'student paper work').toEqual([]);
+});
+
+test('an adviser\'s progress reports pass structural accessibility checks', async ({ page }) => {
+  const narra = ids().sections.narra;
+  await demoLogin(page, 'teacher');
+  for (const path of [`teacher/advisory/${narra}/reports`, `teacher/advisory/${narra}/students/${ids().users.andrea}/report`]) {
+    await page.goto(path);
+    expect(await audit(page), path).toEqual([]);
+  }
 });
 
 test('keyboard users can skip to the content', async ({ page }) => {

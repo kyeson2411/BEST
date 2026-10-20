@@ -9,6 +9,9 @@ $avg = $released ? array_sum(array_map(static fn ($r) => (float) $r['score'] / (
     <h1 class="page-title"><?= e(t('Progress')) ?></h1>
     <p class="page-lead"><?= e(t('Built only from your own work and the results your teachers have released. Your teachers set your official grades.')) ?></p>
   </div>
+  <div class="page-actions">
+    <a class="btn btn--secondary" href="<?= e(url('/student/progress/report')) ?>"><?= icon('printer', 'icon--sm') ?><?= e(t('Progress report')) ?></a>
+  </div>
 </div>
 
 <dl class="stat-line" aria-label="<?= e(t('Summary')) ?>">

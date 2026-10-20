@@ -38,6 +38,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Requirement | Status | Notes |
 |---|---|---|
 | Dashboard, classes, assignments, calendar, progress | Done | screenshots at 1440/1024/390; phone and accessibility checks |
+| Progress report per grading period, printed by the student or their section's adviser | Done | `Services/ProgressReports.php`: released grades by subject, missing and late work, released comments for one period (or the year so far without periods), labelled as not an official report card (SF9). Students: `/student/progress/report`; advisers: one student or the whole section, one A4 page each, only the section's classes, audit-logged with counts. PHPUnit `ProgressReportsTest`; browser `progress-report.spec` (404 for a teacher who is not the adviser) |
 | Assignment submission (text and files), receipts | Done | |
 | Extensions, extra quiz time and excused work per student | Done | `Services/Overrides.php`, set on the submissions page; own dates drive the dashboard, calendar, reminders, nav count, timers and late rules; excused work not counted or missing; "after the due date" answers wait for the latest extension (PHPUnit `OverridesTest`, browser `extensions.spec`) |
 | Quizzes: attempts, time limit, autosave, auto-marking | Done | browser quiz flow; `GradingTest` |

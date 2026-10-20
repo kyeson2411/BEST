@@ -1135,6 +1135,33 @@ input[type="file"]::file-selector-button:hover { background: var(--sage-soft); }
 .print-sheet__blanks { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); margin-top: var(--s-3); font-weight: 600; }
 .print-sheet__section { margin-bottom: var(--s-4); }
 .print-sheet__subhead { margin: 0 0 var(--s-2); font-size: var(--step-1); }
+/* Progress reports: one sheet per student, each printed on its own page. */
+.report + .report { margin-top: var(--s-6); }
+.report__school { display: flex; align-items: center; gap: var(--s-2); margin: 0 0 var(--s-2); font-weight: 600; color: var(--ink-2); }
+.report__who { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-5); margin: var(--s-3) 0 0; }
+.report__who dt { font-size: 0.8125rem; color: var(--ink-3); }
+.report__who dd { margin: 0; font-weight: 700; }
+.report__notice { display: flex; align-items: flex-start; gap: var(--s-2); margin: 0 0 var(--s-4); padding: var(--s-2) var(--s-3); border: 1px solid var(--rule-strong); border-radius: var(--radius-control); font-size: 0.875rem; font-weight: 600; }
+.report__notice .icon { flex-shrink: 0; margin-top: 2px; }
+.report__table th[scope="row"] { font-size: inherit; font-weight: 600; color: var(--ink); text-align: left; white-space: normal; background: none; }
+.report__table tbody tr:last-child > * { border-bottom: 0; }
+.report__key { margin: var(--s-2) 0 var(--s-4); }
+.report__comments { margin: 0; padding: 0; list-style: none; }
+.report__comments > li { padding: var(--s-2) 0; border-bottom: 1px solid var(--rule); break-inside: avoid; }
+.report__comments > li:last-child { border-bottom: 0; }
+.report__comment-head { margin: 0 0 var(--s-1); }
+.report__printed { margin: var(--s-4) 0 0; }
+/* On phone screens each subject becomes a short list. Screens only: an A4 page is narrower than 760px too. */
+@media screen and (max-width: 759px) {
+  .report.print-sheet { padding: var(--s-4); }
+  .report__table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .report__table, .report__table tbody, .report__table tr, .report__table th, .report__table td { display: block; width: 100%; }
+  .report__table tr { padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+  .report__table tbody tr:last-child { border-bottom: 0; }
+  .report__table th[scope="row"] { padding: 0 0 4px; border: 0; }
+  .report__table td { display: flex; justify-content: space-between; gap: var(--s-3); padding: 3px 0; border: 0; text-align: right; }
+  .report__table td::before { content: attr(data-label); flex-shrink: 0; text-align: left; color: var(--ink-3); font-size: 0.8125rem; font-weight: 700; }
+}
 .print-line { display: inline-block; min-width: 9em; height: 1.1em; border-bottom: 1px solid var(--ink-2); vertical-align: bottom; }
 .print-line--long { min-width: 16em; }
 .print-line--short { min-width: 3em; }
@@ -1162,6 +1189,8 @@ input[type="file"]::file-selector-button:hover { background: var(--sage-soft); }
   .page--print .main { max-width: none; padding: 0; }
   .print-sheet { max-width: none; padding: 0; border: 0; border-radius: 0; background: #FFF; font-size: 11pt; }
   .print-q__explain { background: none; border-left: 2px solid var(--rule-strong); border-radius: 0; }
+  .report + .report { margin-top: 0; break-before: page; }
+  .report .table-frame { overflow: visible; border: 0; }
 }
 
 /* Long lists on phones: one summary line per row instead of a labelled row per column. */

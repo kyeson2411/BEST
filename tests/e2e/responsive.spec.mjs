@@ -4,7 +4,7 @@ import { demoLogin, ids } from './helpers.mjs';
 // Runs in the "phone" project (390 × 844). Every main screen must fit without sideways
 // scrolling and keep the bottom navigation reachable.
 const screens = {
-  student: ['student', 'student/assignments', 'student/classes', 'companion', 'student/progress', 'student/calendar', 'student/learning', 'feedback'],
+  student: ['student', 'student/assignments', 'student/classes', 'companion', 'student/progress', 'student/progress/report', 'student/calendar', 'student/learning', 'feedback'],
   teacher: ['teacher', 'teacher/review', 'teacher/assignments', 'teacher/materials', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback'],
   admin: ['admin', 'admin/users', 'admin/classes', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot', 'admin/grading', 'admin/academic-periods'],
 };
@@ -21,9 +21,9 @@ for (const [role, paths] of Object.entries(screens)) {
   });
 }
 
-test('the score grid and the printable copy fit a phone', async ({ page }) => {
+test('the score grid, the printable copy and the section\'s progress reports fit a phone', async ({ page }) => {
   await demoLogin(page, 'teacher');
-  for (const path of [`teacher/assignments/${ids().paperTest}/scores`, `teacher/assignments/${ids().paperTest}/print?copy=key`]) {
+  for (const path of [`teacher/assignments/${ids().paperTest}/scores`, `teacher/assignments/${ids().paperTest}/print?copy=key`, `teacher/advisory/${ids().sections.narra}/reports`]) {
     await page.goto(path);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow, `${path} scrolls sideways by ${overflow}px`).toBeLessThanOrEqual(0);

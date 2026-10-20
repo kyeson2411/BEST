@@ -8,6 +8,11 @@ $notSetUp = count(array_filter($students, static fn ($s) => $s['status'] === 'in
     <h1 class="page-title"><?= e($label) ?></h1>
     <p class="page-lead"><?= e(t('You are this section\'s adviser.')) ?> <?= e(tp(':count student', ':count students', count($students))) ?><?= $section['period_name'] ? ', ' . e($section['period_name']) : '' ?>.</p>
   </div>
+  <?php if ($students): ?>
+    <div class="page-actions">
+      <a class="btn btn--secondary" href="<?= e(url($base . '/reports')) ?>"><?= icon('printer', 'icon--sm') ?><?= e(t('Progress reports')) ?></a>
+    </div>
+  <?php endif; ?>
 </div>
 
 <div class="layout-split">
@@ -35,6 +40,7 @@ $notSetUp = count(array_filter($students, static fn ($s) => $s['status'] === 'in
                 </td>
                 <td class="actions">
                   <?php if ($s['status'] !== 'deactivated'): ?>
+                    <a class="btn btn--quiet btn--sm" href="<?= e(url($base . '/students/' . (int) $s['id'] . '/report')) ?>"><?= icon('file-text', 'icon--sm') ?><?= e(t('Progress report')) ?><span class="sr-only">: <?= e(user_name($s)) ?></span></a>
                     <form method="post" action="<?= e(url('/teacher/students/' . (int) $s['id'] . '/slip')) ?>" data-confirm="<?= e($setup ? t('Prints a sign-in slip with a new one-time code so :name can set up their account. An earlier slip or link for them stops working.', ['name' => user_name($s)]) : t('Prints a slip with a one-time code so :name can choose a new password. Their current password keeps working until the slip is used. Slips are recorded in the audit log.', ['name' => user_name($s)])) ?>" data-confirm-title="<?= e($setup ? t('Print a sign-in slip?') : t('Print a password slip?')) ?>" data-confirm-action="<?= e(t('Print slip')) ?>">
                       <?= csrf_field() ?><input type="hidden" name="back" value="<?= e($base) ?>">
                       <button class="btn btn--quiet btn--sm" type="submit"><?= icon('printer', 'icon--sm') ?><?= e($setup ? t('Sign-in slip') : t('Password slip')) ?></button>

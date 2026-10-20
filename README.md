@@ -306,8 +306,10 @@ school whose counts, rates and hidden small groups are checked number by number,
 the pilot-size school loads only into an empty database), and grading periods (the 2015 table's 41 rows, reading
 a pasted table and refusing a broken one, which period work counts in, overlapping or out-of-year dates,
 splitting a year, and a test school whose period, final and transmuted grades are checked number by number,
-with the table on and off, with subject-group weights, and without periods).
-Last run: **136 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
+with the table on and off, with subject-group weights, and without periods), and progress reports (released
+results from one period only, missing and late counts, comments left out until released, the year so far
+without periods, and an adviser's reports limited to the section's classes and its students).
+Last run: **138 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -339,9 +341,10 @@ teacher who is not the adviser), a student sending feedback from a class page an
 reply, a teacher's feedback without its page, the weekly pilot report as a page and CSV (no names), maths typeset
 with KaTeX that is downloaded only when a page shows maths, an administrator loading the DepEd 2015 template
 (the table is refused until it is checked, then switched on, and the page still fits a phone), a teacher's
-quarter and final grades, CSV columns and work placed in another quarter, a student's quarter grades,
-phone-width layout of 31 screens and structural accessibility checks on 46 screens.
-Last run: **78 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
+quarter and final grades, CSV columns and work placed in another quarter, a student's quarter grades, a
+student's own progress report and an adviser's reports for the section (a 404 for a teacher who is not the
+adviser, and an audit entry), phone-width layout of 33 screens and structural accessibility checks on 49 screens.
+Last run: **82 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
 
 ## Versions and performance
 
@@ -589,6 +592,12 @@ tools/             asset scripts (fonts and icons, school images with their orig
   initial grade, its transmuted grade when the table is on, and the final grade. Students see each period's
   grade and the final grade so far under **Progress**. Changes to periods, groups, templates and the table are
   audit-logged with counts and switches only.
+- **Progress reports.** A printable page per student and grading period (print it, or save it as a PDF): the
+  grades teachers have released in each subject, missing and late work, and released teacher comments for that
+  period, or for the school year so far when the year has no grading periods. Every sheet says it is not an
+  official report card (SF9). Students print their own from **Progress**; the section's adviser prints one
+  student's report or the whole section, one page per student, from **Advisory**, covering the section's classes
+  only. Other teachers get a 404. Opening reports as an adviser is audit-logged with the number of students only.
 - **Quizzes on weak connections.** Answers are sent about a second after each change and when the page is hidden.
   Until the server confirms them they are also kept in the browser's `sessionStorage` for that tab only (never
   in cookies or long-term storage), restored after a reload and sent again on reconnect; they are removed once
@@ -648,9 +657,9 @@ tools/             asset scripts (fonts and icons, school images with their orig
   labelled controls, error messages tied to their fields, status shown with words and icons, never colour alone,
   reduced-motion support, charts with table views, and layouts that work at 390 px.
 - The browser tests check structure (one heading level 1 per page, unique ids, names for every control and
-  link, image alternatives) on 46 screens and the absence of sideways scrolling on 31 phone screens.
+  link, image alternatives) on 49 screens and the absence of sideways scrolling on 33 phone screens.
   They are not a full audit; test with a screen reader before launch.
-- **Filipino:** every interface string is translated (2,950 of 2,950), for students, teachers and school
+- **Filipino:** every interface string is translated (2,970 of 2,970), for students, teachers and school
   administrators. That includes text written by scripts (save status, card counters, companion progress), which
   the server translates and hands to the page in `data-i18n` attributes, so the JavaScript holds no English.
   Strings added later fall back to English until they are added to `lang/fil.php`; run

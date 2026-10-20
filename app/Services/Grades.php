@@ -59,9 +59,12 @@ final class Grades
         $cells = [];
         if ($assignments && $students) {
             [$in, $inParams] = Db::in(array_map(static fn ($a) => (int) $a['id'], $assignments), 'a');
+            if ($onlyStudent !== null) {
+                $inParams['only'] = $onlyStudent;
+            }
             $subs = Db::all(
                 "SELECT id, assignment_id, student_id, status, source, score, points_possible, grading_status, feedback_status, is_late, submitted_at, attempt_no
-                 FROM submissions WHERE assignment_id IN $in AND status IN ('submitted','returned')",
+                 FROM submissions WHERE assignment_id IN $in AND status IN ('submitted','returned')" . ($onlyStudent !== null ? ' AND student_id = :only' : ''),
                 $inParams
             );
             $best = [];

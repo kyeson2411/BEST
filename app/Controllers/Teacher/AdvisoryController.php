@@ -6,16 +6,18 @@ namespace Sibol\Controllers\Teacher;
 
 use Sibol\Controllers\Controller;
 use Sibol\Controllers\SetsStudentAi;
+use Sibol\Core\Audit;
 use Sibol\Core\Db;
 use Sibol\Core\Response;
 use Sibol\Policies\Access;
 use Sibol\Services\AiAccess;
+use Sibol\Services\ProgressReports;
 use Sibol\Services\Sections;
 use Sibol\Services\SignInSlips;
 
 /**
- * A class adviser's section: its students' accounts, with sign-in and password slips, and each student's AI
- * companion setting and guardian answers.
+ * A class adviser's section: its students' accounts, with sign-in and password slips, each student's AI
+ * companion setting and guardian answers, and progress reports across the section's subjects.
  */
 final class AdvisoryController extends Controller
 {
@@ -88,6 +90,41 @@ final class AdvisoryController extends Controller
         $back = '/teacher/advisory/' . $sectionId . '/students/' . $id;
         $this->saveGuardianAnswer($user, $student, $back);
         return $this->redirect($back);
+    }
+
+    /** Progress reports for every student of the section, one printed page each. */
+    public function reports(int $id): Response
+    {
+        $user = $this->user();
+        $section = Access::adviserSection($user, $id);
+        $students = array_values(array_filter(Sections::students($id), static fn (array $s): bool => $s['status'] !== 'deactivated'));
+        return $this->reportView($user, $section, $students, '/teacher/advisory/' . $id . '/reports', t('Progress reports'));
+    }
+
+    /** One student's progress report: the section's subjects they take. */
+    public function report(int $sectionId, int $id): Response
+    {
+        $user = $this->user();
+        [$section, $student] = Access::advisedStudent($user, $sectionId, $id);
+        return $this->reportView($user, $section, [$student], '/teacher/advisory/' . $sectionId . '/students/' . $id . '/report', user_name($student));
+    }
+
+    /** @param list<array<string,mixed>> $students */
+    private function reportView(array $user, array $section, array $students, string $base, string $title): Response
+    {
+        $label = Sections::label($section);
+        $built = ProgressReports::build((int) $user['organization_id'], $students, ProgressReports::sectionClassIds((int) $section['id']), $this->request->str('period') ?: null);
+        // Grades across every subject of the section: who opened them is recorded, never what they show.
+        Audit::log('progress_report.opened', 'section', (int) $section['id'], ['students' => count($students), 'period' => isset($built['period']['id']) ? (int) $built['period']['id'] : null]);
+        return $this->view('shared/progress_reports', [
+            'title' => $title,
+            'crumbs' => [[t('Advisory'), '/teacher/advisory'], [$label, '/teacher/advisory/' . (int) $section['id']], [$title, null]],
+            'lead' => t('Released grades, missing and late work, and teachers\' comments in this section\'s subjects for one grading period. Each student prints on their own page.'),
+            'built' => $built,
+            'students' => array_map(static fn (array $s): array => ['student' => $s, 'section' => $label, 'adviser' => user_name($user)], $students),
+            'base' => $base,
+            'page_class' => 'page--print',
+        ]);
     }
 
     public function slips(int $id): Response

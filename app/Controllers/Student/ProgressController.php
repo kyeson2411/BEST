@@ -7,10 +7,12 @@ namespace Sibol\Controllers\Student;
 use Sibol\Controllers\Controller;
 use Sibol\Core\Db;
 use Sibol\Core\Response;
+use Sibol\Policies\Access;
 use Sibol\Repositories\StudentRepo;
 use Sibol\Services\AiAccess;
 use Sibol\Services\Grades;
 use Sibol\Services\Overrides;
+use Sibol\Services\ProgressReports;
 
 /**
  * Personal progress from the student's own records only: released grades, submissions
@@ -76,6 +78,23 @@ final class ProgressController extends Controller
             // Practice sets open only while the student's AI is on, so the list is left out when it is off.
             'practice' => AiAccess::studentOn($this->user()) ? $practice : null,
             'feedback' => $feedback,
+        ]);
+    }
+
+    /** The student's own progress report for one grading period, to print or save as PDF. */
+    public function report(): Response
+    {
+        $user = $this->user();
+        $built = ProgressReports::build((int) $user['organization_id'], [$user], Access::studentClassIds($user), $this->request->str('period') ?: null);
+        $section = ProgressReports::sectionOf((int) $user['id'], isset($built['year']['id']) ? (int) $built['year']['id'] : null);
+        return $this->view('shared/progress_reports', [
+            'title' => t('Progress report'),
+            'crumbs' => [[t('Progress'), '/student/progress'], [t('Progress report'), null]],
+            'lead' => t('Your released grades, missing and late work, and your teachers\' comments for one grading period. Print it or save it as a PDF.'),
+            'built' => $built,
+            'students' => [['student' => $user, 'section' => $section['label'] ?? null, 'adviser' => $section['adviser'] ?? null]],
+            'base' => '/student/progress/report',
+            'page_class' => 'page--print',
         ]);
     }
 }

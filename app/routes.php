@@ -164,6 +164,7 @@ $router->group('/student', ['role:student', 'notices'], static function ($r): vo
     });
 
     $r->get('/progress', [Student\ProgressController::class, 'index']);
+    $r->get('/progress/report', [Student\ProgressController::class, 'report']);
 
     $r->get('/calendar', [Student\CalendarController::class, 'index']);
     $r->post('/calendar/sessions', [Student\CalendarController::class, 'store']);
@@ -185,7 +186,9 @@ $router->group('/teacher', ['role:teacher', 'notices'], static function ($r): vo
     $r->get('/advisory', [Teacher\AdvisoryController::class, 'index']);
     $r->get('/advisory/{id}', [Teacher\AdvisoryController::class, 'show']);
     $r->post('/advisory/{id}/slips', [Teacher\AdvisoryController::class, 'slips']);
+    $r->get('/advisory/{id}/reports', [Teacher\AdvisoryController::class, 'reports']);
     $r->get('/advisory/{sectionId}/students/{id}', [Teacher\AdvisoryController::class, 'student']);
+    $r->get('/advisory/{sectionId}/students/{id}/report', [Teacher\AdvisoryController::class, 'report']);
     $r->post('/advisory/{sectionId}/students/{id}/ai', [Teacher\AdvisoryController::class, 'studentAi']);
     $r->post('/advisory/{sectionId}/students/{id}/guardian', [Teacher\AdvisoryController::class, 'studentGuardian']);
     $r->post('/classes/{id}/code', [Teacher\ClassController::class, 'joinCode']);
