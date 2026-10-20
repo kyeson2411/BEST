@@ -12,6 +12,7 @@ use Sibol\Core\ImageSanitizer;
 use Sibol\Core\Response;
 use Sibol\Core\Uploads;
 use Sibol\Core\ValidationException;
+use Sibol\Services\EmailDigest;
 use Sibol\Services\Notifier;
 use Sibol\Services\Tokens;
 
@@ -50,6 +51,7 @@ final class ProfileController extends Controller
             'large_text' => 'bool',
             'reduce_motion' => 'bool',
             'underline_links' => 'bool',
+            'email_digest' => 'bool',
         ], ['timezone' => t('Timezone')], '/settings#preferences');
         $muted = array_values(array_intersect(array_keys(Notifier::types()), array_diff(array_keys(Notifier::types()), (array) $this->request->arr('notify'))));
         $prefs = json_decode((string) ($user['preferences'] ?? ''), true) ?: [];
@@ -58,6 +60,8 @@ final class ProfileController extends Controller
             'reduce_motion' => (bool) $data['reduce_motion'],
             'underline_links' => (bool) $data['underline_links'],
             'muted_notifications' => $muted,
+            // Only someone who can receive it can turn the daily email on.
+            'email_digest' => (bool) $data['email_digest'] && EmailDigest::available($user),
         ]);
         Db::update('users', [
             'language' => $data['language'],

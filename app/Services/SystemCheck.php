@@ -55,7 +55,11 @@ final class SystemCheck
         $rows[] = ['label' => 'Secure session cookie', 'ok' => $secure, 'detail' => $secure ? 'Enabled' : 'Off. Serve the site over HTTPS and set SESSION_SECURE_COOKIE=true.'];
         $dbUser = (string) Config::get('db.user');
         $rows[] = ['label' => 'Database account', 'ok' => $dbUser !== 'root', 'detail' => $dbUser === 'root' ? 'Using root. Create a least-privilege user for any shared deployment (see README).' : 'Dedicated user "' . $dbUser . '"'];
-        $rows[] = ['label' => 'Email delivery', 'ok' => false, 'detail' => 'Not configured. Sibol shows invitation and password links to administrators to share; it never claims an email was sent.'];
+        $mail = Mailer::status();
+        $rows[] = $mail['enabled']
+            ? ['label' => 'Email delivery', 'ok' => true, 'detail' => 'SMTP ' . $mail['host'] . ':' . $mail['port'] . ' (' . $mail['encryption'] . '), from ' . $mail['from']
+                . ($mail['has_password'] ? ', password set (hidden)' : ', no password') . '. Links are still shown to copy. Run "php bin/sibol.php mail:test you@school" to try it.']
+            : ['label' => 'Email delivery', 'ok' => false, 'detail' => 'Not configured (MAIL_HOST and MAIL_FROM_ADDRESS in .env). Sibol shows invitation and password links to administrators to share; it never claims an email was sent.'];
         return $rows;
     }
 }

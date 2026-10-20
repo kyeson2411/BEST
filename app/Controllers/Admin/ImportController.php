@@ -10,6 +10,7 @@ use Sibol\Core\Db;
 use Sibol\Core\Response;
 use Sibol\Core\Session;
 use Sibol\Core\Uploads;
+use Sibol\Services\Mailer;
 use Sibol\Services\Sections;
 use Sibol\Services\Settings;
 use Sibol\Services\SignInSlips;
@@ -270,6 +271,42 @@ final class ImportController extends Controller
             'created' => $created,
             'enrolled' => $enrolled,
         ]);
+    }
+
+    /** Emails the invitation links from the import that just finished to the people who have an address. */
+    public function emailLinks(): Response
+    {
+        $admin = $this->user();
+        $data = Session::get('import_links');
+        if (!is_array($data) || time() - (int) $data['at'] > 1800) {
+            $this->flash('error', t('The invitation links are no longer available here. Create new links or slips from each person\'s page.'));
+            return $this->redirect('/admin/users');
+        }
+        if (!Mailer::enabled()) {
+            $this->flash('error', t('Email is not set up for this copy of Sibol. Print the slips or download the links instead.'));
+            return $this->redirect('/admin/users?status=invited');
+        }
+        $sent = 0;
+        $failed = 0;
+        $expires = tp(':count day', ':count days', Tokens::INVITE_DAYS);
+        foreach ($data['rows'] as $r) {
+            if ((string) ($r['email'] ?? '') === '') {
+                continue;
+            }
+            $person = Db::one(
+                "SELECT u.*, o.name AS org_name FROM users u JOIN organizations o ON o.id = u.organization_id
+                 WHERE u.username = :u AND u.organization_id = :o AND u.status = 'invited'",
+                ['u' => (string) $r['username'], 'o' => (int) $admin['organization_id']]
+            );
+            if ($person) {
+                Mailer::accountLink($person, 'invitation', (string) $r['url'], $expires, (string) $person['org_name']) ? $sent++ : $failed++;
+            }
+        }
+        Audit::log('users.invitations_emailed', null, null, ['sent' => $sent, 'failed' => $failed]);
+        $this->flash($failed ? 'error' : 'success', $failed
+            ? tp('Emailed :count invitation. Some could not be sent: copy their links from each person\'s page.', 'Emailed :count invitations. Some could not be sent: copy their links from each person\'s page.', $sent)
+            : tp('Emailed :count invitation.', 'Emailed :count invitations.', $sent));
+        return $this->redirect('/admin/users?status=invited');
     }
 
     /** CSV of the invitation links from the import that just finished (this session only, 30 minutes). */

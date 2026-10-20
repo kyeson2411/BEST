@@ -13,6 +13,7 @@ use Sibol\Core\Paginator;
 use Sibol\Core\Response;
 use Sibol\Core\Session;
 use Sibol\Services\AiAccess;
+use Sibol\Services\Mailer;
 use Sibol\Services\Settings;
 use Sibol\Services\SignInSlips;
 use Sibol\Services\Tokens;
@@ -369,13 +370,27 @@ final class UserController extends Controller
     }
 
     /** The raw link is kept in the session only until the next page shows it once. */
+    /**
+     * Shows the new link once, to copy. When email is set up and the person has an address, the link is also emailed
+     * to them in their own language; the copy stays as the fallback.
+     */
     private function reveal(int $userId, string $purpose, string $token): void
     {
+        $url = Tokens::link($purpose, $token);
+        $expires = $purpose === 'invitation' ? tp(':count day', ':count days', Tokens::INVITE_DAYS) : tp(':count hour', ':count hours', Tokens::RESET_HOURS);
+        $person = Db::one('SELECT u.*, o.name AS org_name FROM users u JOIN organizations o ON o.id = u.organization_id WHERE u.id = :id', ['id' => $userId]);
+        $email = null;
+        if ($person && (string) $person['email'] !== '' && Mailer::enabled()) {
+            $sent = Mailer::accountLink($person, $purpose, $url, $expires, (string) $person['org_name']);
+            $email = ['to' => (string) $person['email'], 'sent' => $sent];
+            Audit::log($sent ? 'user.link_emailed' : 'user.link_email_failed', 'user', $userId, ['purpose' => $purpose]);
+        }
         Session::set('reveal_link', [
             'user_id' => $userId,
             'purpose' => $purpose,
-            'url' => Tokens::link($purpose, $token),
-            'expires' => $purpose === 'invitation' ? tp(':count day', ':count days', Tokens::INVITE_DAYS) : tp(':count hour', ':count hours', Tokens::RESET_HOURS),
+            'url' => $url,
+            'expires' => $expires,
+            'email' => $email,
         ]);
     }
 

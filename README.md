@@ -27,14 +27,15 @@ with no build step and no Node.js at runtime.
 4. [Demo accounts](#demo-accounts)
 5. [Configuration (.env)](#configuration-env)
 6. [AI provider](#ai-provider)
-7. [Command-line tools](#command-line-tools)
-8. [Tests](#tests)
-9. [Versions and performance](#versions-and-performance)
-10. [Project layout](#project-layout)
-11. [Deploying for real use](#deploying-for-real-use)
-12. [Security and Privacy Notes](#security-and-privacy-notes)
-13. [Accessibility and languages](#accessibility-and-languages)
-14. [Known limitations](#known-limitations)
+7. [Email (optional)](#email-optional)
+8. [Command-line tools](#command-line-tools)
+9. [Tests](#tests)
+10. [Versions and performance](#versions-and-performance)
+11. [Project layout](#project-layout)
+12. [Deploying for real use](#deploying-for-real-use)
+13. [Security and Privacy Notes](#security-and-privacy-notes)
+14. [Accessibility and languages](#accessibility-and-languages)
+15. [Known limitations](#known-limitations)
 
 ---
 
@@ -46,7 +47,7 @@ with no build step and no Node.js at runtime.
 | Database | MariaDB 10.4 (XAMPP) | **MariaDB 10.11** (both test suites pass on 10.4 and 10.11.19); MySQL 8.4 should work but has not been tried |
 | Web server | Apache 2.4 with `mod_rewrite` and `.htaccess` (`AllowOverride All`, the XAMPP default) | same |
 | PHP extensions | `pdo_mysql`, `mbstring`, `json`, `fileinfo` | plus `curl` (live AI), `zip` (Word/PowerPoint materials), `openssl` |
-| Composer | for PDF text extraction (`smalot/pdfparser`) and PHPUnit | |
+| Composer | for PDF text extraction (`smalot/pdfparser`), optional email (`phpmailer/phpmailer`) and PHPUnit | |
 | Node.js 18+ | only for browser tests and for re-copying fonts/icons | |
 
 The interface works in current Chrome, Edge, Firefox and Safari, on phones from 360 px wide.
@@ -153,6 +154,9 @@ of files on disk.
 | `AI_EFFORT` | `medium` | Claude only: `low`, `medium` or `high` reasoning effort. |
 | `AI_FALLBACKS` | `default` | Claude only: `default` or `off` (see below). |
 | `AI_PRICE_INPUT_PER_MTOK`, `AI_PRICE_OUTPUT_PER_MTOK` | empty | Your prices in USD per million tokens for the cost estimate. |
+| `MAIL_HOST`, `MAIL_PORT`, `MAIL_ENCRYPTION` | empty, `587`, `tls` | Optional SMTP server; empty host keeps email off (see [Email](#email-optional)). `ssl` for port 465; `none` only for a test server on this computer. |
+| `MAIL_USERNAME`, `MAIL_PASSWORD` | empty | SMTP sign-in. The password is read only on the server, never shown or logged. |
+| `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | empty, `Sibol` | The sender people see. |
 | `UPLOAD_MAX_MB` | `20` | Largest upload; also raise `upload_max_filesize` and `post_max_size` in `php.ini`. |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warning` or `error`. Logs go to `storage/logs/sibol.log`. |
 
@@ -253,6 +257,39 @@ cases never reach the provider); the cost of a run has not been measured yet, so
 checks are patterns, not judgement: read a live run's answers with `--show` before going live, and treat a pass
 as a floor, not a guarantee about other questions.
 
+## Email (optional)
+
+Email is off until `MAIL_HOST` and `MAIL_FROM_ADDRESS` are set in `.env`. While it is off, Sibol works as before:
+administrators copy invitation and password links (or print sign-in slips) and share them, and Sibol never claims
+an email was sent. With email on:
+- a new invitation or password link is also emailed to the person, in their own language, when their account has
+  an address. The link is still shown once to copy, in case the email does not arrive. After a CSV import,
+  **Email N invitations** sends the new links to everyone who has an address.
+- people with an address can turn on **Email me a daily summary of new notifications** under **Account and
+  preferences**. The summary lists the titles of their unread notifications, never bodies, grades, comments or
+  conversations. `bin\sibol.php mail:digest` sends the summaries; run it once a day. Each person gets at most one in
+  20 hours.
+- `check`, `mail:test ADDRESS` and **School settings → Integrations** show whether email works. They show the
+  host and the sender, never the password, and the password never reaches the logs. Sibol uses PHPMailer 6.
+
+**Google Workspace.** Use a school account as the sender, for example `sibol@school.edu.ph`:
+1. Turn on 2-Step Verification for that account, then create an app password for it (Google Account → Security
+   → App passwords).
+2. In `.env`, set `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_ENCRYPTION=tls`, `MAIL_USERNAME` and
+   `MAIL_FROM_ADDRESS` to that account, and `MAIL_PASSWORD` to the app password. Gmail sends only as the
+   account or one of its aliases.
+
+   If your Workspace administrator set up the SMTP relay for this server instead, use
+   `MAIL_HOST=smtp-relay.gmail.com` as the relay's settings say.
+3. Run `C:\xampp\php\php.exe bin\sibol.php mail:test you@school.edu.ph` and check that the email arrives (and is not
+   in spam).
+4. For the daily summary, add a daily task in Windows Task Scheduler that runs
+   `C:\xampp\php\php.exe C:\xampp\htdocs\BEST\bin\sibol.php mail:digest`, for example at 6:00 AM.
+
+Google limits how many messages one account can send in a day; check its current limits before inviting a whole
+school at once. This build was tested against a local SMTP test server, not Google's servers: run step 3 before
+relying on it.
+
 ## Command-line tools
 
 ```bat
@@ -272,6 +309,8 @@ C:\xampp\php\php.exe bin\sibol.php <command>
 | `lang:missing [fil]` | Count untranslated interface strings and write stubs to `storage/cache/`. |
 | `school:create "Name" email Given Family [timezone]` | Create a real school and its first administrator; prints a one-time invitation link. |
 | `user:link email-or-username` | Print a new invitation link (not yet accepted) or password reset link (active account). |
+| `mail:test ADDRESS` | Send a test email with the `MAIL_` settings (see [Email](#email-optional)). |
+| `mail:digest` | Send the daily notification summaries people turned on; run once a day. |
 | `ai:eval [--demo] [--case=A01,B02] [--show]` | Run the AI check on the demo school: a pass/fail table with token cost (see [Checking the AI before going live](#checking-the-ai-before-going-live)). |
 
 ## Tests
@@ -315,8 +354,11 @@ number, reviewing early before a quiz, practice questions leaving while the stud
 material is unpublished, and the queue in the data export and erasure), and the comment bank (comments matched to
 a rubric's criteria by title, ordered by use, refused when empty or too long, and out of reach of other teachers),
 and who may need a nudge (two missing or late in 14 days, by name; excused work, extensions, scored and unscored
-work in class and absences handled as in the gradebook; one reminder a day, none when the student turned them off).
-Last run: **148 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
+work in class and absences handled as in the gradebook; one reminder a day, none when the student turned them off),
+and email (off without `MAIL_HOST` and never showing the password; invitation and reset links emailed in the
+person's language and not without an address; the daily summary with unread titles only, never bodies, at most once
+in 20 hours and only what is new since the last one).
+Last run: **151 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -354,9 +396,10 @@ adviser, and an audit entry), a student's review queue (a missed quiz question c
 a class before its quiz, a missed practice set joining the queue, and a 403 for teachers), the comment bank
 (inserted into the overall comment and into a question's comment, saved from the grading page without leaving it,
 and a 404 for another teacher), a teacher nudging a student who missed two tasks (listed by name, reminded once a
-day, the reminder in the student's notifications, a 403 for students), phone-width layout of 36 screens and
+day, the reminder in the student's notifications, a 403 for students), email switched off (links still copied, no
+promise of an email, no password shown, no daily summary offered), phone-width layout of 36 screens and
 structural accessibility checks on 53 screens.
-Last run: **91 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
+Last run: **92 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
 
 ## Versions and performance
 
@@ -651,8 +694,10 @@ tools/             asset scripts (fonts and icons, school images with their orig
   students cannot be picked out.
 - The audit log records who did what and when, never passwords, tokens, keys or conversation text.
   Network addresses are stored only as hashes.
-- Sibol does not send email. It shows invitation and reset links to administrators to share, or prints them
-  on sign-in slips, and never claims an email was sent.
+- Email is optional. Without it, Sibol shows invitation and reset links to administrators to share, or prints
+  them on sign-in slips, and never claims an email was sent. With it, links are also emailed to the person, and
+  the daily summary carries notification titles only. The SMTP password stays in `.env` and is never shown or
+  logged.
 - **Privacy notice and rules.** On first sign-in, and again whenever either changes, students read the privacy
   notice and the rules for using Sibol (`/rules`) and accept both before any other page opens; the page they
   asked for opens afterwards, and they can read both in Filipino first. Each acceptance is stored with its
@@ -699,7 +744,7 @@ tools/             asset scripts (fonts and icons, school images with their orig
 - The browser tests check structure (one heading level 1 per page, unique ids, names for every control and
   link, image alternatives) on 53 screens and the absence of sideways scrolling on 36 phone screens.
   They are not a full audit; test with a screen reader before launch.
-- **Filipino:** every interface string is translated (3,065 of 3,065), for students, teachers and school
+- **Filipino:** every interface string is translated (3,111 of 3,111), for students, teachers and school
   administrators. That includes text written by scripts (save status, card counters, companion progress), which
   the server translates and hands to the page in `data-i18n` attributes, so the JavaScript holds no English.
   Strings added later fall back to English until they are added to `lang/fil.php`; run
@@ -711,8 +756,9 @@ tools/             asset scripts (fonts and icons, school images with their orig
 
 ## Known limitations
 
-- No email delivery, single sign-on or multi-factor authentication yet. People without email use printed
-  sign-in slips.
+- No single sign-on or multi-factor authentication yet. People without email use printed sign-in slips.
+- Email was tested with PHPMailer against a local SMTP test server and with messages kept in memory, not against
+  Google's servers. Run `mail:test` once before relying on it.
 - The QR codes on sign-in slips come from Sibol's own encoder (no library). The tests read every code back with
   an independent decoder and check it against values published in the QR standard, but nobody has scanned a
   printed slip with a phone yet: do that once on the school's printer before handing slips out.

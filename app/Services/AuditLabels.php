@@ -53,6 +53,10 @@ final class AuditLabels
             case 'user.reactivated': return t('Reactivated an account');
             case 'user.invitation_link': return t('Created a new invitation link');
             case 'user.reset_link': return t('Created a password reset link');
+            case 'user.link_emailed': return ($meta['purpose'] ?? '') === 'invitation' ? t('Emailed an invitation link') : t('Emailed a password reset link');
+            case 'user.link_email_failed': return t('Could not email a link; it was shown to copy');
+            case 'users.invitations_emailed': return tp('Emailed :count invitation', 'Emailed :count invitations', $n('sent'));
+            case 'settings.test_email': return !empty($meta['sent']) ? t('Sent a test email') : t('Tried to send a test email');
             case 'users.imported': return tp('Imported :count person from CSV', 'Imported :count people from CSV', $n('created'));
             case 'user.ai_switched':
                 return ['on' => t('Switched the AI companion on for a student'), 'off' => t('Switched the AI companion off for a student')][$meta['setting'] ?? ''] ?? t('Set a student\'s AI companion to follow the school');

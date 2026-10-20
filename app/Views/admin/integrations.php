@@ -41,7 +41,23 @@ $problems = count(array_filter($checks, static fn ($c) => !$c['ok']));
     </section>
     <section class="panel" aria-labelledby="mail-title">
       <h2 class="panel__title" id="mail-title"><?= e(t('Email')) ?></h2>
-      <p class="meta" style="margin:0"><?= e(t('Not connected. Invitation and password links are shown to administrators to share. In-app notifications work without email.')) ?></p>
+      <?php if (!$mail['enabled']): ?>
+        <p class="meta" style="margin:0"><?= e(t('Not connected. Invitation and password links are shown to administrators to share. In-app notifications work without email. To send email, set MAIL_HOST and the other MAIL_ settings in .env.')) ?></p>
+      <?php else: ?>
+        <dl class="dl">
+          <dt><?= e(t('Status')) ?></dt><dd><?= e(t('Connected: invitation and password links are emailed, and people can turn on a daily summary.')) ?></dd>
+          <dt>MAIL_HOST</dt><dd><code><?= e($mail['host'] . ':' . $mail['port']) ?></code> (<?= e($mail['encryption']) ?>)</dd>
+          <dt>MAIL_USERNAME</dt><dd><?= e($mail['username'] !== '' ? $mail['username'] : t('Not set')) ?></dd>
+          <dt>MAIL_PASSWORD</dt><dd><?= e($mail['has_password'] ? t('Set (hidden)') : t('Not set')) ?></dd>
+          <dt><?= e(t('Sender')) ?></dt><dd><?= e($mail['from']) ?></dd>
+        </dl>
+        <?php if ((string) ($user['email'] ?? '') !== ''): ?>
+          <form method="post" action="<?= e(url('/admin/integrations/test-email')) ?>">
+            <?= csrf_field() ?><button class="btn btn--secondary btn--sm" type="submit"><?= icon('mail', 'icon--sm') ?><?= e(t('Send a test email to :address', ['address' => $user['email']])) ?></button>
+          </form>
+        <?php endif; ?>
+        <p class="meta"><?= e(t('Links are still shown to copy, in case an email does not arrive. The password is never shown here or written to the logs.')) ?></p>
+      <?php endif; ?>
     </section>
   </aside>
 </div>

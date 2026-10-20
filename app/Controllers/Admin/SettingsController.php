@@ -12,6 +12,7 @@ use Sibol\Core\ImageSanitizer;
 use Sibol\Core\Response;
 use Sibol\Core\Uploads;
 use Sibol\Services\Ai\Providers;
+use Sibol\Services\Mailer;
 use Sibol\Services\Notices;
 use Sibol\Services\Settings;
 use Sibol\Services\SystemCheck;
@@ -239,6 +240,21 @@ final class SettingsController extends Controller
                 'has_key' => (string) Config::get('ai.api_key', '') !== '',
                 'base_url_host' => (string) parse_url((string) Config::get('ai.base_url', ''), PHP_URL_HOST),
             ],
+            'mail' => Mailer::status(),
+            'user' => $this->user(),
         ]);
+    }
+
+    /** Sends a test email to the administrator's own address, to check the MAIL_ settings. */
+    public function testEmail(): Response
+    {
+        $admin = $this->user();
+        $to = (string) ($admin['email'] ?? '');
+        $sent = $to !== '' && Mailer::send($to, t('Sibol test email'), t('This test email from Sibol at :school arrived, so email is set up correctly.', ['school' => (string) ($admin['org_name'] ?? '')]));
+        Audit::log('settings.test_email', null, null, ['sent' => $sent]);
+        $this->flash($sent ? 'success' : 'error', $sent
+            ? t('Test email sent to :address. Check that it arrived, and look in the spam folder too.', ['address' => $to])
+            : t('The test email could not be sent. Check the MAIL_ settings in .env, then look in storage/logs/sibol.log for the reason.'));
+        return $this->redirect('/admin/integrations');
     }
 }

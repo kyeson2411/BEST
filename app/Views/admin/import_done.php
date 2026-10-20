@@ -1,4 +1,6 @@
-<?php /** @var list<array> $created @var int $enrolled */ ?>
+<?php /** @var list<array> $created @var int $enrolled */
+$withEmail = count(array_filter($created, static fn (array $c): bool => (string) ($c['email'] ?? '') !== ''));
+?>
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Import complete')) ?></h1>
@@ -8,6 +10,11 @@
     <div class="page-actions">
       <a class="btn btn--primary" href="<?= e(url('/slips')) ?>"><?= icon('printer', 'icon--sm') ?><?= e(t('Print sign-in slips')) ?></a>
       <a class="btn btn--secondary" href="<?= e(url('/admin/users/import/links')) ?>"><?= icon('download', 'icon--sm') ?><?= e(t('Download links as CSV')) ?></a>
+      <?php if ($withEmail && \Sibol\Services\Mailer::enabled()): ?>
+        <form method="post" action="<?= e(url('/admin/users/import/email')) ?>" data-confirm="<?= e(tp('Sends :count person their invitation link by email, in their own language.', 'Sends :count people their invitation links by email, each in their own language.', $withEmail)) ?>" data-confirm-title="<?= e(t('Email the invitations?')) ?>" data-confirm-action="<?= e(t('Send emails')) ?>">
+          <?= csrf_field() ?><button class="btn btn--secondary" type="submit"><?= icon('mail', 'icon--sm') ?><?= e(tp('Email :count invitation', 'Email :count invitations', $withEmail)) ?></button>
+        </form>
+      <?php endif; ?>
     </div>
   <?php endif; ?>
 </div>

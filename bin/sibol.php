@@ -19,7 +19,9 @@ declare(strict_types=1);
  *   lang:missing [fil] List interface strings that are not translated yet
  *   school:create      Create a real school and its first administrator (prints a one-time link)
  *   user:link EMAIL    Print a new invitation or password-reset link for an account (email or username)
- *   check              Show configuration problems (database, AI provider, folders)
+ *   check              Show configuration problems (database, AI provider, email, folders)
+ *   mail:test ADDRESS  Send a test email with the MAIL_ settings in .env
+ *   mail:digest        Send the daily notification summaries people turned on (run once a day)
  *   ai:eval            Run the AI check: 30 fixed prompts on the demo school, with a pass/fail table
  *                      and token cost (--demo forces demo mode, --case=A01,B02 runs some, --show prints answers)
  */
@@ -80,6 +82,27 @@ try {
 
         case 'privacy:purge':
             $out(Sibol\Services\Privacy::purgeExpiredConversations());
+            break;
+
+        case 'mail:test':
+            // php bin/sibol.php mail:test you@school.edu.ph
+            $to = trim($argv[2] ?? '');
+            if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+                throw new RuntimeException('Usage: mail:test ADDRESS');
+            }
+            if (!Sibol\Services\Mailer::enabled()) {
+                throw new RuntimeException('Email is off: set MAIL_HOST and MAIL_FROM_ADDRESS in .env.');
+            }
+            $ok = Sibol\Services\Mailer::send($to, 'Sibol test email', 'This test email from Sibol arrived, so email is set up correctly.');
+            $out($ok ? 'Sent to ' . $to . '. Check that it arrived (and the spam folder).' : 'Not sent. The reason is in storage/logs/sibol.log.');
+            break;
+
+        case 'mail:digest':
+            // Once a day, from Task Scheduler or cron. Titles only; each person at most once in 20 hours.
+            $result = Sibol\Services\EmailDigest::run(new DateTimeImmutable('now'));
+            $out(Sibol\Services\Mailer::enabled()
+                ? sprintf('Daily summaries: %d sent, %d failed.', $result['sent'], $result['failed'])
+                : 'Email is off: set MAIL_HOST and MAIL_FROM_ADDRESS in .env.');
             break;
 
         case 'school:create':

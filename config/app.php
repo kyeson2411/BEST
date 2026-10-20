@@ -45,6 +45,16 @@ return [
         'price_input_per_mtok' => Env::get('AI_PRICE_INPUT_PER_MTOK', ''),
         'price_output_per_mtok' => Env::get('AI_PRICE_OUTPUT_PER_MTOK', ''),
     ],
+    // Optional email (SMTP). Empty MAIL_HOST keeps it off: administrators copy links instead.
+    'mail' => [
+        'host' => Env::get('MAIL_HOST', ''),
+        'port' => Env::int('MAIL_PORT', 587),
+        'encryption' => Env::get('MAIL_ENCRYPTION', 'tls'),
+        'username' => Env::get('MAIL_USERNAME', ''),
+        'password' => Env::get('MAIL_PASSWORD', ''),
+        'from_address' => Env::get('MAIL_FROM_ADDRESS', ''),
+        'from_name' => Env::get('MAIL_FROM_NAME', 'Sibol'),
+    ],
     'uploads' => [
         'max_mb' => Env::int('UPLOAD_MAX_MB', 20),
         'path' => BASE_PATH . '/storage/uploads',

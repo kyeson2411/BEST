@@ -95,6 +95,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | AI usage by day, feature and role with cost estimate | Done | |
 | School details, grade levels, logo, grading model and templates | Done | grading has its own page, `/admin/grading` |
 | Integrations and system checks (no secrets shown) | Done | |
+| Optional email (SMTP) for invitation and reset links, and an opt-in daily summary | Done (local test server) | PHPMailer 6.12 (PHP 5.5+). `MAIL_*` in `.env`; off when `MAIL_HOST` is empty, and links are always still shown to copy. `Services/Mailer.php` (person's language; password never shown or logged; fake transport for tests), `Services/EmailDigest.php` (unread titles only, once in 20 hours, `mail:digest`), `mail:test`, test button on Integrations, `check`. Bulk invitations after a CSV import on request. Tried with PHPMailer against a local SMTP server; not yet against Google. PHPUnit `EmailTest`; browser `email.spec` (off state) |
 | Privacy requests: export, correction, erasure, decline | Done | export downloadable only by the requester (browser test); erasure in `PrivacyAndUsageTest` |
 | Reported answers without conversation access | Done | browser test confirms the question is not shown |
 | Audit log with filters | Done | |

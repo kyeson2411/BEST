@@ -1,10 +1,20 @@
 <?php
-/** One-time display of an invitation or reset link. @var array $reveal {purpose,url,expires} @var array $person */
+/**
+ * One-time display of an invitation or reset link, with whether it was also emailed.
+ * @var array $reveal {purpose,url,expires,email: {to,sent}|null} @var array $person
+ */
 $invite = $reveal['purpose'] === 'invitation';
+$email = $reveal['email'] ?? null;
 ?>
 <section class="callout callout--leaf" aria-labelledby="reveal-title" style="margin-bottom: 24px; display:block">
   <h2 class="callout__title" id="reveal-title"><?= icon($invite ? 'mail' : 'key-round', 'icon--sm') ?> <?= e($invite ? t('Invitation link for :name', ['name' => user_name($person)]) : t('Password reset link for :name', ['name' => user_name($person)])) ?></h2>
-  <p><?= e(t('Copy this link now and send it to them through your school\'s usual channel. Sibol does not send email, and this link will not be shown again.')) ?></p>
+  <?php if ($email && $email['sent']): ?>
+    <p><?= e(t('Sibol emailed this link to :address. If it does not arrive, copy the link now and send it through your school\'s usual channel; it will not be shown again.', ['address' => $email['to']])) ?></p>
+  <?php elseif ($email): ?>
+    <p><?= e(t('Sibol could not email this link to :address. Copy it now and send it through your school\'s usual channel; it will not be shown again.', ['address' => $email['to']])) ?></p>
+  <?php else: ?>
+    <p><?= e(t('Copy this link now and send it to them through your school\'s usual channel. Sibol does not send email, and this link will not be shown again.')) ?></p>
+  <?php endif; ?>
   <div class="copy-field">
     <label class="sr-only" for="reveal-url"><?= e(t('Link')) ?></label>
     <input class="input" id="reveal-url" type="text" readonly value="<?= e($reveal['url']) ?>">

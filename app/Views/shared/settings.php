@@ -73,6 +73,11 @@ $typeLabel = ['export' => t('Copy of my data'), 'correction' => t('Correct my in
         <?php foreach ($types as $key => $label): ?>
           <?= checkbox('notify[]', $label, !in_array($key, $muted, true), null, $key) ?>
         <?php endforeach; ?>
+        <?php if (\Sibol\Services\EmailDigest::available($user)): ?>
+          <?= checkbox('email_digest', t('Email me a daily summary of new notifications'), !empty($prefs['email_digest']), t('At most one email a day to :address, with notification titles only: never grades, comments or conversations.', ['address' => $user['email']])) ?>
+        <?php elseif (\Sibol\Services\Mailer::enabled()): ?>
+          <p class="fieldset-hint"><?= e(t('A daily summary by email needs an email address on your account. Ask your school\'s administrator to add one.')) ?></p>
+        <?php endif; ?>
       </fieldset>
       <button class="btn btn--primary" type="submit"><?= e(t('Save preferences')) ?></button>
     </form>

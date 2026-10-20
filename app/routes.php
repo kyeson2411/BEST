@@ -293,6 +293,7 @@ $router->group('/admin', ['role:admin', 'notices'], static function ($r): void {
     $r->get('/users/import', [Admin\ImportController::class, 'create']);
     $r->get('/users/import/template', [Admin\ImportController::class, 'template']);
     $r->get('/users/import/links', [Admin\ImportController::class, 'links']);
+    $r->post('/users/import/email', [Admin\ImportController::class, 'emailLinks']);
     $r->post('/users/import', [Admin\ImportController::class, 'preview']);
     $r->post('/users/import/confirm', [Admin\ImportController::class, 'confirm']);
     $r->get('/users/{id}', [Admin\UserController::class, 'show']);
@@ -345,6 +346,7 @@ $router->group('/admin', ['role:admin', 'notices'], static function ($r): void {
     $r->post('/settings', [Admin\SettingsController::class, 'saveSchool']);
     $r->post('/settings/logo', [Admin\SettingsController::class, 'saveLogo']);
     $r->get('/integrations', [Admin\SettingsController::class, 'integrations']);
+    $r->post('/integrations/test-email', [Admin\SettingsController::class, 'testEmail']);
 
     $r->get('/audit', [Admin\AuditController::class, 'index']);
 
