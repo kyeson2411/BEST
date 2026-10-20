@@ -186,6 +186,16 @@ Ranked by people affected × how badly. "Students" covers several hundred people
 | 26 | Annoys | Teachers | New quiz/assignment form | 14 fields before the first question; module list repeats names across classes | Short first step (class, title, due date); rules folded into "More settings" with sensible defaults; modules listed for the chosen class only |
 | 27 | Annoys | AI-off students | Menu | Companion and Practice vanish with no word | A short note on Home or Help: "Your school has switched off the AI study helper for your account" |
 
+**Reported by the developer (21 October 2026):** "Create assignment" is confusing: they saw multiple choice
+mentioned but could not find where to write a multiple-choice question, or tell what the fields were for.
+What causes it: Home "Create assignment" opens the written-work form, which has no questions; quizzes are a
+separate kind behind a small "Make a quiz instead" link; the quiz form is rules only ("You add questions … on
+the next screen"); on the next screen "Add a question" is a folded box, and the only visible "Multiple choice"
+is a number box in the AI panel that means how many questions the AI should draft. This raises problem 26 to
+**blocks**. Fix (with B4/B5): one "Create" choice that shows the three kinds side by side with a one-line
+example each; the quiz's question editor open by default with "Multiple choice" as the first type; the AI
+panel labelled "How many questions should the AI draft?".
+
 Not problems (keep as they are): confirm dialogs that state the consequence; the submission receipt with
 "What happens next"; the import preview ("Nothing has been saved yet"); AI draft labels with page sources;
 the student's own due dates everywhere; no page scrolls sideways at 390 px.
