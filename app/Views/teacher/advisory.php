@@ -19,7 +19,7 @@ $notSetUp = count(array_filter($students, static fn ($s) => $s['status'] === 'in
       <div class="table-frame">
         <table class="table table--stack">
           <caption class="sr-only"><?= e(t('Students in :section', ['section' => $label])) ?></caption>
-          <thead><tr><th scope="col"><?= e(t('Student')) ?></th><th scope="col"><?= e(t('Account')) ?></th><th scope="col" class="actions"><span class="sr-only"><?= e(t('Actions')) ?></span></th></tr></thead>
+          <thead><tr><th scope="col"><?= e(t('Student')) ?></th><th scope="col"><?= e(t('Account')) ?></th><th scope="col"><?= e(t('AI companion')) ?></th><th scope="col" class="actions"><span class="sr-only"><?= e(t('Actions')) ?></span></th></tr></thead>
           <tbody>
             <?php foreach ($students as $s): $setup = $s['status'] === 'invited'; ?>
               <tr>
@@ -29,6 +29,9 @@ $notSetUp = count(array_filter($students, static fn ($s) => $s['status'] === 'in
                   <?php if ($s['status'] === 'deactivated'): ?><?= badge(t('Deactivated'), 'neutral') ?>
                   <?php elseif ($setup): ?><?= badge(t('Not set up yet'), 'amber') ?>
                   <?php else: ?><?= badge(t('Active'), 'leaf') ?><span class="table-sub"><?= $s['last_login_at'] ? e(t('Last sign-in :date', ['date' => fmt_date($s['last_login_at'], 'date_short')])) : e(t('Never signed in')) ?></span><?php endif; ?>
+                </td>
+                <td data-label="<?= e(t('AI companion')) ?>">
+                  <a href="<?= e(url($base . '/students/' . (int) $s['id'])) ?>"><?= e(\Sibol\Services\AiAccess::studentOn($s) ? t('On') : t('Off')) ?><span class="sr-only">: <?= e(t('AI companion and guardian\'s answer for :name', ['name' => user_name($s)])) ?></span></a>
                 </td>
                 <td class="actions">
                   <?php if ($s['status'] !== 'deactivated'): ?>

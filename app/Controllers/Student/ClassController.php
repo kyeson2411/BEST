@@ -12,6 +12,7 @@ use Sibol\Core\RateLimiter;
 use Sibol\Core\Response;
 use Sibol\Policies\Access;
 use Sibol\Repositories\StudentRepo;
+use Sibol\Services\AiAccess;
 use Sibol\Services\Notifier;
 use Sibol\Services\Settings;
 
@@ -109,7 +110,7 @@ final class ClassController extends Controller
             'lessons' => $lessons,
             'announcements' => $announcements,
             'work' => $work,
-            'aiEnabled' => (bool) Settings::get((int) $user['organization_id'], 'ai.enabled', true),
+            'aiEnabled' => AiAccess::allowed($user),
         ]);
     }
 

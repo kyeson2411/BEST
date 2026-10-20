@@ -19,9 +19,11 @@ foreach ((array) ($content['sources'] ?? []) as $s) {
     <h1 class="page-title"><?= e($lesson['title']) ?></h1>
     <p class="page-lead"><?= e($class['name']) ?><?php if ($lesson['duration_minutes']): ?>, <?= e(t(':n minutes', ['n' => (int) $lesson['duration_minutes']])) ?><?php endif; ?></p>
   </div>
-  <div class="page-actions">
-    <a class="btn btn--secondary" href="<?= e(url('/companion/new', ['class_id' => (int) $class['id'], 'mode' => 'explain', 'topic' => $lesson['title']])) ?>"><?= icon('messages-square') ?><?= e(t('Ask the companion about this lesson')) ?></a>
-  </div>
+  <?php if (my_ai_on()): ?>
+    <div class="page-actions">
+      <a class="btn btn--secondary" href="<?= e(url('/companion/new', ['class_id' => (int) $class['id'], 'mode' => 'explain', 'topic' => $lesson['title']])) ?>"><?= icon('messages-square') ?><?= e(t('Ask the companion about this lesson')) ?></a>
+    </div>
+  <?php endif; ?>
 </div>
 
 <article class="prose">

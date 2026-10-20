@@ -50,3 +50,11 @@ export function inDays(days, hour = 17) {
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:00`;
 }
+
+/** Accepts the privacy notice and the rules on the "Before you start" page a student sees first. */
+export async function acceptNotices(page) {
+  await expect(page).toHaveURL(/\/welcome$/);
+  await page.getByLabel('I have read the privacy notice').check();
+  await page.getByLabel('I will follow the rules for using Sibol').check();
+  await page.getByRole('button', { name: 'Accept and continue' }).click();
+}

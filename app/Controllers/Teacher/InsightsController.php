@@ -91,7 +91,7 @@ final class InsightsController extends Controller
             return $this->redirect('/teacher/insights/' . $id);
         }
         try {
-            $text = Generators::interventionIdeas($user, $class, Insights::topics($id));
+            $text = Generators::interventionIdeas($user, $class, Insights::topics($id, (int) $user['organization_id']));
         } catch (AiException $e) {
             $this->flash('error', $e->getMessage());
             return $this->redirect('/teacher/insights/' . $id);

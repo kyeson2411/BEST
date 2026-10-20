@@ -22,6 +22,7 @@ final class AuditLabels
             'submission' => t('Submissions and grading'),
             'settings' => t('Settings and policies'),
             'privacy' => t('Privacy'),
+            'notices' => t('Privacy notice and rules'),
             'ai' => t('Companion and AI'),
             'access' => t('Denied access'),
         ];
@@ -49,6 +50,11 @@ final class AuditLabels
             case 'user.invitation_link': return t('Created a new invitation link');
             case 'user.reset_link': return t('Created a password reset link');
             case 'users.imported': return tp('Imported :count person from CSV', 'Imported :count people from CSV', $n('created'));
+            case 'user.ai_switched':
+                return ['on' => t('Switched the AI companion on for a student'), 'off' => t('Switched the AI companion off for a student')][$meta['setting'] ?? ''] ?? t('Set a student\'s AI companion to follow the school');
+            case 'user.guardian_answer': return ($meta['answer'] ?? '') === 'yes' ? t('Recorded a guardian\'s yes to the AI companion') : t('Recorded a guardian\'s no to the AI companion');
+            case 'notices.acknowledged': return t('Accepted the privacy notice and the rules');
+            case 'notices.renewed': return t('Asked everyone to accept the privacy notice and the rules again');
             case 'user.setup_slip': return t('Printed a sign-in slip');
             case 'user.reset_slip': return t('Printed a password slip');
             case 'user.signin_slips':

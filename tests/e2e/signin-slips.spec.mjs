@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { confirmClick, demoLogin, ids, passwordLogin, statusOf } from './helpers.mjs';
+import { acceptNotices, confirmClick, demoLogin, ids, passwordLogin, statusOf } from './helpers.mjs';
 
 // Item 19: students without email sign in with a username; administrators, advisers and teachers
 // print one-time sign-in and password slips, which work by QR link or by typing the code.
@@ -56,6 +56,8 @@ test('students imported without email set up their account from a printed slip',
   await student.getByLabel('Create a password').fill('blue jeepney morning');
   await student.getByLabel('Type the password again').fill('blue jeepney morning');
   await student.getByRole('button', { name: 'Set up account' }).click();
+  // A new student reads and accepts the privacy notice and the rules first (item 21).
+  await acceptNotices(student);
   await expect(student).toHaveURL(/\/student$/);
 
   // The code worked once; afterwards the student signs in with the username.

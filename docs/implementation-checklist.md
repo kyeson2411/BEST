@@ -8,7 +8,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Requirement | Status | Where / evidence |
 |---|---|---|
 | PHP framework-light MVC under XAMPP, no Node at runtime | Done | `public/index.php`, `app/Core`, `app/Controllers` |
-| MySQL/MariaDB through PDO prepared statements | Done | `app/Core/Db.php`; 37 tables in `database/migrations` |
+| MySQL/MariaDB through PDO prepared statements | Done | `app/Core/Db.php`; 40 tables in `database/migrations` |
 | Migrations, combined phpMyAdmin schema, deterministic demo seed | Done | `bin/sibol.php migrate`, `schema:build`, `db:seed`; `Services/DemoSeeder.php` |
 | Sessions, password hashing, session regeneration, idle timeout | Done | `Core/Auth.php`, `Core/Session.php`; sign-in/out browser tests |
 | Live notification badge | Done | `GET /notifications/count` returns the count only; `app.js` polls every 90 s while the tab is visible and updates the badge and its accessible name; the poll (`X-Sibol-Poll`) does not refresh the idle timer. PHPUnit `NotificationBadgeTest`, browser `notification-badge.spec` |
@@ -17,7 +17,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 113 PHP tests, 67 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 122 PHP tests, 71 browser tests, all passing |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
 
@@ -29,6 +29,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Super administrator | Documented only | Multiple schools can share a database; creating a school is a command-line task (`school:create`). There is no cross-school admin screen. |
 | Invitation onboarding with one-time links | Done | Links are shown to the administrator (no email); browser test covers invite → set password → reuse refused |
 | Accounts without email: usernames, sign-in slips, advisers | Done | Migration 009: optional email, unique usernames made from names (`Services/Usernames.php`), sections from class section names with one adviser each (`Services/Sections.php`). Sign-in by username or email. Printable setup and password slips with a typeable one-time code and a QR code (`Services/SignInSlips.php`, `Services/Qr.php`, `/start`), from the import result, a class roster, the adviser's page or a person's page; teachers and advisers reach only students of their own classes or section (`Access::studentAccount`, 404 otherwise); audit-logged without codes. PHPUnit `AccountsWithoutEmailTest`, `UsernamesAndCodesTest`, `QrTest` (independent decoder, published test vectors); browser `signin-slips.spec`. Not yet scanned from paper with a phone |
+| Privacy notice and rules accepted before first use; AI switched off per student with guardians' answers | Done | Migration 011: `notice_acknowledgments`, `guardian_consents`, `users.ai_enabled`. A router guard (`notices`) sends people the policy names (students by default) to `/welcome` until they accept the current versions (`Services/Notices.php`: wording version plus the school's edition; "Ask everyone again" in Policies); JSON requests get 403. Per-student switch and dated guardian yes/no for the section's adviser and administrators (`Services/AiAccess.php`, `Access::advisedStudent`, 404 for anyone else); when off, navigation and links hide the companion and practice, the `ai-student` guard returns 403, `Usage` refuses before any provider call, grading suggestions are refused and reteaching-idea topics leave the student out. Audit-logged without text; in the data export; acknowledgments erased with the account. PHPUnit `NoticesAndAiSwitchTest`; browser `notices-ai.spec`. Guardians do not answer in Sibol themselves |
 | CSV import with preview and row-level problems | Done | browser test with valid, invalid, duplicate and existing rows |
 | Time-limited, revocable class codes | Done | teacher class page; policy switch disables all codes |
 
@@ -85,7 +86,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Overview with pending actions, configuration warnings, aggregate completion | Done | small groups hidden |
 | People: invite, edit, role change rules, deactivate/reactivate, links | Done | cannot deactivate self or the last administrator |
 | Classes, members, archive; subjects; academic periods | Done | |
-| Policies: AI on/off, modes, limits, budget, features, class codes, retention, contacts, notifications | Done | browser test switches a feature off and on |
+| Policies: AI on/off, modes, limits, budget, features, class codes, retention, contacts, notifications, who accepts the notice and rules, whether a student's AI starts on | Done | browser tests switch a feature off and on, and ask everyone to accept the notice again |
 | AI usage by day, feature and role with cost estimate | Done | |
 | School details, grade levels, logo, grading model and templates | Done | |
 | Integrations and system checks (no secrets shown) | Done | |

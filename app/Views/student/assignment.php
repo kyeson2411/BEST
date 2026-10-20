@@ -309,7 +309,7 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
         <?php if ($isQuiz): ?><dt><?= e(t('Answers')) ?></dt><dd><?= e($answerRule) ?></dd><?php endif; ?>
       </dl>
     </section>
-    <?php if ((bool) setting('ai.enabled', true)): ?>
+    <?php if (my_ai_on()): ?>
       <section class="panel panel--sunken" aria-labelledby="help-title">
         <h2 class="panel__title" id="help-title"><?= e(t('Stuck?')) ?></h2>
         <p style="font-size:.9375rem"><?= e(t('The companion can explain the topic or guide you with hints. It will not do the work for you.')) ?></p>

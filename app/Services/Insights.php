@@ -17,13 +17,18 @@ final class Insights
     public const WEAK_PCT = 60.0;
 
     /** @return list<array{topic:string,attempts:int,students:int,correct:int,correct_pct:float,questions:int}> */
-    public static function topics(int $classId): array
+    /**
+     * Correct rates per question topic. With $forAiInOrg, only students whose AI is on are counted, so the
+     * figures sent to an AI service for reteaching ideas include nothing about a student whose AI is off.
+     */
+    public static function topics(int $classId, ?int $forAiInOrg = null): array
     {
+        $aiOnly = $forAiInOrg !== null ? ' JOIN users u ON u.id = s.student_id AND ' . AiAccess::studentSql('u', $forAiInOrg) : '';
         $rows = Db::all(
             "SELECT COALESCE(NULLIF(q.topic, ''), :untagged) AS topic, COUNT(*) AS attempts, COUNT(DISTINCT s.student_id) AS students,
                     SUM(sa.is_correct) AS correct, COUNT(DISTINCT q.id) AS questions
              FROM submission_answers sa
-             JOIN submissions s ON s.id = sa.submission_id AND s.status = 'submitted'
+             JOIN submissions s ON s.id = sa.submission_id AND s.status = 'submitted'" . $aiOnly . "
              JOIN questions q ON q.id = sa.question_id
              JOIN assignments a ON a.id = q.assignment_id
              WHERE a.class_id = :c AND sa.is_correct IS NOT NULL

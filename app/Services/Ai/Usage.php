@@ -8,6 +8,7 @@ use Sibol\Core\Config;
 use Sibol\Core\Dates;
 use Sibol\Core\Db;
 use Sibol\Core\RateLimiter;
+use Sibol\Services\AiAccess;
 use Sibol\Services\Settings;
 
 /**
@@ -33,6 +34,11 @@ final class Usage
         if (!Settings::get($orgId, 'ai.enabled', true)) {
             self::recordRefusal($user, $feature, 'blocked', 'ai_disabled');
             return t('AI tools are turned off at your school.');
+        }
+        if ($user['role'] === 'student' && !AiAccess::studentOn($user)) {
+            // Switched off for this student by an adviser or administrator: nothing goes to a provider.
+            self::recordRefusal($user, $feature, 'blocked', 'student_switched_off');
+            return t('The companion and AI practice are switched off for your account. Everything else in Sibol works as usual. Ask your adviser if you have questions.');
         }
         if ($user['role'] === 'teacher' && !Settings::get($orgId, 'ai.teacher_tools', true)) {
             self::recordRefusal($user, $feature, 'blocked', 'teacher_tools_disabled');

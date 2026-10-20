@@ -15,15 +15,17 @@ final class Navigation
         $id = (int) $user['id'];
         switch ($user['role']) {
             case 'student':
-                return [
+                // The companion and AI practice disappear for a student whose AI is switched off.
+                $ai = AiAccess::studentOn($user);
+                return array_values(array_filter([
                     ['label' => t('Home'), 'icon' => 'house', 'url' => '/student', 'exact' => true, 'bottom' => true],
-                    ['label' => t('Classes'), 'icon' => 'school', 'url' => '/student/classes'],
+                    ['label' => t('Classes'), 'icon' => 'school', 'url' => '/student/classes', 'bottom' => !$ai],
                     ['label' => t('Assignments'), 'icon' => 'clipboard-list', 'url' => '/student/assignments', 'count' => self::studentDueCount($id), 'bottom' => true],
-                    ['label' => t('Companion'), 'icon' => 'messages-square', 'url' => '/companion', 'bottom' => true],
-                    ['label' => t('Practice'), 'icon' => 'repeat', 'url' => '/student/learning'],
+                    $ai ? ['label' => t('Companion'), 'icon' => 'messages-square', 'url' => '/companion', 'bottom' => true] : null,
+                    $ai ? ['label' => t('Practice'), 'icon' => 'repeat', 'url' => '/student/learning'] : null,
                     ['label' => t('Progress'), 'icon' => 'chart-line', 'url' => '/student/progress'],
                     ['label' => t('Calendar'), 'icon' => 'calendar-days', 'url' => '/student/calendar', 'bottom' => true],
-                ];
+                ]));
             case 'teacher':
                 $advisory = self::advises($user)
                     ? [['label' => t('Advisory'), 'icon' => 'book-user', 'url' => '/teacher/advisory']]

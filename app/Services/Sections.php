@@ -63,7 +63,7 @@ final class Sections
     public static function students(int $sectionId): array
     {
         return Db::all(
-            "SELECT DISTINCT u.id, u.given_name, u.family_name, u.preferred_name, u.username, u.email, u.status, u.avatar_path, u.last_login_at
+            "SELECT DISTINCT u.id, u.organization_id, u.role, u.given_name, u.family_name, u.preferred_name, u.username, u.email, u.status, u.avatar_path, u.last_login_at, u.ai_enabled
              FROM class_memberships cm
              JOIN classes c ON c.id = cm.class_id AND c.status = 'active' AND c.section_id = :s
              JOIN users u ON u.id = cm.user_id

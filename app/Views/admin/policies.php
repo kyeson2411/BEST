@@ -1,4 +1,4 @@
-<?php /** @var array $settings @var string $provider */
+<?php /** @var array $settings @var string $provider @var array $noticeProgress @var array $noticeVersions */
 use Sibol\Services\Settings;
 
 $ai = $settings['ai'];
@@ -6,6 +6,7 @@ $features = $settings['features'];
 $codes = $settings['class_codes'];
 $privacy = $settings['privacy'];
 $notify = $settings['notifications'];
+$notices = $settings['notices'];
 $modes = (array) $ai['student_modes'];
 ?>
 <div class="page-head">
@@ -19,6 +20,7 @@ $modes = (array) $ai['student_modes'];
   <a class="tab" href="#ai"><?= e(t('AI companion')) ?></a>
   <a class="tab" href="#features"><?= e(t('Features')) ?></a>
   <a class="tab" href="#codes"><?= e(t('Class codes')) ?></a>
+  <a class="tab" href="#notices"><?= e(t('Notice and rules')) ?></a>
   <a class="tab" href="#privacy"><?= e(t('Privacy and retention')) ?></a>
   <a class="tab" href="#notifications"><?= e(t('Notifications')) ?></a>
 </nav>
@@ -33,6 +35,7 @@ $modes = (array) $ai['student_modes'];
         <?= checkbox('ai_enabled', t('AI tools are on'), (bool) $ai['enabled'], t('Turning this off hides the companion and AI drafting for everyone. Everything else keeps working.')) ?>
         <?= checkbox('teacher_tools', t('Teachers can use AI drafting tools'), (bool) $ai['teacher_tools'], t('Question drafts, lesson drafts, grading suggestions and reteaching ideas. Teachers always review before anything reaches students.')) ?>
         <?= checkbox('general_answers', t('Allow general explanations beyond class materials'), (bool) $ai['general_answers'], t('When off, the companion only answers from released class materials and says so when they do not cover a question.')) ?>
+        <?= checkbox('students_start_on', t('A student\'s AI starts on'), (bool) $ai['students_start_on'], t('Advisers and administrators can switch it off for one student, for example when a guardian says no. Untick to keep it off for each student until one of them switches it on, for example after a guardian says yes.')) ?>
       </div>
       <fieldset class="fieldset-plain<?= field_error('student_modes') ? ' field--error' : '' ?>">
         <legend class="field__label"><?= e(t('Companion modes students can use')) ?></legend>
@@ -73,6 +76,23 @@ $modes = (array) $ai['student_modes'];
     </div>
   </section>
 
+  <section class="section" id="notices" aria-labelledby="notices-title">
+    <div class="section__head"><h2 class="section__title" id="notices-title"><?= e(t('Privacy notice and rules')) ?></h2><a class="section__link" href="<?= e(url('/rules')) ?>"><?= e(t('See the rules')) ?></a></div>
+    <p class="section__intro"><?= e(t('People you choose read and accept the privacy notice and the rules for using Sibol when they first sign in and again whenever either changes. Sibol records who accepted which version and when.')) ?></p>
+    <div class="grid-2">
+      <div>
+        <?= checkbox('notices_students', t('Students must accept them'), (bool) $notices['students']) ?>
+        <?= checkbox('notices_staff', t('Teachers and administrators must accept them too'), (bool) $notices['staff']) ?>
+      </div>
+      <dl class="dl">
+        <dt><?= e(t('Current versions')) ?></dt><dd><?= e(t('Privacy notice :p, rules :r', ['p' => $noticeVersions['privacy'], 'r' => $noticeVersions['rules']])) ?></dd>
+        <?php if ($noticeProgress['required'] > 0): ?>
+          <dt><?= e(t('Accepted so far')) ?></dt><dd><?= e(t(':n of :m active accounts that must accept', ['n' => $noticeProgress['accepted'], 'm' => $noticeProgress['required']])) ?></dd>
+        <?php endif; ?>
+      </dl>
+    </div>
+  </section>
+
   <section class="section" id="privacy" aria-labelledby="privacy-title">
     <div class="section__head"><h2 class="section__title" id="privacy-title"><?= e(t('Privacy and retention')) ?></h2><a class="section__link" href="<?= e(url('/privacy')) ?>"><?= e(t('See the privacy notice')) ?></a></div>
     <div class="form-grid">
@@ -103,3 +123,11 @@ $modes = (array) $ai['student_modes'];
     <span class="meta"><?= e(t('Saved changes are recorded in the audit log.')) ?></span>
   </div>
 </form>
+
+<section class="panel panel--sunken" aria-labelledby="renew-title" style="margin-top: 32px; max-width: 760px">
+  <h2 class="panel__title" id="renew-title"><?= e(t('Ask everyone to read them again')) ?></h2>
+  <p class="meta"><?= e(t('Use this after your school changes how it uses Sibol, for example a new privacy contact or a decision by your data protection officer. Everyone the policy names reads and accepts the notice and the rules again before they continue.')) ?></p>
+  <form method="post" action="<?= e(url('/admin/policies/notices')) ?>" data-confirm="<?= e(t('The next time they open Sibol, people will have to read and accept the privacy notice and the rules again.')) ?>" data-confirm-title="<?= e(t('Ask everyone again?')) ?>" data-confirm-action="<?= e(t('Ask again')) ?>">
+    <?= csrf_field() ?><button class="btn btn--secondary" type="submit"><?= icon('refresh-cw', 'icon--sm') ?><?= e(t('Ask everyone again')) ?></button>
+  </form>
+</section>

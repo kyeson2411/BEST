@@ -5,15 +5,22 @@ declare(strict_types=1);
 namespace Sibol\Controllers\Teacher;
 
 use Sibol\Controllers\Controller;
+use Sibol\Controllers\SetsStudentAi;
 use Sibol\Core\Db;
 use Sibol\Core\Response;
 use Sibol\Policies\Access;
+use Sibol\Services\AiAccess;
 use Sibol\Services\Sections;
 use Sibol\Services\SignInSlips;
 
-/** A class adviser's section: its students' accounts, with sign-in and password slips. */
+/**
+ * A class adviser's section: its students' accounts, with sign-in and password slips, and each student's AI
+ * companion setting and guardian answers.
+ */
 final class AdvisoryController extends Controller
 {
+    use SetsStudentAi;
+
     public function index(): Response
     {
         $user = $this->user();
@@ -47,6 +54,40 @@ final class AdvisoryController extends Controller
                 ['s' => $id]
             ),
         ]);
+    }
+
+    /** One student of the section: their AI companion setting and their guardian's answers. */
+    public function student(int $sectionId, int $id): Response
+    {
+        $user = $this->user();
+        [$section, $student] = Access::advisedStudent($user, $sectionId, $id);
+        $label = Sections::label($section);
+        return $this->view('teacher/advisory_student', [
+            'title' => user_name($student),
+            'crumbs' => [[t('Advisory'), '/teacher/advisory'], [$label, '/teacher/advisory/' . $sectionId], [user_name($student), null]],
+            'section' => $section,
+            'student' => $student,
+            'answers' => AiAccess::guardianAnswers($id),
+            'action' => '/teacher/advisory/' . $sectionId . '/students/' . $id,
+        ]);
+    }
+
+    public function studentAi(int $sectionId, int $id): Response
+    {
+        $user = $this->user();
+        [, $student] = Access::advisedStudent($user, $sectionId, $id);
+        $back = '/teacher/advisory/' . $sectionId . '/students/' . $id;
+        $this->saveAiSetting($user, $student, $back);
+        return $this->redirect($back);
+    }
+
+    public function studentGuardian(int $sectionId, int $id): Response
+    {
+        $user = $this->user();
+        [, $student] = Access::advisedStudent($user, $sectionId, $id);
+        $back = '/teacher/advisory/' . $sectionId . '/students/' . $id;
+        $this->saveGuardianAnswer($user, $student, $back);
+        return $this->redirect($back);
     }
 
     public function slips(int $id): Response

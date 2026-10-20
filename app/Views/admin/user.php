@@ -114,6 +114,9 @@ $activeClasses = array_values(array_filter($memberships, static fn ($m) => $m['s
         <?php if ($lastAdmin && !$isSelf): ?><p class="meta" style="margin-top: 8px"><?= e(t('This is the only active administrator, so it cannot be deactivated.')) ?></p><?php endif; ?>
       </section>
     <?php endif; ?>
+    <?php if ($person['role'] === 'student' && !$erased): ?>
+      <?= partial('student_ai_panel', ['student' => $person, 'answers' => $guardianAnswers, 'action' => $base]) ?>
+    <?php endif; ?>
     <section class="panel panel--sunken" aria-labelledby="priv-title">
       <h2 class="panel__title" id="priv-title"><?= e(t('Privacy')) ?></h2>
       <p class="meta" style="margin:0"><?= e(t('Requests to export, correct or delete this person\'s data are handled in Privacy and safety, where every step is recorded.')) ?></p>

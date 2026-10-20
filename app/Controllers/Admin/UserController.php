@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Sibol\Controllers\Admin;
 
 use Sibol\Controllers\Controller;
+use Sibol\Controllers\SetsStudentAi;
 use Sibol\Core\Audit;
 use Sibol\Core\Db;
 use Sibol\Core\HttpException;
 use Sibol\Core\Paginator;
 use Sibol\Core\Response;
 use Sibol\Core\Session;
+use Sibol\Services\AiAccess;
 use Sibol\Services\Settings;
 use Sibol\Services\SignInSlips;
 use Sibol\Services\Tokens;
@@ -23,6 +25,8 @@ use Sibol\Services\Usernames;
  */
 final class UserController extends Controller
 {
+    use SetsStudentAi;
+
     public function index(): Response
     {
         $o = $this->orgId();
@@ -175,6 +179,7 @@ final class UserController extends Controller
             'activity' => $activity,
             'grades' => (array) Settings::get($o, 'grade_levels', []),
             'lastAdmin' => $person['role'] === 'admin' && $this->activeAdmins($o) <= 1,
+            'guardianAnswers' => $person['role'] === 'student' ? AiAccess::guardianAnswers($id) : [],
         ]);
     }
 
@@ -283,6 +288,24 @@ final class UserController extends Controller
         return $this->redirect($back);
     }
 
+    /** Switches a student's AI companion on or off, or back to the school's setting. */
+    public function ai(int $id): Response
+    {
+        $admin = $this->user();
+        $student = $this->student($id, (int) $admin['organization_id']);
+        $this->saveAiSetting($admin, $student, '/admin/users/' . $id . '#ai-companion');
+        return $this->redirect('/admin/users/' . $id . '#ai-companion');
+    }
+
+    /** Records a guardian's yes or no about the AI companion (no documents). */
+    public function guardian(int $id): Response
+    {
+        $admin = $this->user();
+        $student = $this->student($id, (int) $admin['organization_id']);
+        $this->saveGuardianAnswer($admin, $student, '/admin/users/' . $id . '#ai-companion');
+        return $this->redirect('/admin/users/' . $id . '#ai-companion');
+    }
+
     /** A printed sign-in slip instead of a link: setup for an invited account, a new password otherwise. */
     public function slip(int $id): Response
     {
@@ -303,6 +326,15 @@ final class UserController extends Controller
     {
         $person = Db::one('SELECT * FROM users WHERE id = :id AND organization_id = :o', ['id' => $id, 'o' => $orgId]);
         if (!$person) {
+            throw HttpException::notFound();
+        }
+        return $person;
+    }
+
+    private function student(int $id, int $orgId): array
+    {
+        $person = $this->find($id, $orgId);
+        if ($person['role'] !== 'student' || $person['anonymized_at'] !== null) {
             throw HttpException::notFound();
         }
         return $person;

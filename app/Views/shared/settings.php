@@ -43,6 +43,7 @@ $typeLabel = ['export' => t('Copy of my data'), 'correction' => t('Correct my in
       <?php if (!empty($user['username'])): ?><dt><?= e(t('Username')) ?></dt><dd class="code-text"><?= e($user['username']) ?></dd><?php endif; ?>
       <?php if (!empty($user['email'])): ?><dt><?= e(t('Email')) ?></dt><dd><?= e($user['email']) ?></dd><?php endif; ?>
       <?php if ($user['grade_level']): ?><dt><?= e(t('Grade level')) ?></dt><dd><?= e($user['grade_level']) ?></dd><?php endif; ?>
+      <?php if ($user['role'] === 'student'): ?><dt><?= e(t('AI companion')) ?></dt><dd><?= e(\Sibol\Services\AiAccess::studentOn($user) ? t('On') : t('Switched off for your account by your school')) ?></dd><?php endif; ?>
     </dl>
     <p class="meta"><?= e(t('Your name, username and email come from school records. To correct them, send a correction request below.')) ?></p>
     <form method="post" action="<?= e(url('/settings/profile')) ?>">

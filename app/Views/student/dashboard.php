@@ -235,7 +235,7 @@ $next = $upcoming[0] ?? null;
         <a class="section__link" href="<?= e(url('/student/calendar')) ?>"><?= e(t('Calendar')) ?></a>
       </div>
       <?php if (!$study): ?>
-        <p class="meta"><?= e(t('Plan short study sessions on the calendar, or ask the companion to help you make a plan.')) ?></p>
+        <p class="meta"><?= e($aiEnabled ? t('Plan short study sessions on the calendar, or ask the companion to help you make a plan.') : t('Plan short study sessions on the calendar.')) ?></p>
       <?php else: ?>
         <ul class="rows">
           <?php foreach ($study as $s): ?>

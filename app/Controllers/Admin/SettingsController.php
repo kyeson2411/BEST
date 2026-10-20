@@ -12,6 +12,7 @@ use Sibol\Core\ImageSanitizer;
 use Sibol\Core\Response;
 use Sibol\Core\Uploads;
 use Sibol\Services\Ai\Providers;
+use Sibol\Services\Notices;
 use Sibol\Services\Settings;
 use Sibol\Services\SystemCheck;
 
@@ -25,6 +26,8 @@ final class SettingsController extends Controller
             'title' => t('Policies'),
             'settings' => Settings::all($o),
             'provider' => Providers::label(),
+            'noticeProgress' => Notices::progress($o),
+            'noticeVersions' => Notices::current($o),
         ]);
     }
 
@@ -59,6 +62,9 @@ final class SettingsController extends Controller
             'notify_new_assignment' => 'bool',
             'notify_feedback_released' => 'bool',
             'notify_announcements' => 'bool',
+            'students_start_on' => 'bool',
+            'notices_students' => 'bool',
+            'notices_staff' => 'bool',
         ], [
             'student_daily_messages' => t('Messages per student per day'),
             'teacher_daily_requests' => t('Requests per teacher per day'),
@@ -86,6 +92,12 @@ final class SettingsController extends Controller
                 'teacher_daily_requests' => $data['teacher_daily_requests'],
                 'monthly_token_budget' => $data['monthly_token_budget'],
                 'max_question_chars' => $data['max_question_chars'],
+                'students_start_on' => $data['students_start_on'],
+            ],
+            'notices' => [
+                'students' => $data['notices_students'],
+                'staff' => $data['notices_staff'],
+                'edition' => max(1, (int) Settings::get($o, 'notices.edition', 1)),
             ],
             'features' => [
                 'document_answers' => $data['document_answers'],
@@ -125,6 +137,15 @@ final class SettingsController extends Controller
         }
         $this->flash('success', $changed ? t('Policies saved. They apply from the next request.') : t('No changes to save.'));
         return $this->redirect($back);
+    }
+
+    /** After the school changes how it uses Sibol: everyone the policy names reads and accepts both notices again. */
+    public function renewNotices(): Response
+    {
+        $admin = $this->user();
+        $edition = Notices::askAgain($admin);
+        $this->flash('success', t('Done. People will read and accept the privacy notice and the rules again when they next open Sibol (edition :n).', ['n' => $edition]));
+        return $this->redirect('/admin/policies#notices');
     }
 
     public function school(): Response

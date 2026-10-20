@@ -8,6 +8,7 @@ use Sibol\Controllers\Controller;
 use Sibol\Core\Db;
 use Sibol\Core\Response;
 use Sibol\Repositories\StudentRepo;
+use Sibol\Services\AiAccess;
 use Sibol\Services\Grades;
 use Sibol\Services\Overrides;
 
@@ -68,7 +69,8 @@ final class ProgressController extends Controller
             'books' => $books,
             'work' => $work,
             'released' => $released,
-            'practice' => $practice,
+            // Practice sets open only while the student's AI is on, so the list is left out when it is off.
+            'practice' => AiAccess::studentOn($this->user()) ? $practice : null,
             'feedback' => $feedback,
         ]);
     }

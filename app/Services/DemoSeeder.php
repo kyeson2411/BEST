@@ -198,6 +198,19 @@ final class DemoSeeder
         }
         $this->person('rafael', 'student', 'Rafael', 'Domingo', ['status' => 'invited', 'grade_level' => 'Grade 9']);
         $this->person('angelica', 'student', 'Angelica', 'Santos', ['status' => 'deactivated', 'grade_level' => 'Grade 9']);
+        // Students who have been using Sibol accepted the current privacy notice and rules when they started.
+        foreach ($this->u as $key => $id) {
+            if ($this->users[$key]['role'] === 'student' && $this->users[$key]['status'] === 'active') {
+                foreach (Notices::current($this->org) as $notice => $version) {
+                    Db::insert('notice_acknowledgments', ['organization_id' => $this->org, 'user_id' => $id, 'notice' => $notice, 'version' => $version, 'acknowledged_at' => $this->ago('-100 days')]);
+                }
+            }
+        }
+        // Luis Pascual's guardian said no to the AI companion, so his adviser switched it off; Trisha Mendoza's said yes.
+        Db::insert('guardian_consents', ['organization_id' => $this->org, 'student_id' => $this->u['luis'], 'topic' => 'ai', 'answer' => 'no', 'answered_on' => gmdate('Y-m-d', strtotime('-95 days')), 'recorded_by' => $this->u['liza'], 'created_at' => $this->ago('-95 days')]);
+        Db::update('users', ['ai_enabled' => 0], ['id' => $this->u['luis']]);
+        Db::insert('guardian_consents', ['organization_id' => $this->org, 'student_id' => $this->u['trisha'], 'topic' => 'ai', 'answer' => 'yes', 'answered_on' => gmdate('Y-m-d', strtotime('-96 days')), 'recorded_by' => $this->u['liza'], 'created_at' => $this->ago('-96 days')]);
+        Db::update('users', ['ai_enabled' => 1], ['id' => $this->u['trisha']]);
         Tokens::issue($this->u['carmela'], 'invitation', $this->u['admin']);
         Tokens::issue($this->u['rafael'], 'invitation', $this->u['admin']);
     }

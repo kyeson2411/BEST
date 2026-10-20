@@ -304,6 +304,13 @@ function setting(string $key, $default = null)
     return \Sibol\Services\Settings::get($orgId, $key, $default);
 }
 
+/** Whether the signed-in person may use the companion and AI practice (the school's and their own switch). */
+function my_ai_on(): bool
+{
+    $user = Auth::user();
+    return $user !== null && \Sibol\Services\AiAccess::allowed($user);
+}
+
 /** Render a partial from app/Views/partials. */
 function partial(string $name, array $data = []): string
 {

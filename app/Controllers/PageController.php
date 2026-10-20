@@ -39,6 +39,19 @@ final class PageController extends Controller
         return $this->view('pages/privacy', $data, $user ? 'layouts/app' : 'layouts/bare');
     }
 
+    /** The rules for using Sibol: academic honesty and what the companion will and won't do. */
+    public function rules(): Response
+    {
+        $user = Auth::user();
+        $privacy = $user ? Settings::get((int) $user['organization_id'], 'privacy') : Settings::defaults()['privacy'];
+        return $this->view('pages/rules', [
+            'title' => t('Rules for using Sibol'),
+            'role' => $user['role'] ?? null,
+            'privacy' => $privacy,
+            'version' => $user ? \Sibol\Services\Notices::current((int) $user['organization_id'])['rules'] : \Sibol\Services\Notices::VERSIONS['rules'],
+        ], $user ? 'layouts/app' : 'layouts/bare');
+    }
+
     public function help(): Response
     {
         $user = Auth::user();

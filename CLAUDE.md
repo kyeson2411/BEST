@@ -36,6 +36,9 @@ The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL m
   only reported answers (`ai_reports.answer_excerpt`). Do not add any screen that lists or reads conversations.
 - **AI output is a draft.** Anything AI-generated that students could see (questions, lessons, feedback) must
   pass teacher review. Demo mode must stay labelled and must never pretend to be a model or invent a source.
+- **A student's AI can be switched off** by their adviser or an administrator (`users.ai_enabled`, usually after a
+  guardian says no). Check `AiAccess::allowed()` before offering any AI feature to or about a student, put student
+  AI routes in a group with the `ai-student` guard, and never send an AI-off student's work to a provider.
 - **Demo data is fictional** and flagged `is_demo`. Never import real names, grades or documents.
 
 ## Conventions
@@ -90,6 +93,9 @@ The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL m
 - `Response::file()` adds a sandbox CSP; inline PDFs replace it with `frame-ancestors 'none'` so the viewer works.
 - Demo sign-in and `/setup` only work with `APP_ENV=local` from the same computer.
 - `db:reset` and the browser tests delete stored uploads as well as tables.
+- Students accept the privacy notice and the rules before any other page opens (router guard `notices`), so a new
+  student in a browser test lands on `/welcome` first (`acceptNotices()` in `tests/e2e/helpers.mjs`). Raise
+  `Notices::VERSIONS` when the wording of `partials/privacy_notice.php` or `partials/rules_of_use.php` changes.
 - Materials copied to other sections share stored files (`material_versions.stored_path`). Anything that deletes a
   material file must first check that no other version still points to it.
 - `quiz.js` keeps unsent answers in `sessionStorage` (`sibol.quiz.<submission id>`); `app.js` removes every

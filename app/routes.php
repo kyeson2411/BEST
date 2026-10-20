@@ -11,6 +11,7 @@ use Sibol\Controllers\Admin;
 use Sibol\Controllers\AuthController;
 use Sibol\Controllers\CompanionController;
 use Sibol\Controllers\FileController;
+use Sibol\Controllers\NoticeController;
 use Sibol\Controllers\NotificationController;
 use Sibol\Controllers\PageController;
 use Sibol\Controllers\ProfileController;
@@ -19,6 +20,41 @@ use Sibol\Controllers\SetupController;
 use Sibol\Controllers\SlipController;
 use Sibol\Controllers\Student;
 use Sibol\Controllers\Teacher;
+use Sibol\Core\Auth;
+use Sibol\Core\HttpException;
+use Sibol\Core\Request;
+use Sibol\Core\Response;
+use Sibol\Core\Session;
+use Sibol\Services\AiAccess;
+use Sibol\Services\Notices;
+
+// Signed-in pages wait until the person has read and accepted the privacy notice and the rules for using
+// Sibol, when the school's policy asks them to (students, by default), and again after either changes.
+// After a change, work already under way (a quiz saving answers or being handed in) is not interrupted:
+// people who accepted an earlier version are asked at their next page load.
+$router->guard('notices', static function (Request $request): ?Response {
+    $user = Auth::user();
+    if (!$user || !Notices::pending($user)) {
+        return null;
+    }
+    if (($request->method !== 'GET' || $request->wantsJson()) && Notices::acceptedBefore($user)) {
+        return null;
+    }
+    if ($request->wantsJson()) {
+        return Response::json(['error' => t('Read and accept the privacy notice and the rules for using Sibol first.')], 403);
+    }
+    Session::set('intended', $request->method === 'GET' ? $request->fullPath() : null);
+    return Response::redirect('/welcome', 302);
+});
+
+// The companion and AI practice are not there for a student whose AI an adviser or administrator switched off.
+$router->guard('ai-student', static function (): ?Response {
+    $user = Auth::user();
+    if ($user && $user['role'] === 'student' && !AiAccess::studentOn($user)) {
+        throw HttpException::forbidden(t('The companion and AI practice are switched off for your account. Everything else in Sibol works as usual. Ask your adviser if you have questions.'));
+    }
+    return null;
+});
 
 // Public and sign-in --------------------------------------------------------------
 $router->get('/', [PageController::class, 'home']);
@@ -33,7 +69,13 @@ $router->post('/reset/{token}', [AuthController::class, 'reset']);
 $router->get('/start', [AuthController::class, 'showStart']);
 $router->post('/start', [AuthController::class, 'start']);
 $router->get('/privacy', [PageController::class, 'privacy']);
+$router->get('/rules', [PageController::class, 'rules']);
 $router->get('/help', [PageController::class, 'help']);
+
+// Reading and accepting the privacy notice and the rules (the "notices" guard sends people here).
+$router->get('/welcome', [NoticeController::class, 'show'], ['auth']);
+$router->post('/welcome', [NoticeController::class, 'accept'], ['auth']);
+$router->post('/welcome/language', [NoticeController::class, 'language'], ['auth']);
 
 // First-run setup (APP_ENV=local and this computer only) ---------------------------
 $router->get('/setup', [SetupController::class, 'index']);
@@ -42,7 +84,7 @@ $router->post('/setup/seed', [SetupController::class, 'seed']);
 $router->post('/setup/reset', [SetupController::class, 'reset']);
 
 // Any signed-in user ---------------------------------------------------------------
-$router->group('', ['auth'], static function ($r): void {
+$router->group('', ['auth', 'notices'], static function ($r): void {
     $r->get('/menu', [PageController::class, 'menu']);
     $r->get('/settings', [ProfileController::class, 'edit']);
     $r->post('/settings/profile', [ProfileController::class, 'updateProfile']);
@@ -71,7 +113,7 @@ $router->group('', ['auth'], static function ($r): void {
     $r->get('/submission-files/{id}', [FileController::class, 'submissionFile']);
 
     // The learning companion serves students and teachers with role-specific modes.
-    $r->group('/companion', ['role:student,teacher'], static function ($c): void {
+    $r->group('/companion', ['role:student,teacher', 'ai-student'], static function ($c): void {
         $c->get('', [CompanionController::class, 'index']);
         $c->get('/new', [CompanionController::class, 'create']);
         $c->post('', [CompanionController::class, 'store']);
@@ -90,7 +132,7 @@ $router->group('', ['auth'], static function ($r): void {
 });
 
 // Students -------------------------------------------------------------------------
-$router->group('/student', ['role:student'], static function ($r): void {
+$router->group('/student', ['role:student', 'notices'], static function ($r): void {
     $r->get('', [Student\DashboardController::class, 'index']);
     $r->get('/classes', [Student\ClassController::class, 'index']);
     $r->post('/classes/join', [Student\ClassController::class, 'join']);
@@ -106,11 +148,13 @@ $router->group('/student', ['role:student'], static function ($r): void {
     $r->post('/assignments/{id}/attempt', [Student\AssignmentController::class, 'saveAttempt']);
     $r->get('/submissions/{id}', [Student\AssignmentController::class, 'receipt']);
 
-    $r->get('/learning', [Student\PracticeController::class, 'index']);
-    $r->post('/learning', [Student\PracticeController::class, 'store']);
-    $r->get('/learning/{id}', [Student\PracticeController::class, 'show']);
-    $r->post('/learning/{id}/results', [Student\PracticeController::class, 'saveResults']);
-    $r->post('/learning/{id}/delete', [Student\PracticeController::class, 'destroy']);
+    $r->group('/learning', ['ai-student'], static function ($l): void {
+        $l->get('', [Student\PracticeController::class, 'index']);
+        $l->post('', [Student\PracticeController::class, 'store']);
+        $l->get('/{id}', [Student\PracticeController::class, 'show']);
+        $l->post('/{id}/results', [Student\PracticeController::class, 'saveResults']);
+        $l->post('/{id}/delete', [Student\PracticeController::class, 'destroy']);
+    });
 
     $r->get('/progress', [Student\ProgressController::class, 'index']);
 
@@ -121,7 +165,7 @@ $router->group('/student', ['role:student'], static function ($r): void {
 });
 
 // Teachers -------------------------------------------------------------------------
-$router->group('/teacher', ['role:teacher'], static function ($r): void {
+$router->group('/teacher', ['role:teacher', 'notices'], static function ($r): void {
     $r->get('', [Teacher\DashboardController::class, 'index']);
 
     $r->get('/classes', [Teacher\ClassController::class, 'index']);
@@ -134,6 +178,9 @@ $router->group('/teacher', ['role:teacher'], static function ($r): void {
     $r->get('/advisory', [Teacher\AdvisoryController::class, 'index']);
     $r->get('/advisory/{id}', [Teacher\AdvisoryController::class, 'show']);
     $r->post('/advisory/{id}/slips', [Teacher\AdvisoryController::class, 'slips']);
+    $r->get('/advisory/{sectionId}/students/{id}', [Teacher\AdvisoryController::class, 'student']);
+    $r->post('/advisory/{sectionId}/students/{id}/ai', [Teacher\AdvisoryController::class, 'studentAi']);
+    $r->post('/advisory/{sectionId}/students/{id}/guardian', [Teacher\AdvisoryController::class, 'studentGuardian']);
     $r->post('/classes/{id}/code', [Teacher\ClassController::class, 'joinCode']);
     $r->post('/classes/{id}/modules', [Teacher\ClassController::class, 'addModule']);
     $r->post('/classes/{classId}/modules/{id}', [Teacher\ClassController::class, 'updateModule']);
@@ -216,7 +263,7 @@ $router->group('/teacher', ['role:teacher'], static function ($r): void {
 });
 
 // School administrators --------------------------------------------------------------
-$router->group('/admin', ['role:admin'], static function ($r): void {
+$router->group('/admin', ['role:admin', 'notices'], static function ($r): void {
     $r->get('', [Admin\DashboardController::class, 'index']);
 
     $r->get('/users', [Admin\UserController::class, 'index']);
@@ -232,6 +279,8 @@ $router->group('/admin', ['role:admin'], static function ($r): void {
     $r->post('/users/{id}/status', [Admin\UserController::class, 'status']);
     $r->post('/users/{id}/link', [Admin\UserController::class, 'link']);
     $r->post('/users/{id}/slip', [Admin\UserController::class, 'slip']);
+    $r->post('/users/{id}/ai', [Admin\UserController::class, 'ai']);
+    $r->post('/users/{id}/guardian', [Admin\UserController::class, 'guardian']);
 
     $r->get('/classes', [Admin\ClassController::class, 'index']);
     $r->get('/classes/new', [Admin\ClassController::class, 'create']);
@@ -256,6 +305,7 @@ $router->group('/admin', ['role:admin'], static function ($r): void {
     $r->get('/usage', [Admin\UsageController::class, 'index']);
     $r->get('/policies', [Admin\SettingsController::class, 'policies']);
     $r->post('/policies', [Admin\SettingsController::class, 'savePolicies']);
+    $r->post('/policies/notices', [Admin\SettingsController::class, 'renewNotices']);
     $r->get('/settings', [Admin\SettingsController::class, 'school']);
     $r->post('/settings', [Admin\SettingsController::class, 'saveSchool']);
     $r->post('/settings/grading', [Admin\SettingsController::class, 'saveGrading']);

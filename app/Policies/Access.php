@@ -166,6 +166,26 @@ final class Access
         return $section;
     }
 
+    /**
+     * A student of a section this teacher advises (enrolled in one of its active classes).
+     * @return array{0:array<string,mixed>,1:array<string,mixed>} [section, student]
+     */
+    public static function advisedStudent(array $user, int $sectionId, int $studentId): array
+    {
+        $section = self::adviserSection($user, $sectionId);
+        $student = Db::one(
+            "SELECT u.* FROM users u
+             WHERE u.id = :s AND u.organization_id = :o AND u.role = 'student' AND u.anonymized_at IS NULL AND EXISTS (
+                SELECT 1 FROM class_memberships cm JOIN classes c ON c.id = cm.class_id AND c.status = 'active' AND c.section_id = :sec
+                WHERE cm.user_id = u.id AND cm.role = 'student' AND cm.status = 'active')",
+            ['s' => $studentId, 'o' => (int) $user['organization_id'], 'sec' => $sectionId]
+        );
+        if (!$student) {
+            throw HttpException::notFound();
+        }
+        return [$section, $student];
+    }
+
     /** SQL condition (alias m) for materials a student may see right now. */
     public static function releasedMaterialSql(string $alias = 'm'): string
     {

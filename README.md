@@ -115,10 +115,12 @@ Staff can sign in with their username or their email (`ramon.dizon@demo.sibol.te
 | Teacher | `joy.santiago` | English 9 – Narra |
 | Student | `andrea.cruz` | Grade 9 Narra: graded work, feedback, companion history |
 | Student | `janelle.ocampo` | Grade 9 Molave |
+| Student | `luis.pascual` | Grade 9 Molave: AI companion switched off after his guardian said no |
+| Student | `trisha.mendoza` | Grade 9 Molave: guardian said yes to the AI companion |
 | Invited (no password yet) | `carmela.reyes` (teacher), `rafael.domingo` (student) | print a sign-in slip or create a link |
 | Deactivated | `angelica.santos` | cannot sign in |
 
-The other 16 students follow the same `given.family` pattern. The demo school takes the real
+The other 14 students follow the same `given.family` pattern. The demo school takes the real
 school's name with "(Demo)" added (from `SCHOOL_NAME`) so the screens look like the finished product, but every
 person, class, grade and conversation in it is invented. Every demo record is flagged in the database and the
 interface shows a "Demo school" band.
@@ -293,8 +295,11 @@ passes; its checks are unit-tested with good and bad answers), usernames made fr
 who may print them, sections and advisers, the QR encoder (published Reed-Solomon examples, format and
 version bits, and every symbol read back by an independent decoder), and scores for work on paper (held and
 released scores in the gradebook, absent and excused students, make-up dates, online work left untouched, and
-printed copies without answers or unapproved AI drafts).
-Last run: **113 tests, all passing**.
+printed copies without answers or unapproved AI drafts), the privacy notice and rules (who must accept, versions
+and editions, asking everyone again, audit entries without text) and the AI switch per student (the school's
+starting value, a guardian's yes or no, only the section's adviser or an administrator may change it, refusals
+before anything reaches a provider, reteaching topics without that student, and the data export).
+Last run: **122 tests, all passing**.
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -319,8 +324,12 @@ language (including a question written in Filipino), students imported without e
 from a printed slip's typed code, an adviser's password slip, a subject teacher's roster slips (and a 404 for a
 student outside their classes), choosing a section adviser, a teacher entering paper scores (a refused score,
 absent and excused students, held then released, seen by the student), the blank copy and the answer key, 404s
-for other teachers, phone-width layout of 25 screens and structural accessibility checks on 40 screens.
-Last run: **67 tests, all passing**.
+for other teachers, a new student accepting the privacy notice and the rules before any other page (and again
+after the administrator asks everyone, without interrupting work already under way), an adviser recording a
+guardian's no so the companion and practice disappear for that student (403, other pages unaffected, 404 for a
+teacher who is not the adviser), phone-width layout of 25 screens and structural accessibility checks on 40
+screens.
+Last run: **71 tests, all passing**.
 
 ## Project layout
 
@@ -469,6 +478,22 @@ tools/             asset scripts (fonts and icons, school images with their orig
   Network addresses are stored only as hashes.
 - Sibol does not send email. It shows invitation and reset links to administrators to share, or prints them
   on sign-in slips, and never claims an email was sent.
+- **Privacy notice and rules.** On first sign-in, and again whenever either changes, students read the privacy
+  notice and the rules for using Sibol (`/rules`) and accept both before any other page opens; the page they
+  asked for opens afterwards, and they can read both in Filipino first. Each acceptance is stored with its
+  version and time (`notice_acknowledgments`) and audit-logged without text. A notice's version is its wording
+  version in the code (`Notices::VERSIONS`) plus the school's edition. **Policies → Notice and rules** says who
+  must accept (students by default; teachers and administrators optional), shows how many have accepted (counts
+  only) and has **Ask everyone again**, which starts a new edition after the school changes how it uses Sibol.
+- **AI switched off for one student.** A student's companion and AI practice start on (a policy, so a school can
+  start everyone off instead). The section's adviser (**Advisory**, then the student) or an administrator
+  (**People**) can switch them off or on for one student and record a parent's or guardian's yes or no with its
+  date; a no switches AI off and a yes switches it on. Sibol stores only the answer, its date and who entered it;
+  signed forms stay in the school's own files. When AI is off, the companion and practice disappear from the
+  student's menus and pages, their requests are refused before anything reaches a provider, their typed work is
+  not offered for AI grading suggestions, and their answers are left out of the topic summaries behind reteaching
+  ideas. Changes are audit-logged, and the student's data export lists their acceptances, their AI setting and
+  the guardian's answers.
 - Under the Philippine Data Privacy Act of 2012, the school is the personal information controller. Appoint a
   Data Protection Officer, enter their contact in **Policies**, and review the privacy notice at `/privacy`
   before enrolling real students.

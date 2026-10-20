@@ -14,6 +14,10 @@
   <?= field('select', 'language', t('Language'), ['value' => 'en', 'options' => ['en' => 'English', 'fil' => 'Filipino'], 'required' => true]) ?>
   <?= field('password', 'password', t('Create a password'), ['required' => true, 'hint' => t('At least 10 characters. A short phrase of a few words is easy to remember and hard to guess.'), 'attrs' => ['autocomplete' => 'new-password', 'minlength' => 10]]) ?>
   <?= field('password', 'password_confirmation', t('Type the password again'), ['required' => true, 'attrs' => ['autocomplete' => 'new-password']]) ?>
-  <p class="meta"><?= e(t('By continuing you confirm you have read the')) ?> <a href="<?= e(url('/privacy')) ?>" target="_blank" rel="noopener"><?= e(t('privacy notice')) ?></a>.</p>
+  <?php if (\Sibol\Services\Notices::required($invitee)): ?>
+    <p class="meta"><?= e(t('Next, you will read the privacy notice and the rules for using Sibol and accept them.')) ?></p>
+  <?php else: ?>
+    <p class="meta"><?= e(t('By continuing you confirm you have read the')) ?> <a href="<?= e(url('/privacy')) ?>" target="_blank" rel="noopener"><?= e(t('privacy notice')) ?></a>.</p>
+  <?php endif; ?>
   <button class="btn btn--primary btn--block" type="submit" data-busy="<?= e(t('Setting up…')) ?>"><?= e(t('Set up account')) ?></button>
 </form>

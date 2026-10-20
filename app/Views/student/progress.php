@@ -1,4 +1,4 @@
-<?php /** @var list<array> $books @var array $work @var list<array> $released @var list<array> $practice @var list<array> $feedback */
+<?php /** @var list<array> $books @var array $work @var list<array> $released @var list<array>|null $practice null when the student's AI is off @var list<array> $feedback */
 $submitted = (int) ($work['submitted'] ?? 0);
 $dueSoFar = (int) ($work['due_so_far'] ?? 0);
 $onTime = (int) ($work['on_time'] ?? 0);
@@ -27,10 +27,12 @@ $avg = $released ? array_sum(array_map(static fn ($r) => (float) $r['score'] / (
     <dd style="margin:0"><span class="stat__value"><?= $avg !== null ? e(fmt_number($avg)) . '%' : '—' ?></span>
       <span class="stat__note"><?= e(tp('Across :count result', 'Across :count results', count($released))) ?></span></dd>
   </div>
+  <?php if ($practice !== null): ?>
   <div class="stat">
     <dt class="stat__label"><?= e(t('Practice sets finished')) ?></dt>
     <dd style="margin:0"><span class="stat__value"><?= count($practice) ?></span><span class="stat__note"><?= e(t('Private; not part of grades')) ?></span></dd>
   </div>
+  <?php endif; ?>
 </dl>
 <details class="how">
   <summary><?= e(t('How these numbers are calculated')) ?></summary>
@@ -104,6 +106,7 @@ $avg = $released ? array_sum(array_map(static fn ($r) => (float) $r['score'] / (
         </ul>
       <?php endif; ?>
     </section>
+    <?php if ($practice !== null): ?>
     <section class="section" aria-labelledby="pr-title">
       <div class="section__head">
         <h2 class="section__title" id="pr-title"><?= e(t('Recent practice')) ?></h2>
@@ -125,5 +128,6 @@ $avg = $released ? array_sum(array_map(static fn ($r) => (float) $r['score'] / (
         </ul>
       <?php endif; ?>
     </section>
+    <?php endif; ?>
   </aside>
 </div>

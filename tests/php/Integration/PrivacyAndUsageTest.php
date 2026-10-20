@@ -38,6 +38,7 @@ final class PrivacyAndUsageTest extends IntegrationTestCase
         $bea = $this->person('bea.ramos');
         $submissions = (int) Db::value('SELECT COUNT(*) FROM submissions WHERE student_id = :u', ['u' => (int) $bea['id']]);
         self::assertGreaterThan(0, $submissions);
+        self::assertSame(2, (int) Db::value('SELECT COUNT(*) FROM notice_acknowledgments WHERE user_id = :u', ['u' => (int) $bea['id']]));
 
         $counts = Privacy::erase((int) $bea['id'], false);
 
@@ -51,6 +52,7 @@ final class PrivacyAndUsageTest extends IntegrationTestCase
         self::assertSame(0, (int) Db::value("SELECT COUNT(*) FROM class_memberships WHERE user_id = :u AND status = 'active'", ['u' => (int) $bea['id']]));
         self::assertSame($submissions, (int) Db::value('SELECT COUNT(*) FROM submissions WHERE student_id = :u', ['u' => (int) $bea['id']]));
         self::assertGreaterThanOrEqual(1, $counts['conversations']);
+        self::assertSame(0, (int) Db::value('SELECT COUNT(*) FROM notice_acknowledgments WHERE user_id = :u', ['u' => (int) $bea['id']]));
     }
 
     public function testDailyLimitStopsRequestsAndIsCountedWithoutContent(): void

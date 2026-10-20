@@ -29,6 +29,7 @@ echo json_encode([
         'janelle' => $user('janelle.ocampo'),
         'enzo' => $user('enzo.castillo'),
         'joy' => $user('joy.santiago'),
+        'luis' => $user('luis.pascual'),
     ],
     'sections' => [
         'narra' => $section('Narra'),

@@ -17,6 +17,7 @@ use Sibol\Services\Ai\AiException;
 use Sibol\Services\Ai\Generators;
 use Sibol\Services\Ai\Providers;
 use Sibol\Services\Ai\Usage;
+use Sibol\Services\AiAccess;
 use Sibol\Services\Assessments;
 use Sibol\Services\Notifier;
 use Sibol\Services\Overrides;
@@ -189,7 +190,7 @@ final class SubmissionController extends Controller
     {
         $user = $this->user();
         [$sub, $a] = Access::teacherSubmission($user, $id);
-        $student = Db::one('SELECT id, given_name, family_name, preferred_name, email, grade_level FROM users WHERE id = :u', ['u' => (int) $sub['student_id']]);
+        $student = Db::one('SELECT id, organization_id, role, ai_enabled, given_name, family_name, preferred_name, email, grade_level FROM users WHERE id = :u', ['u' => (int) $sub['student_id']]);
         $snapshot = Assessments::snapshotFor($sub['assignment_version_id'] !== null ? (int) $sub['assignment_version_id'] : null);
         $answers = [];
         foreach (Db::all('SELECT * FROM submission_answers WHERE submission_id = :s', ['s' => $id]) as $row) {
@@ -216,6 +217,7 @@ final class SubmissionController extends Controller
             'history' => Db::all('SELECT h.*, u.given_name, u.family_name, u.preferred_name FROM grading_history h LEFT JOIN users u ON u.id = h.actor_id WHERE h.submission_id = :s ORDER BY h.created_at DESC', ['s' => $id]),
             'suggestion' => $suggestion ? json_decode((string) $suggestion['suggestion'], true) + ['created_at' => $suggestion['created_at'], 'model' => $suggestion['model']] : null,
             'aiAvailable' => !(Providers::make()->isDemo()),
+            'studentAiOn' => AiAccess::studentOn($student),
             'prevId' => $pos !== false && $pos > 0 ? $ids[$pos - 1] : null,
             'nextId' => $pos !== false && $pos < count($ids) - 1 ? $ids[$pos + 1] : null,
             'canReopen' => Assessments::canReopen($sub, $a),
@@ -335,6 +337,11 @@ final class SubmissionController extends Controller
         $user = $this->user();
         [$sub, $a] = Access::teacherSubmission($user, $id);
         $back = '/teacher/submissions/' . $id . '#suggestion';
+        $student = Db::one('SELECT id, organization_id, role, ai_enabled FROM users WHERE id = :u', ['u' => (int) $sub['student_id']]);
+        if ($student && !AiAccess::studentOn($student)) {
+            $this->flash('error', t('AI is switched off for this student, so their work is not sent to an AI service.'));
+            return $this->redirect($back);
+        }
         $blocked = Usage::blockedReason($user, 'grading_suggestion');
         if ($blocked !== null) {
             $this->flash('error', $blocked);

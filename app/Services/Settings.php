@@ -45,6 +45,16 @@ final class Settings
                 'monthly_token_budget' => 2000000,
                 'general_answers' => true,
                 'max_question_chars' => 2000,
+                // A student's AI starts on; an adviser or administrator can switch it off (or, with false here,
+                // it starts off until one of them switches it on, for example after a guardian's yes).
+                'students_start_on' => true,
+            ],
+            // Who must read and accept the privacy notice and the rules for using Sibol, on first sign-in and
+            // after each change. "edition" goes up when the school asks everyone to read them again.
+            'notices' => [
+                'students' => true,
+                'staff' => false,
+                'edition' => 1,
             ],
             'features' => [
                 'document_answers' => true,

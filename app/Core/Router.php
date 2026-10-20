@@ -9,6 +9,7 @@ namespace Sibol\Core;
  *   'auth'             signed-in, active account
  *   'guest'            signed-out only
  *   'role:a,b'         account role must be one of the list
+ *   any other name     a guard registered with guard(), run in order after the checks above
  * CSRF is verified for every POST in App, not per route.
  */
 final class Router
@@ -18,6 +19,17 @@ final class Router
     private string $prefix = '';
     /** @var list<string> */
     private array $middleware = [];
+    /** @var array<string,callable> */
+    private array $guards = [];
+
+    /**
+     * A named check that routes can list as middleware. It returns a Response to stop the request
+     * (for example a redirect), or null to let it through; it may also throw an HttpException.
+     */
+    public function guard(string $name, callable $check): void
+    {
+        $this->guards[$name] = $check;
+    }
 
     public function get(string $path, array $handler, array $middleware = []): void
     {
@@ -113,6 +125,15 @@ final class Router
                     Audit::log('access.denied', 'route', null, ['path' => $request->path]);
                     throw HttpException::forbidden();
                 }
+            }
+            if (isset($this->guards[$name])) {
+                $stop = ($this->guards[$name])($request);
+                if ($stop instanceof Response) {
+                    return $stop;
+                }
+            } elseif ($name !== 'auth' && $name !== 'guest' && !str_starts_with($name, 'role:')) {
+                // A misspelt check must not let the request through.
+                throw new \LogicException('Unknown route middleware: ' . $name);
             }
         }
         return null;

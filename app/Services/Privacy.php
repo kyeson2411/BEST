@@ -20,6 +20,7 @@ final class Privacy
     public static function export(int $userId): string
     {
         $user = Db::one('SELECT id, role, username, email, given_name, family_name, preferred_name, grade_level, language, timezone, status, created_at, last_login_at FROM users WHERE id = :u', ['u' => $userId]);
+        $aiSetting = Db::value('SELECT ai_enabled FROM users WHERE id = :u', ['u' => $userId]);
         $data = [
             'generated_at' => gmdate('c'),
             'about' => 'This file contains the information Sibol holds about you. Times are in UTC.',
@@ -45,6 +46,11 @@ final class Privacy
             'shared_with_teachers' => Db::all('SELECT kind, content, student_note, created_at FROM shared_excerpts WHERE student_id = :u', ['u' => $userId]),
             'notifications' => Db::all('SELECT title, body, created_at, read_at FROM notifications WHERE user_id = :u ORDER BY created_at DESC LIMIT 500', ['u' => $userId]),
             'privacy_requests' => Db::all('SELECT request_type, status, created_at, resolved_at FROM privacy_requests WHERE user_id = :u', ['u' => $userId]),
+            'notices_accepted' => Db::all('SELECT notice, version, acknowledged_at FROM notice_acknowledgments WHERE user_id = :u ORDER BY acknowledged_at', ['u' => $userId]),
+            'ai_companion' => [
+                'setting' => $aiSetting === null ? 'school default' : ((int) $aiSetting === 1 ? 'on' : 'off'),
+                'guardian_answers' => Db::all("SELECT answer, answered_on, created_at AS recorded_at FROM guardian_consents WHERE student_id = :u AND topic = 'ai' ORDER BY answered_on", ['u' => $userId]),
+            ],
         ];
         $stored = Uploads::storeContent((string) json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), 'exports', 'export.json');
         return $stored['path'];
@@ -69,6 +75,7 @@ final class Privacy
             $counts['shared_excerpts'] = Db::exec('DELETE FROM shared_excerpts WHERE student_id = :u', ['u' => $userId]);
             $counts['notifications'] = Db::exec('DELETE FROM notifications WHERE user_id = :u', ['u' => $userId]);
             Db::exec('DELETE FROM content_views WHERE user_id = :u', ['u' => $userId]);
+            Db::exec('DELETE FROM notice_acknowledgments WHERE user_id = :u', ['u' => $userId]);
             Db::exec('UPDATE user_tokens SET revoked_at = :n WHERE user_id = :u AND used_at IS NULL AND revoked_at IS NULL', ['n' => Db::now(), 'u' => $userId]);
             if ($includeRecords) {
                 foreach (Db::column('SELECT f.stored_path FROM submission_files f JOIN submissions s ON s.id = f.submission_id WHERE s.student_id = :u', ['u' => $userId]) as $path) {
@@ -76,6 +83,7 @@ final class Privacy
                 }
                 $counts['submissions'] = Db::exec('DELETE FROM submissions WHERE student_id = :u', ['u' => $userId]);
                 Db::exec('DELETE FROM assignment_overrides WHERE student_id = :u', ['u' => $userId]);
+                Db::exec('DELETE FROM guardian_consents WHERE student_id = :u', ['u' => $userId]);
             }
             Uploads::delete($user['avatar_path'] ?? null);
             Db::update('users', [

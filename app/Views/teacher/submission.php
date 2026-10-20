@@ -1,7 +1,7 @@
 <?php
 /**
  * @var array $sub @var array $a @var array $student @var list<array> $questions @var array $answers @var list<array> $files @var array $rubric
- * @var array $rubricScores @var list<array> $history @var array|null $suggestion @var bool $aiAvailable @var int|null $prevId @var int|null $nextId
+ * @var array $rubricScores @var list<array> $history @var array|null $suggestion @var bool $aiAvailable @var bool $studentAiOn @var int|null $prevId @var int|null $nextId
  * @var bool $canReopen @var int $reopenMinutes
  */
 use Sibol\Core\Uploads;
@@ -121,10 +121,12 @@ $historyLabels = ['submitted' => t('Submitted by the student'), 'graded' => t('G
             </ul>
             <?php if ($suggestion['comment']): ?><p style="font-size:.9375rem" data-suggest-comment><?= e($suggestion['comment']) ?></p><?php endif; ?>
             <button type="button" class="btn btn--secondary btn--sm" data-apply-suggestion><?= e(t('Copy into the form')) ?></button>
+          <?php elseif (!$studentAiOn): ?>
+            <p style="font-size:.9375rem"><?= e(t('AI is switched off for this student, so their work is not sent to an AI service.')) ?></p>
           <?php else: ?>
             <p style="font-size:.9375rem"><?= e($aiAvailable ? t('Get a suggested score for each rubric criterion, with reasons. The student\'s typed answer is sent to the AI service without their name.') : t('Connect an AI provider to get rubric suggestions. Demo mode cannot evaluate writing.')) ?></p>
           <?php endif; ?>
-          <?php if ($aiAvailable): ?>
+          <?php if ($aiAvailable && $studentAiOn): ?>
             <button class="btn btn--secondary btn--sm" type="submit" form="suggest-form" data-busy="<?= e(t('Reading…')) ?>"><?= e($suggestion ? t('Ask again') : t('Suggest scores')) ?></button>
           <?php endif; ?>
         </section>
