@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sibol\Controllers\Teacher;
 
+use DateTimeImmutable;
 use Sibol\Controllers\Controller;
 use Sibol\Core\Audit;
 use Sibol\Core\Db;
@@ -12,6 +13,7 @@ use Sibol\Core\Response;
 use Sibol\Policies\Access;
 use Sibol\Repositories\TeacherRepo;
 use Sibol\Services\Notifier;
+use Sibol\Services\Nudges;
 use Sibol\Services\Settings;
 use Sibol\Services\SignInSlips;
 use Sibol\Services\Usernames;
@@ -80,7 +82,33 @@ final class ClassController extends Controller
                 ['c' => $id]
             ),
             'codePolicy' => (array) Settings::get((int) $user['organization_id'], 'class_codes', []),
+            'nudges' => $tab === 'overview' && $class['status'] === 'active' ? Nudges::forClass($id, new DateTimeImmutable('now')) : [],
         ]);
+    }
+
+    /** Sends one student of the class a neutral reminder about work that is missing or late. */
+    public function nudge(int $classId, int $id): Response
+    {
+        $user = $this->user();
+        $class = Access::teacherClass($user, $classId);
+        $student = Db::one(
+            "SELECT u.* FROM class_memberships cm JOIN users u ON u.id = cm.user_id AND u.status = 'active'
+             WHERE cm.class_id = :c AND cm.user_id = :u AND cm.role = 'student' AND cm.status = 'active'",
+            ['c' => $classId, 'u' => $id]
+        );
+        if (!$student || $class['status'] !== 'active') {
+            throw HttpException::notFound();
+        }
+        $result = Nudges::send($class, $student, new DateTimeImmutable('now'));
+        if ($result === 'sent') {
+            Audit::log('class.nudge_sent', 'class', $classId, ['student_id' => $id]);
+        }
+        $this->flash($result === 'sent' ? 'success' : 'info', [
+            'sent' => t('Reminder sent to :name.', ['name' => user_name($student)]),
+            'already' => t(':name already had a reminder about this class today.', ['name' => user_name($student)]),
+            'muted' => t(':name turned these reminders off, so none was sent. Talk to them in class instead.', ['name' => user_name($student)]),
+        ][$result]);
+        return $this->redirect('/teacher/classes/' . $classId . '#nudges');
     }
 
     public function addStudent(int $id): Response

@@ -65,11 +65,13 @@ test('paper work screens pass structural accessibility checks', async ({ page })
   expect(await audit(page), 'student paper work').toEqual([]);
 });
 
-test('the grading page with the comment bank passes structural accessibility checks', async ({ page }) => {
+test('the grading page with the comment bank, and a class page, pass structural accessibility checks', async ({ page }) => {
   await demoLogin(page, 'teacher');
   await page.goto(`teacher/submissions/${ids().beaSubmission}`);
   await page.locator('[data-comment-bank] summary').click();
   expect(await audit(page), 'grading page').toEqual([]);
+  await page.goto(`teacher/classes/${ids().classes.sciNarra}`);
+  expect(await audit(page), 'class page').toEqual([]);
 });
 
 test('an adviser\'s progress reports pass structural accessibility checks', async ({ page }) => {

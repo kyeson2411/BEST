@@ -313,8 +313,10 @@ queue (intervals of 1, 3, 7, 14 and 30 days with the clock moved day by day, qui
 answers are released and only once, answers checked by Sibol, due reviews before new ones within the daily
 number, reviewing early before a quiz, practice questions leaving while the student's AI is off or their
 material is unpublished, and the queue in the data export and erasure), and the comment bank (comments matched to
-a rubric's criteria by title, ordered by use, refused when empty or too long, and out of reach of other teachers).
-Last run: **146 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
+a rubric's criteria by title, ordered by use, refused when empty or too long, and out of reach of other teachers),
+and who may need a nudge (two missing or late in 14 days, by name; excused work, extensions, scored and unscored
+work in class and absences handled as in the gradebook; one reminder a day, none when the student turned them off).
+Last run: **148 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -351,8 +353,10 @@ student's own progress report and an adviser's reports for the section (a 404 fo
 adviser, and an audit entry), a student's review queue (a missed quiz question checked and rescheduled, reviewing
 a class before its quiz, a missed practice set joining the queue, and a 403 for teachers), the comment bank
 (inserted into the overall comment and into a question's comment, saved from the grading page without leaving it,
-and a 404 for another teacher), phone-width layout of 35 screens and structural accessibility checks on 52 screens.
-Last run: **89 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
+and a 404 for another teacher), a teacher nudging a student who missed two tasks (listed by name, reminded once a
+day, the reminder in the student's notifications, a 403 for students), phone-width layout of 36 screens and
+structural accessibility checks on 53 screens.
+Last run: **91 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
 
 ## Versions and performance
 
@@ -627,6 +631,13 @@ tools/             asset scripts (fonts and icons, school images with their orig
   are writing** adds the selected text, or the whole box, without leaving the page. The most used comments come
   first. Only their owner sees them; another teacher gets a 404. They are in the teacher's data export and are
   erased with their account.
+- **Who may need a nudge.** A class's overview lists, by name, students with two or more pieces of work missing
+  or handed in late among those due in the last 14 days. Each student's own due dates count, excused work is left
+  out, and a student marked absent from work done in class counts as missing, as in the gradebook. The list is
+  never ranked or scored. **Send a reminder** puts one neutral note in that student's notifications, with no
+  marks: some work in the class is past its due date or was handed in late, with a link to their assignments. A
+  student gets at most one a day per class, and none if they turned reminders off. Sending is audit-logged with
+  the student only.
 - **Quizzes on weak connections.** Answers are sent about a second after each change and when the page is hidden.
   Until the server confirms them they are also kept in the browser's `sessionStorage` for that tab only (never
   in cookies or long-term storage), restored after a reload and sent again on reconnect; they are removed once
@@ -686,9 +697,9 @@ tools/             asset scripts (fonts and icons, school images with their orig
   labelled controls, error messages tied to their fields, status shown with words and icons, never colour alone,
   reduced-motion support, charts with table views, and layouts that work at 390 px.
 - The browser tests check structure (one heading level 1 per page, unique ids, names for every control and
-  link, image alternatives) on 52 screens and the absence of sideways scrolling on 35 phone screens.
+  link, image alternatives) on 53 screens and the absence of sideways scrolling on 36 phone screens.
   They are not a full audit; test with a screen reader before launch.
-- **Filipino:** every interface string is translated (3,050 of 3,050), for students, teachers and school
+- **Filipino:** every interface string is translated (3,065 of 3,065), for students, teachers and school
   administrators. That includes text written by scripts (save status, card counters, companion progress), which
   the server translates and hands to the page in `data-i18n` attributes, so the JavaScript holds no English.
   Strings added later fall back to English until they are added to `lang/fil.php`; run

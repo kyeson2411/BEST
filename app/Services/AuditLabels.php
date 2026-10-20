@@ -67,6 +67,7 @@ final class AuditLabels
             case 'section.removed': return t('Removed an empty section');
             case 'progress_report.opened': return tp('Opened :count progress report', 'Opened :count progress reports', $n('students'));
 
+            case 'class.nudge_sent': return t('Sent a student a reminder about missing or late work');
             case 'class.created': return t('Created a class');
             case 'class.updated': return t('Updated class details');
             case 'class.archived': return t('Archived a class');

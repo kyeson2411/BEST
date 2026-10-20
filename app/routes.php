@@ -184,6 +184,7 @@ $router->group('/teacher', ['role:teacher', 'notices'], static function ($r): vo
     $r->get('/classes/{id}', [Teacher\ClassController::class, 'show']);
     $r->post('/classes/{id}/roster', [Teacher\ClassController::class, 'addStudent']);
     $r->post('/classes/{classId}/roster/{id}/withdraw', [Teacher\ClassController::class, 'withdrawStudent']);
+    $r->post('/classes/{classId}/nudge/{id}', [Teacher\ClassController::class, 'nudge']);
     $r->post('/classes/{id}/slips', [Teacher\ClassController::class, 'slips']);
     $r->post('/students/{id}/slip', [Teacher\ClassController::class, 'studentSlip']);
 

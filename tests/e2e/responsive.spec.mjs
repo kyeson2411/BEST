@@ -23,7 +23,7 @@ for (const [role, paths] of Object.entries(screens)) {
 
 test('the score grid, the printable copy and the section\'s progress reports fit a phone', async ({ page }) => {
   await demoLogin(page, 'teacher');
-  for (const path of [`teacher/assignments/${ids().paperTest}/scores`, `teacher/assignments/${ids().paperTest}/print?copy=key`, `teacher/advisory/${ids().sections.narra}/reports`]) {
+  for (const path of [`teacher/assignments/${ids().paperTest}/scores`, `teacher/assignments/${ids().paperTest}/print?copy=key`, `teacher/advisory/${ids().sections.narra}/reports`, `teacher/classes/${ids().classes.sciNarra}`]) {
     await page.goto(path);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow, `${path} scrolls sideways by ${overflow}px`).toBeLessThanOrEqual(0);

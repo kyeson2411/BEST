@@ -2,6 +2,7 @@
 /**
  * @var array $class @var string $tab @var string $q @var list<array> $roster @var int $dueCount @var list<array> $teachers @var list<array> $modules
  * @var list<array> $announcements @var list<array> $shares @var list<array> $work @var array $codePolicy
+ * @var list<array> $nudges students who may need a reminder (Nudges::forClass), by name
  */
 use Sibol\Core\Db;
 
@@ -39,6 +40,7 @@ $archived = $class['status'] !== 'active';
 
 <?php if ($tab === 'overview'): ?>
   <div class="layout-split">
+    <div class="stack">
     <section class="section" aria-labelledby="work-title">
       <div class="section__head"><h2 class="section__title" id="work-title"><?= e(t('Recent and upcoming work')) ?></h2><a class="section__link" href="<?= e(url('/teacher/assignments', ['class_id' => (int) $class['id']])) ?>"><?= e(t('All work')) ?></a></div>
       <?php if (!$work): ?>
@@ -59,6 +61,41 @@ $archived = $class['status'] !== 'active';
         </ul>
       <?php endif; ?>
     </section>
+    <?php if (!$archived): $localToday = fmt_date(gmdate('Y-m-d H:i:s'), 'input_date'); ?>
+      <section class="section" id="nudges" aria-labelledby="nudges-title">
+        <div class="section__head"><h2 class="section__title" id="nudges-title"><?= e(t('Who may need a nudge')) ?></h2></div>
+        <p class="meta" style="margin-top:0"><?= e(t('Students with :n or more pieces of work missing or handed in late among those due in the last :days days, by name. Each student\'s own due dates count, and excused work is left out.', ['n' => \Sibol\Services\Nudges::AT_LEAST, 'days' => \Sibol\Services\Nudges::DAYS])) ?></p>
+        <?php if (!$nudges): ?>
+          <p class="meta"><?= icon('check', 'icon--sm') ?> <?= e(t('Nobody right now.')) ?></p>
+        <?php else: ?>
+          <ul class="rows">
+            <?php foreach ($nudges as $n): $st = $n['student']; $remindedToday = $n['nudged_on'] !== null && fmt_date($n['nudged_on'], 'input_date') === $localToday; ?>
+              <li class="row">
+                <div class="row__main">
+                  <span class="row__title"><?= e(user_name($st)) ?></span>
+                  <div class="row__meta">
+                    <?php if ($n['missing']): ?><span><?= e(t('Missing: :titles', ['titles' => implode(', ', $n['missing'])])) ?></span><?php endif; ?>
+                    <?php if ($n['late']): ?><span><?= e(t('Late: :titles', ['titles' => implode(', ', $n['late'])])) ?></span><?php endif; ?>
+                    <?php if ($n['nudged_on'] && !$remindedToday): ?><span><?= e(t('Last reminder :when', ['when' => fmt_rel($n['nudged_on'])])) ?></span><?php endif; ?>
+                  </div>
+                </div>
+                <div class="row__aside">
+                  <?php if ($remindedToday): ?>
+                    <span class="meta"><?= icon('check', 'icon--sm') ?> <?= e(t('Reminded today')) ?></span>
+                  <?php else: ?>
+                    <form method="post" action="<?= e(url($base . '/nudge/' . (int) $st['id'])) ?>">
+                      <?= csrf_field() ?><button class="btn btn--secondary btn--sm" type="submit"><?= icon('bell', 'icon--sm') ?><?= e(t('Send a reminder')) ?><span class="sr-only">: <?= e(user_name($st)) ?></span></button>
+                    </form>
+                  <?php endif; ?>
+                </div>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+          <p class="meta"><?= e(t('A reminder is a short, neutral note in the student\'s notifications: some work in this class is past its due date or was handed in late, with a link to their assignments. It never shows marks.')) ?></p>
+        <?php endif; ?>
+      </section>
+    <?php endif; ?>
+    </div>
     <aside class="stack">
       <section class="panel" aria-labelledby="code-title">
         <h2 class="panel__title" id="code-title"><?= e(t('Class code')) ?></h2>
