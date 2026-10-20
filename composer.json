@@ -1,0 +1,42 @@
+{
+    "name": "sibol/learning-companion",
+    "description": "Sibol: an AI learning companion for schools. Plain PHP + MySQL, runs under XAMPP.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.0",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "smalot/pdfparser": "^2.13"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "suggest": {
+        "ext-curl": "Needed to call a live AI provider",
+        "ext-fileinfo": "Needed to validate uploaded file types",
+        "ext-zip": "Needed to read DOCX and PPTX materials"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sibol\\": "app/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sibol\\Tests\\": "tests/php/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "platform": {
+            "php": "8.0.30"
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

@@ -1,0 +1,19 @@
+# Sibol: only the public/ folder is meant to be reachable from a browser.
+# XAMPP serves all of htdocs, so everything else (source, .env, uploads,
+# vendor, database scripts) is blocked here.
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # The bare folder URL opens the app (built from REQUEST_URI so any folder name works).
+    RewriteCond %{REQUEST_URI} ^(.*?)/?$
+    RewriteRule ^$ %1/public/ [R=302,L]
+    # Requests inside public/ are handled by public/.htaccess.
+    RewriteRule ^public(/|$) - [L]
+    # Anything else is forbidden.
+    RewriteRule ^ - [F,L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

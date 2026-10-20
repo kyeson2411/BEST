@@ -1,0 +1,39 @@
+import { test, expect } from '@playwright/test';
+import { demoLogin } from './helpers.mjs';
+
+// Runs in the "phone" project (390 × 844). Every main screen must fit without sideways
+// scrolling and keep the bottom navigation reachable.
+const screens = {
+  student: ['student', 'student/assignments', 'student/classes', 'companion', 'student/progress', 'student/calendar', 'student/learning'],
+  teacher: ['teacher', 'teacher/review', 'teacher/assignments', 'teacher/materials', 'teacher/gradebook', 'teacher/insights'],
+  admin: ['admin', 'admin/users', 'admin/classes', 'admin/usage', 'admin/policies', 'admin/privacy', 'admin/audit'],
+};
+
+for (const [role, paths] of Object.entries(screens)) {
+  test(`${role} screens fit a phone`, async ({ page }) => {
+    await demoLogin(page, role);
+    for (const path of paths) {
+      await page.goto(path);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      expect(overflow, `${path} scrolls sideways by ${overflow}px`).toBeLessThanOrEqual(0);
+      await expect(page.locator('.bottombar'), `${path} has bottom navigation`).toBeVisible();
+    }
+  });
+}
+
+test('the sign-in page fits a phone with the seal pinned to the photo', async ({ page }) => {
+  await page.goto('');
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+  const photo = await page.locator('.auth__photo').boundingBox();
+  const seal = await page.locator('.auth__seal').boundingBox();
+  expect(seal.y).toBeLessThan(photo.y + photo.height);
+  expect(seal.y + seal.height).toBeGreaterThan(photo.y + photo.height);
+  await expect(page.getByLabel('Email')).toBeInViewport();
+});
+
+test('the menu drawer opens from the bottom bar', async ({ page }) => {
+  await demoLogin(page, 'teacher');
+  await page.locator('.bottombar').getByRole('link', { name: 'More' }).click();
+  await expect(page.locator('#spine').getByRole('link', { name: 'Gradebook' })).toBeVisible();
+});

@@ -1,0 +1,29 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Runtime data (uploads, exports, logs, caches, PHP sessions)
+/storage/uploads/*
+/storage/exports/*
+/storage/logs/*
+/storage/cache/*
+/storage/sessions/
+!/storage/**/.gitkeep
+!/storage/**/.htaccess
+
+# Test output
+/test-results/
+/playwright-report/
+/tests/e2e/.auth/
+.phpunit.result.cache
+
+# OS / editor
+Thumbs.db
+.DS_Store
+.idea/
+.vscode/

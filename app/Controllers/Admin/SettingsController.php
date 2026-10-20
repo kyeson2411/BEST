@@ -1,0 +1,295 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Sibol\Controllers\Admin;
+
+use Sibol\Controllers\Controller;
+use Sibol\Core\Audit;
+use Sibol\Core\Config;
+use Sibol\Core\Db;
+use Sibol\Core\ImageSanitizer;
+use Sibol\Core\Response;
+use Sibol\Core\Uploads;
+use Sibol\Services\Ai\Providers;
+use Sibol\Services\Settings;
+use Sibol\Services\SystemCheck;
+
+/** School policies (AI, features, class codes, privacy, notifications), school details and grading setup. */
+final class SettingsController extends Controller
+{
+    public function policies(): Response
+    {
+        $o = $this->orgId();
+        return $this->view('admin/policies', [
+            'title' => t('Policies'),
+            'settings' => Settings::all($o),
+            'provider' => Providers::label(),
+        ]);
+    }
+
+    public function savePolicies(): Response
+    {
+        $admin = $this->user();
+        $o = (int) $admin['organization_id'];
+        $back = '/admin/policies';
+        $data = $this->validate([
+            'ai_enabled' => 'bool',
+            'teacher_tools' => 'bool',
+            'general_answers' => 'bool',
+            'student_modes' => 'nullable|array',
+            'student_daily_messages' => 'required|int|min:0|max:1000',
+            'teacher_daily_requests' => 'required|int|min:0|max:2000',
+            'monthly_token_budget' => 'required|int|min:0|max:1000000000',
+            'max_question_chars' => 'required|int|min:200|max:8000',
+            'document_answers' => 'bool',
+            'flashcards' => 'bool',
+            'practice_quizzes' => 'bool',
+            'study_plans' => 'bool',
+            'share_with_teacher' => 'bool',
+            'codes_enabled' => 'bool',
+            'code_ttl_days' => 'required|int|min:1|max:180',
+            'ai_retention_days' => 'required|int|min:0|max:3650',
+            'students_can_delete_chats' => 'bool',
+            'contact_name' => 'nullable|string|max:120',
+            'contact_email' => 'nullable|email',
+            'help_text' => 'nullable|string|max:1000',
+            'deadline_reminder_hours' => 'required|int|min:0|max:168',
+            'notify_new_material' => 'bool',
+            'notify_new_assignment' => 'bool',
+            'notify_feedback_released' => 'bool',
+            'notify_announcements' => 'bool',
+        ], [
+            'student_daily_messages' => t('Messages per student per day'),
+            'teacher_daily_requests' => t('Requests per teacher per day'),
+            'monthly_token_budget' => t('Monthly token budget'),
+            'max_question_chars' => t('Longest question'),
+            'code_ttl_days' => t('Class code lifetime'),
+            'ai_retention_days' => t('Conversation retention'),
+            'contact_name' => t('Privacy contact'),
+            'contact_email' => t('Privacy contact email'),
+            'help_text' => t('Help message'),
+            'deadline_reminder_hours' => t('Deadline reminder'),
+        ], $back);
+        $modes = array_values(array_intersect(Settings::STUDENT_MODES, array_map('strval', (array) ($data['student_modes'] ?? []))));
+        if ($data['ai_enabled'] && !$modes) {
+            $this->fail('student_modes', t('Keep at least one companion mode for students, or turn AI tools off.'), $back);
+        }
+        $before = Settings::all($o);
+        $new = [
+            'ai' => [
+                'enabled' => $data['ai_enabled'],
+                'teacher_tools' => $data['teacher_tools'],
+                'general_answers' => $data['general_answers'],
+                'student_modes' => $modes,
+                'student_daily_messages' => $data['student_daily_messages'],
+                'teacher_daily_requests' => $data['teacher_daily_requests'],
+                'monthly_token_budget' => $data['monthly_token_budget'],
+                'max_question_chars' => $data['max_question_chars'],
+            ],
+            'features' => [
+                'document_answers' => $data['document_answers'],
+                'flashcards' => $data['flashcards'],
+                'practice_quizzes' => $data['practice_quizzes'],
+                'study_plans' => $data['study_plans'],
+                'share_with_teacher' => $data['share_with_teacher'],
+            ],
+            'class_codes' => ['enabled' => $data['codes_enabled'], 'ttl_days' => $data['code_ttl_days']],
+            'privacy' => [
+                'ai_retention_days' => $data['ai_retention_days'],
+                'students_can_delete_chats' => $data['students_can_delete_chats'],
+                'contact_name' => (string) $data['contact_name'],
+                'contact_email' => (string) $data['contact_email'],
+                'help_text' => (string) $data['help_text'],
+            ],
+            'notifications' => [
+                'deadline_reminder_hours' => $data['deadline_reminder_hours'],
+                'new_material' => $data['notify_new_material'],
+                'new_assignment' => $data['notify_new_assignment'],
+                'feedback_released' => $data['notify_feedback_released'],
+                'announcements' => $data['notify_announcements'],
+            ],
+        ];
+        $changed = [];
+        foreach ($new as $key => $value) {
+            if (array_intersect_key((array) $before[$key], $value) != $value) {
+                $changed[] = $key;
+                Settings::set($o, $key, array_replace((array) $before[$key], $value), (int) $admin['id']);
+            }
+        }
+        if (!$data['codes_enabled'] && ($before['class_codes']['enabled'] ?? true)) {
+            Db::exec('UPDATE classes SET join_code_enabled = 0 WHERE organization_id = :o', ['o' => $o]);
+        }
+        if ($changed) {
+            Audit::log('settings.policies_updated', null, null, ['sections' => implode(',', $changed)]);
+        }
+        $this->flash('success', $changed ? t('Policies saved. They apply from the next request.') : t('No changes to save.'));
+        return $this->redirect($back);
+    }
+
+    public function school(): Response
+    {
+        $admin = $this->user();
+        $o = (int) $admin['organization_id'];
+        return $this->view('admin/school', [
+            'title' => t('School settings'),
+            'org' => Db::one('SELECT * FROM organizations WHERE id = :o', ['o' => $o]),
+            'grades' => (array) Settings::get($o, 'grade_levels', []),
+            'grading' => (array) Settings::get($o, 'grading', []),
+            'presets' => Settings::gradingPresets(),
+            'used' => array_map('strval', Db::column("SELECT DISTINCT category FROM assignments WHERE organization_id = :o AND category IS NOT NULL AND category <> ''", ['o' => $o])),
+        ]);
+    }
+
+    public function saveSchool(): Response
+    {
+        $admin = $this->user();
+        $o = (int) $admin['organization_id'];
+        $back = '/admin/settings';
+        $data = $this->validate([
+            'name' => 'required|string|max:160',
+            'short_name' => 'nullable|string|max:60',
+            'timezone' => 'required|timezone',
+            'default_language' => 'required|in:en,fil',
+            'grade_levels' => 'nullable|string|max:2000',
+        ], ['name' => t('School name'), 'short_name' => t('Short name'), 'timezone' => t('Timezone'), 'default_language' => t('Default language'), 'grade_levels' => t('Grade levels')], $back);
+        $grades = array_values(array_unique(array_filter(array_map(static fn ($g) => mb_substr(trim($g), 0, 40), explode("\n", (string) $data['grade_levels'])), static fn ($g) => $g !== '')));
+        if (count($grades) > 30) {
+            $this->fail('grade_levels', t('Use 30 grade levels or fewer.'), $back);
+        }
+        Db::update('organizations', [
+            'name' => $data['name'],
+            'short_name' => $data['short_name'],
+            'timezone' => $data['timezone'],
+            'default_language' => $data['default_language'],
+            'updated_at' => Db::now(),
+        ], ['id' => $o]);
+        Settings::set($o, 'grade_levels', $grades, (int) $admin['id']);
+        Audit::log('settings.school_updated');
+        $this->flash('success', t('School details saved.'));
+        return $this->redirect($back);
+    }
+
+    public function saveGrading(): Response
+    {
+        $admin = $this->user();
+        $o = (int) $admin['organization_id'];
+        $back = '/admin/settings#grading';
+        $presets = Settings::gradingPresets();
+        $preset = $this->request->str('preset');
+        if ($preset !== '') {
+            if (!isset($presets[$preset])) {
+                $this->fail('preset', t('Choose one of the starting points.'), $back);
+            }
+            Settings::set($o, 'grading', $presets[$preset]['value'], (int) $admin['id']);
+            Audit::log('settings.grading_updated', null, null, ['preset' => $preset]);
+            $this->flash('success', t('Starting point loaded. Review the weights and labels so they match your school\'s policy, then save.'));
+            return $this->redirect($back);
+        }
+        $data = $this->validate([
+            'model' => 'required|in:points,weighted',
+            'passing_percent' => 'required|numeric|min:0|max:100',
+        ], ['model' => t('Grading model'), 'passing_percent' => t('Passing percentage')], $back);
+
+        $categories = [];
+        $keys = $this->request->arr('cat_key');
+        $labels = $this->request->arr('cat_label');
+        $weights = $this->request->arr('cat_weight');
+        foreach ($labels as $i => $label) {
+            $label = mb_substr(trim((string) $label), 0, 60);
+            $weight = trim((string) ($weights[$i] ?? ''));
+            if ($label === '' && $weight === '') {
+                continue;
+            }
+            if ($label === '' || !is_numeric($weight) || (float) $weight < 0 || (float) $weight > 100) {
+                $this->fail('categories', t('Each category needs a name and a weight between 0 and 100.'), $back);
+            }
+            $key = preg_replace('/[^a-z0-9_]/', '', (string) ($keys[$i] ?? '')) ?: trim((string) preg_replace('/[^a-z0-9]+/', '_', mb_strtolower($label)), '_');
+            if ($key === '' || isset($categories[$key])) {
+                $key = 'cat' . (count($categories) + 1);
+            }
+            $categories[$key] = ['key' => $key, 'label' => $label, 'weight' => round((float) $weight, 2)];
+        }
+        if ($data['model'] === 'weighted') {
+            if (!$categories) {
+                $this->fail('categories', t('Weighted grading needs at least one category.'), $back);
+            }
+            $sum = array_sum(array_column($categories, 'weight'));
+            if (abs($sum - 100) > 0.01) {
+                $this->fail('categories', t('Category weights add up to :sum%. They must add up to 100%.', ['sum' => fmt_number($sum, 2)]), $back);
+            }
+        }
+        $descriptors = [];
+        $mins = $this->request->arr('desc_min');
+        foreach ($this->request->arr('desc_label') as $i => $label) {
+            $label = mb_substr(trim((string) $label), 0, 60);
+            $min = trim((string) ($mins[$i] ?? ''));
+            if ($label === '' && $min === '') {
+                continue;
+            }
+            if ($label === '' || !is_numeric($min) || (float) $min < 0 || (float) $min > 100) {
+                $this->fail('descriptors', t('Each descriptor needs a label and a lowest percentage between 0 and 100.'), $back);
+            }
+            $descriptors[] = ['min' => (float) $min, 'label' => $label];
+        }
+        usort($descriptors, static fn ($a, $b) => $b['min'] <=> $a['min']);
+        Settings::set($o, 'grading', [
+            'model' => $data['model'],
+            'categories' => array_values($categories),
+            'passing_percent' => $data['passing_percent'],
+            'descriptors' => $descriptors,
+        ], (int) $admin['id']);
+        Audit::log('settings.grading_updated', null, null, ['model' => $data['model']]);
+        $this->flash('success', t('Grading setup saved. Gradebooks use it right away.'));
+        return $this->redirect($back);
+    }
+
+    public function saveLogo(): Response
+    {
+        $admin = $this->user();
+        $o = (int) $admin['organization_id'];
+        $back = '/admin/settings#logo';
+        $current = (string) Db::value('SELECT logo_path FROM organizations WHERE id = :o', ['o' => $o]);
+        if ($this->request->bool('remove')) {
+            Uploads::delete($current ?: null);
+            Db::update('organizations', ['logo_path' => null, 'updated_at' => Db::now()], ['id' => $o]);
+            Audit::log('settings.logo_updated', null, null, ['removed' => true]);
+            $this->flash('success', t('Logo removed.'));
+            return $this->redirect($back);
+        }
+        $file = $this->request->file('logo');
+        $problem = Uploads::validate($file, ['png', 'jpg', 'jpeg'], 1048576);
+        if ($problem !== null) {
+            $this->fail('logo', $problem, $back);
+        }
+        $stored = Uploads::store($file, 'logos');
+        if (!ImageSanitizer::clean(Uploads::absolute($stored['path']), $stored['ext'])) {
+            Uploads::delete($stored['path']);
+            $this->fail('logo', t('That image could not be read. Try saving it again as a PNG or JPG.'), $back);
+        }
+        Uploads::delete($current ?: null);
+        Db::update('organizations', ['logo_path' => $stored['path'], 'updated_at' => Db::now()], ['id' => $o]);
+        Audit::log('settings.logo_updated');
+        $this->flash('success', t('Logo updated.'));
+        return $this->redirect($back);
+    }
+
+    public function integrations(): Response
+    {
+        return $this->view('admin/integrations', [
+            'title' => t('Integrations and system checks'),
+            'crumbs' => [[t('School settings'), '/admin/settings'], [t('Integrations'), null]],
+            'checks' => SystemCheck::run(),
+            'ai' => [
+                'label' => Providers::label(),
+                'provider' => (string) Config::get('ai.provider', 'demo'),
+                'model' => (string) Config::get('ai.model', ''),
+                'effort' => (string) Config::get('ai.effort', 'medium'),
+                'fallbacks' => (string) Config::get('ai.fallbacks', 'default'),
+                'timeout' => (int) Config::get('ai.timeout', 90),
+                'has_key' => (string) Config::get('ai.api_key', '') !== '',
+                'base_url_host' => (string) parse_url((string) Config::get('ai.base_url', ''), PHP_URL_HOST),
+            ],
+        ]);
+    }
+}

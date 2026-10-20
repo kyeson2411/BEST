@@ -1,0 +1,75 @@
+<?php
+/** @var array $assignment @var array $submission @var list<array> $questions @var array<int,string> $saved */
+$deadline = $submission['deadline_at'] ? \Sibol\Core\Dates::format($submission['deadline_at'], 'iso') : null;
+$answered = count(array_filter($saved, static fn ($v) => trim((string) $v) !== ''));
+?>
+<form method="post" action="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/attempt')) ?>" id="quiz-form" data-quiz
+      data-autosave-url="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/attempt')) ?>" data-no-busy>
+  <?= csrf_field() ?>
+  <div class="quiz-bar">
+    <div>
+      <h1 class="page-title" style="font-size:1.5rem"><?= e($assignment['title']) ?></h1>
+      <p class="meta" style="margin:2px 0 0"><?= e($assignment['class_name']) ?>, <?= e(t('attempt :n', ['n' => (int) $submission['attempt_no']])) ?></p>
+    </div>
+    <div class="cluster">
+      <span class="meta" data-save-status aria-live="polite"><?= e(tp(':count of :total answered', ':count of :total answered', $answered, ['total' => count($questions)])) ?></span>
+      <?php if ($deadline): ?>
+        <span class="timer" data-countdown="<?= e($deadline) ?>" data-autosubmit-form="#quiz-form" role="timer" aria-label="<?= e(t('Time left')) ?>">
+          <?= icon('timer', 'icon--sm') ?><span data-countdown-label></span>
+        </span>
+      <?php endif; ?>
+    </div>
+  </div>
+
+  <?php if (trim((string) $assignment['instructions']) !== ''): ?>
+    <details class="how" style="margin-bottom: 16px">
+      <summary><?= e(t('Instructions')) ?></summary>
+      <div class="prose"><?= markdown($assignment['instructions']) ?></div>
+    </details>
+  <?php endif; ?>
+
+  <ol class="questions">
+    <?php foreach ($questions as $q): $qid = (int) $q['id']; $value = $saved[$qid] ?? ''; $name = 'answers[' . $qid . ']'; ?>
+      <li class="question" id="q-<?= $qid ?>">
+        <fieldset>
+          <legend class="question__head" style="width:100%">
+            <span class="question__no" aria-hidden="true"></span>
+            <span class="question__prompt"><?= markdown($q['prompt']) ?></span>
+            <span class="question__points"><?= e(tp(':count point', ':count points', (int) round($q['points']))) ?></span>
+          </legend>
+          <div class="question__body">
+            <?php if ($q['qtype'] === 'multiple_choice'): ?>
+              <div class="choice-list">
+                <?php foreach ($q['options'] as $opt): ?>
+                  <label class="choice">
+                    <input type="radio" name="<?= e($name) ?>" value="<?= e($opt['key']) ?>"<?= checked($value === $opt['key']) ?>>
+                    <span><span class="choice__title"><?= e($opt['key']) ?>.</span> <?= e($opt['text']) ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+            <?php elseif ($q['qtype'] === 'true_false'): ?>
+              <div class="choice-list" style="grid-template-columns: repeat(2, minmax(0, 220px))">
+                <label class="choice"><input type="radio" name="<?= e($name) ?>" value="true"<?= checked($value === 'true') ?>><span class="choice__title"><?= e(t('True')) ?></span></label>
+                <label class="choice"><input type="radio" name="<?= e($name) ?>" value="false"<?= checked($value === 'false') ?>><span class="choice__title"><?= e(t('False')) ?></span></label>
+              </div>
+            <?php elseif ($q['qtype'] === 'short_answer'): ?>
+              <label class="sr-only" for="a-<?= $qid ?>"><?= e(t('Your answer')) ?></label>
+              <input class="input" id="a-<?= $qid ?>" type="text" name="<?= e($name) ?>" value="<?= e($value) ?>" maxlength="500" autocomplete="off" style="max-width: 480px">
+            <?php else: ?>
+              <label class="sr-only" for="a-<?= $qid ?>"><?= e(t('Your answer')) ?></label>
+              <textarea class="input textarea" id="a-<?= $qid ?>" name="<?= e($name) ?>" rows="6" maxlength="10000"><?= e($value) ?></textarea>
+              <p class="meta" style="margin-top:4px"><?= e(t('Your teacher marks this answer.')) ?></p>
+            <?php endif; ?>
+          </div>
+        </fieldset>
+      </li>
+    <?php endforeach; ?>
+  </ol>
+
+  <div class="form-actions form-actions--sticky">
+    <button class="btn btn--secondary" type="submit" name="action" value="save"><?= icon('save', 'icon--sm') ?><?= e(t('Save answers')) ?></button>
+    <button class="btn btn--primary" type="submit" name="action" value="submit"
+            data-confirm="<?= e(t('You cannot change your answers after submitting.')) ?>" data-confirm-title="<?= e(t('Submit this quiz?')) ?>" data-confirm-action="<?= e(t('Submit quiz')) ?>"><?= icon('send', 'icon--sm') ?><?= e(t('Submit quiz')) ?></button>
+    <span class="meta"><?= e(t('Answers also save automatically every 30 seconds.')) ?></span>
+  </div>
+</form>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sibol PHP tests. Run from the project folder:
+    C:\xampp\php\php.exe vendor\bin\phpunit
+  Integration tests use a separate database (sibol_test) that is dropped, migrated and
+  seeded with the fictional demo school at the start of each run. Your sibol database is not touched.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/php/bootstrap.php"
+         colors="true"
+         cacheResult="false"
+         failOnWarning="true"
+         failOnRisky="true">
+    <testsuites>
+        <testsuite name="unit">
+            <directory>tests/php/Unit</directory>
+        </testsuite>
+        <testsuite name="integration">
+            <directory>tests/php/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_ENV" value="local" force="true"/>
+        <env name="DB_NAME" value="sibol_test" force="true"/>
+        <env name="AI_PROVIDER" value="demo" force="true"/>
+        <env name="AI_API_KEY" value="" force="true"/>
+        <env name="LOG_LEVEL" value="error" force="true"/>
+    </php>
+</phpunit>
