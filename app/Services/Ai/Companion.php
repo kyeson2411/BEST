@@ -9,6 +9,7 @@ use Sibol\Core\Dates;
 use Sibol\Core\Db;
 use Sibol\Core\Logger;
 use Sibol\Core\Markdown;
+use Sibol\Core\Translator;
 use Sibol\Core\View;
 use Sibol\Repositories\StudentRepo;
 use Sibol\Services\Settings;
@@ -58,6 +59,12 @@ final class Companion
 
         $result = new AiResult();
         $error = null;
+        // With a live model, Sibol itself says first when the class materials do not cover the question, so it never
+        // depends on the model doing so (demo answers say it in their own words).
+        $notice = $provider->isDemo() ? null : self::coverageNotice($user, $conversation, $question, $sources);
+        if ($notice !== null) {
+            $emit(['type' => 'delta', 'text' => $notice . "\n\n"]);
+        }
         try {
             if ($provider->isDemo()) {
                 $started = microtime(true);
@@ -78,7 +85,7 @@ final class Companion
             } else {
                 $request = new AiRequest(
                     Prompts::companionSystem($user, $mode, ['language' => $conversation['language'], 'level' => $conversation['level'] ?? '']),
-                    self::messages($conversationId, $question, $sources, $conversation, $user, $upcoming),
+                    self::messages($conversationId, $question, $sources, $conversation, $user, $upcoming, $notice !== null),
                     'companion',
                     16000,
                     (string) Config::get('ai.effort', 'medium')
@@ -126,6 +133,9 @@ final class Companion
         }
         if (trim($text) === '' && $status !== 'complete') {
             $text = $status === 'cancelled' ? t('Stopped before any answer was written.') : t('The answer was interrupted. Try again.');
+        }
+        if ($notice !== null && !$result->refused) {
+            $text = $notice . "\n\n" . $text;
         }
         $grounding = $provider->isDemo() ? 'demo' : ($citations ? 'sources' : ($sources ? 'no_sources' : 'general'));
 
@@ -177,6 +187,37 @@ final class Companion
         ]);
     }
 
+    /**
+     * The sentence that opens an answer when the class materials do not cover the question: no passage matched, or
+     * the passages share fewer than half of its key words. In the answer's language. Null when they do cover it, and
+     * for study plans and summaries of a chosen material, which are not questions about the materials.
+     */
+    public static function coverageNotice(array $user, array $conversation, string $question, array $sources): ?string
+    {
+        $mode = (string) $conversation['mode'];
+        if (in_array($mode, ['study_plan', 'summarize'], true)) {
+            return null;
+        }
+        $none = $sources === [];
+        if (!$none && !Retrieval::partialMatch($question, $sources)) {
+            return null;
+        }
+        $general = (bool) Settings::get((int) $user['organization_id'], 'ai.general_answers', true) && $mode !== 'ask_materials';
+        $language = Language::answerLanguage((string) ($conversation['language'] ?? 'en'), $question);
+        $teacher = ($user['role'] ?? '') === 'teacher';
+        return Translator::with($language, static function () use ($none, $general, $teacher): string {
+            if (!$none) {
+                return '**' . t('Your class materials may not cover this directly.') . '** ' . t('The passages found only partly match the question.');
+            }
+            if (!$general) {
+                return '**' . t('Your class materials don\'t cover this.') . '** ' . t('Try different key words, or ask your teacher.');
+            }
+            return '**' . t('Your class materials don\'t cover this.') . '** ' . ($teacher
+                ? t('Anything below is general knowledge, not from the class materials: check it before you use it.')
+                : t('Anything below is general knowledge, not from your teacher\'s materials, so check it with your teacher.'));
+        });
+    }
+
     /** @return list<array<string,mixed>> */
     public static function gatherSources(array $user, array $conversation, string $question): array
     {
@@ -207,8 +248,12 @@ final class Companion
         return $sources;
     }
 
-    /** History plus the new question with its sources and context. @return list<array{role:string,content:string}> */
-    private static function messages(int $conversationId, string $question, array $sources, array $conversation, array $user, array $upcoming): array
+    /**
+     * History plus the new question with its sources and context. $noticeShown: the answer already opens with
+     * coverageNotice(), so the model is told not to say it again.
+     * @return list<array{role:string,content:string}>
+     */
+    private static function messages(int $conversationId, string $question, array $sources, array $conversation, array $user, array $upcoming, bool $noticeShown = false): array
     {
         $rows = Db::all(
             "SELECT role, content FROM ai_messages WHERE conversation_id = :c AND status = 'complete' ORDER BY id DESC LIMIT " . (self::HISTORY_MESSAGES + 1),
@@ -234,7 +279,13 @@ final class Companion
             $context[] = "The student's upcoming work:\n" . implode("\n", $lines);
         }
         $block = Prompts::sourceBlock($sources);
-        $content = ($block !== '' ? $block . "\n\n" : ($conversation['mode'] === 'study_plan' ? '' : "(No class material passages matched this question.)\n\n"))
+        if ($block === '') {
+            $block = $conversation['mode'] === 'study_plan' ? '' : '(No class material passages matched this question.'
+                . ($noticeShown ? ' Sibol has already told the reader that the class materials do not cover it, so do not say that again.' : '') . ')';
+        } elseif ($noticeShown) {
+            $block .= "\n\n(These passages only partly match the question. Sibol has already told the reader so, so do not say that again: use the passages where they apply.)";
+        }
+        $content = ($block !== '' ? $block . "\n\n" : '')
             . implode("\n", $context) . "\n\n"
             . ($user['role'] === 'teacher' ? "Teacher's request:\n" : "Student's question:\n") . $question;
         $messages[] = ['role' => 'user', 'content' => $content];

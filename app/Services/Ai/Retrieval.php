@@ -131,6 +131,17 @@ final class Retrieval
         return $found;
     }
 
+    /** True when the passages together contain fewer than half of the question's key words. */
+    public static function partialMatch(string $question, array $sources): bool
+    {
+        $keywords = self::keywords(self::cleanQuery($question));
+        if (count($keywords) < 2) {
+            return false;
+        }
+        $text = implode("\n", array_map(static fn ($s) => $s['section_title'] . ' ' . $s['content'], $sources));
+        return self::coverage($text, $keywords) * 2 < count($keywords);
+    }
+
     /**
      * The question with the other words its keywords stand for (Synonyms), for the full-text search and for
      * choosing the sentence to quote from a passage.

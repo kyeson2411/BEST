@@ -971,11 +971,15 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   `ai:retrieval` on the demo school only).
 - Claude was not tested with a live key. Groq (`openai_compatible`) was, in October 2026: `openai/gpt-oss-120b`
   passed 17 of 31 `ai:eval` cases before the prompts were tightened. It then stopped giving quiz answers, but
-  still put its own wording in quotation marks, answered questions the materials do not cover without saying so
-  first, and wrote sample paragraphs for graded writing. `qwen/qwen3.8-27b` did about the same. Groq's free tier
-  also hit its per-minute limit during the run. Keep students in demo mode until a model passes `ai:eval`.
-- Demo mode cannot judge meaning: it labels passages that share fewer than half of a question's key words as
-  "may not cover this directly" rather than deciding whether they answer it.
+  still put its own wording in quotation marks and wrote sample paragraphs for graded writing. It also answered
+  questions the materials do not cover without saying so first; the companion now says that itself (below), and
+  those cases pass. `qwen/qwen3.8-27b` did about the same. Groq's free tier also hit its per-minute limit during
+  the run. Keep students in demo mode until a model passes `ai:eval`.
+- With a connected model, Sibol itself opens the answer with "Your class materials don't cover this." when no
+  passage matched (and "may not cover this directly" when the passages share fewer than half of the question's
+  key words), in the answer's language, and tells the model not to repeat it (`Companion::coverageNotice`). Like
+  demo mode, this counts key words and cannot judge meaning: a passage that shares the words but not the answer
+  gets no notice, so the prompt rule still applies.
 - The Filipino translation covers the whole interface but was drafted with AI and has not yet been reviewed
   by a Filipino teacher.
 - The DepEd grading templates were typed in by hand. The published copy of DepEd Order No. 8, s. 2015 is a

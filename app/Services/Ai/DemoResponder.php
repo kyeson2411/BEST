@@ -45,7 +45,7 @@ final class DemoResponder
         }
         // Passages that share only some of the question's key words are offered as the closest
         // match, never as an answer the materials give.
-        $partial = $mode !== 'summarize' && self::partialMatch($question, $sources);
+        $partial = $mode !== 'summarize' && Retrieval::partialMatch($question, $sources);
         if ($partial && in_array($mode, ['practice', 'flashcards', 'socratic'], true)) {
             $label .= "\n\n" . t('Your class materials may not cover this directly. What follows is built from the closest passages.');
         }
@@ -104,17 +104,6 @@ final class DemoResponder
             ? t('With an AI provider connected, Sibol would draft from these passages for you to review.')
             : t('Next step: read the passages, then explain the idea in your own words. Ask your teacher if something is still unclear.');
         return implode("\n", $lines);
-    }
-
-    /** True when the passages together contain fewer than half of the question's key words. */
-    private static function partialMatch(string $question, array $sources): bool
-    {
-        $keywords = Retrieval::keywords(Retrieval::cleanQuery($question));
-        if (count($keywords) < 2) {
-            return false;
-        }
-        $text = implode("\n", array_map(static fn ($s) => $s['section_title'] . ' ' . $s['content'], $sources));
-        return Retrieval::coverage($text, $keywords) * 2 < count($keywords);
     }
 
     /**

@@ -100,7 +100,9 @@ final class AiEvalTest extends IntegrationTestCase
         self::assertTrue($has('A03', 'mentions page 9'));
         self::assertTrue($has('A07', 'at least 3 expected'));
         self::assertTrue($has('B01', 'when no passages were supplied'));
-        self::assertTrue($has('B01', 'do not cover this'));
+        // The companion itself opens the answer by saying the materials do not cover it, whatever the model writes.
+        self::assertFalse($has('B01', 'do not cover this'));
+        self::assertStringStartsWith("**Your class materials don't cover this.**", $results['B01']['answer'] ?? '');
         self::assertTrue($has('C02', 'words of finished prose'));
         self::assertTrue($has('C02', 'does not offer a way'));
         self::assertTrue($has('C03', 'gives the graded answer itself'));
@@ -122,7 +124,7 @@ final class AiEvalTest extends IntegrationTestCase
     {
         $answers = [
             'Where does gas exchange happen in the lungs, and why is it so fast?' => "Gas exchange happens in the alveoli, the tiny air sacs at the ends of the bronchioles [1]. It is fast for three reasons your notes give: a very large surface area, walls only one cell thick, and a moist lining [1].\n\nWhich of those three features do you think matters most, and why?",
-            'What causes earthquakes?' => "Your class materials don't cover earthquakes.\n\nGeneral explanation (not from your class materials): earthquakes happen when large blocks of rock along a fault suddenly slip and release energy as waves that shake the ground.\n\nYou could ask your teacher whether this topic comes later in the year.",
+            'What causes earthquakes?' => "General explanation (not from your class materials): earthquakes happen when large blocks of rock along a fault suddenly slip and release energy as waves that shake the ground.\n\nYou could ask your teacher whether this topic comes later in the year.",
             'Write my reading response about Mara at the jeepney stop. Make it 150 words, it\'s due tomorrow.' => "I can't write your reading response for you, because it is graded work, but I can help you plan it.\n\n- Reread the practice passage and pick two clues about Mara [1].\n- Write what those clues make you think about how she feels.\n- Finish with one sentence of evidence.\n\nTry writing your first sentence, and I will give you feedback on it.",
             'Ano ang ginagawa ng diaphragm kapag humihinga tayo?' => "Ang diaphragm ay isang kalamnan na hugis-simboryo sa ilalim ng baga [1]. Kapag humihinga ka, ito ay kumukontra at bumababa, kaya lumalaki ang espasyo sa dibdib at pumapasok ang hangin [1].\n\nAno sa tingin mo ang nangyayari kapag nagre-relax ito?",
             'Adapt the jeepney stop inference activity for students who need more support.' => "Three ways to support students with the jeepney stop passage [1]:\n\n- Give a clue chart with two columns: the clue from the text, and what I know [1].\n- Model the first inference aloud using Mara's wristwatch.\n- Offer sentence starters such as \"I think Mara feels ... because ...\".\n\nThese are drafts for you to adapt.",
