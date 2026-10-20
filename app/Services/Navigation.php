@@ -25,9 +25,13 @@ final class Navigation
                     ['label' => t('Calendar'), 'icon' => 'calendar-days', 'url' => '/student/calendar', 'bottom' => true],
                 ];
             case 'teacher':
-                return [
+                $advisory = self::advises($user)
+                    ? [['label' => t('Advisory'), 'icon' => 'book-user', 'url' => '/teacher/advisory']]
+                    : [];
+                return array_merge([
                     ['label' => t('Home'), 'icon' => 'house', 'url' => '/teacher', 'exact' => true, 'bottom' => true],
                     ['label' => t('Classes'), 'icon' => 'school', 'url' => '/teacher/classes', 'bottom' => true],
+                ], $advisory, [
                     ['label' => t('To review'), 'icon' => 'inbox', 'url' => '/teacher/review', 'count' => self::teacherReviewCount($id), 'bottom' => true],
                     ['label' => t('Assignments'), 'icon' => 'clipboard-list', 'url' => '/teacher/assignments'],
                     ['label' => t('Materials'), 'icon' => 'folder-open', 'url' => '/teacher/materials'],
@@ -35,13 +39,13 @@ final class Navigation
                     ['label' => t('Gradebook'), 'icon' => 'table', 'url' => '/teacher/gradebook'],
                     ['label' => t('Insights'), 'icon' => 'chart-column', 'url' => '/teacher/insights'],
                     ['label' => t('Companion'), 'icon' => 'messages-square', 'url' => '/companion', 'bottom' => true],
-                ];
+                ]);
             case 'admin':
                 return [
                     ['label' => t('Overview'), 'icon' => 'layout-dashboard', 'url' => '/admin', 'exact' => true, 'bottom' => true],
                     ['label' => t('People'), 'icon' => 'users', 'url' => '/admin/users', 'bottom' => true],
                     ['label' => t('Classes'), 'icon' => 'school', 'url' => '/admin/classes', 'bottom' => true],
-                    ['label' => t('Subjects and terms'), 'icon' => 'layers', 'url' => '/admin/subjects', 'also' => ['/admin/academic-periods']],
+                    ['label' => t('Subjects and terms'), 'icon' => 'layers', 'url' => '/admin/subjects', 'also' => ['/admin/academic-periods', '/admin/sections']],
                     ['label' => t('AI usage'), 'icon' => 'gauge', 'url' => '/admin/usage'],
                     ['label' => t('Policies'), 'icon' => 'sliders-horizontal', 'url' => '/admin/policies'],
                     ['label' => t('Privacy and safety'), 'short' => t('Privacy'), 'icon' => 'shield-check', 'url' => '/admin/privacy', 'count' => self::adminOpenItems((int) $user['organization_id']), 'bottom' => true],
@@ -95,6 +99,11 @@ final class Navigation
                AND NOT EXISTS (SELECT 1 FROM submissions s WHERE s.assignment_id = a.id AND s.student_id = :u2 AND s.status = 'submitted')",
             ['u' => $studentId, 'u2' => $studentId, 'u3' => $studentId]
         );
+    }
+
+    private static function advises(array $teacher): bool
+    {
+        return (bool) Db::value('SELECT 1 FROM sections WHERE adviser_id = :u AND organization_id = :o LIMIT 1', ['u' => (int) $teacher['id'], 'o' => (int) $teacher['organization_id']]);
     }
 
     private static function teacherReviewCount(int $teacherId): int

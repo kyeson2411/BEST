@@ -14,7 +14,7 @@ $memberRow = static function (array $m) use ($base, $archived): string {
       <span class="row__lead"><?= partial('avatar', ['person' => $m, 'size' => 'sm']) ?></span>
       <div class="row__main">
         <a class="row__title" href="<?= e(url('/admin/users/' . (int) $m['id'])) ?>"><?= e(user_name($m)) ?></a>
-        <div class="row__meta"><span><?= e($m['email']) ?></span>
+        <div class="row__meta"><span class="code-text"><?= e((string) $m['username']) ?></span>
           <?php if ($m['user_status'] === 'invited'): ?><span><?= e(t('Invitation not yet accepted')) ?></span><?php endif; ?>
           <span><?= e(t('Added :date', ['date' => fmt_date($m['joined_at'], 'date_short')])) ?></span></div>
       </div>
@@ -65,7 +65,13 @@ $memberRow = static function (array $m) use ($base, $archived): string {
     </section>
 
     <section class="section" aria-labelledby="students-title">
-      <div class="section__head"><h2 class="section__title" id="students-title"><?= e(t('Students')) ?></h2></div>
+      <?php $notSetUp = count(array_filter($studentRows, static fn ($m) => $m['user_status'] === 'invited')); ?>
+      <div class="section__head"><h2 class="section__title" id="students-title"><?= e(t('Students')) ?></h2>
+        <?php if ($notSetUp && !$archived): ?>
+          <form method="post" action="<?= e(url($base . '/slips')) ?>" data-confirm="<?= e(tp('Prints a sign-in slip with a new one-time code for the :count student who has not set up an account yet. Earlier links for them stop working.', 'Prints a sign-in slip with a new one-time code for each of the :count students who have not set up an account yet. Earlier links for them stop working.', $notSetUp)) ?>" data-confirm-title="<?= e(t('Print sign-in slips?')) ?>" data-confirm-action="<?= e(t('Print slips')) ?>">
+            <?= csrf_field() ?><button class="btn btn--quiet btn--sm" type="submit"><?= icon('printer', 'icon--sm') ?><?= e(tp('Sign-in slip for :count student', 'Sign-in slips for :count students', $notSetUp)) ?></button>
+          </form>
+        <?php endif; ?></div>
       <?php if (!$studentRows): ?><p class="meta"><?= e(t('No students yet. Add them below, or let the teacher share a class code.')) ?></p>
       <?php else: ?><ul class="rows"><?php foreach ($studentRows as $m): ?><?= $memberRow($m) ?><?php endforeach; ?></ul><?php endif; ?>
       <?php if ($withdrawn): ?>
@@ -90,7 +96,7 @@ $memberRow = static function (array $m) use ($base, $archived): string {
               </div>
             </fieldset>
           <?php endif; ?>
-          <?= field('textarea', 'emails', t('Or add by email'), ['rows' => 3, 'hint' => t('One or more student emails, separated by spaces, commas or new lines.'), 'attrs' => ['maxlength' => 5000]]) ?>
+          <?= field('textarea', 'emails', t('Or add by username or email'), ['rows' => 3, 'hint' => t('One or more usernames or emails, separated by spaces, commas or new lines.'), 'attrs' => ['maxlength' => 5000]]) ?>
           <div class="form-actions"><button class="btn btn--primary" type="submit"><?= icon('user-plus', 'icon--sm') ?><?= e(t('Add students')) ?></button></div>
         </form>
       </section>

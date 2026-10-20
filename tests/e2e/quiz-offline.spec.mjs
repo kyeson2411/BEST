@@ -18,7 +18,7 @@ const kept = (page) => page.evaluate(() => {
   }
   return out;
 });
-const moveDeadline = (email, seconds) => execFileSync(php, ['tests/e2e/quiz-deadline.php', email, QUIZ, String(seconds)], { encoding: 'utf8' });
+const moveDeadline = (username, seconds) => execFileSync(php, ['tests/e2e/quiz-deadline.php', username, QUIZ, String(seconds)], { encoding: 'utf8' });
 
 async function openQuiz(page) {
   await page.goto('student/assignments?filter=all');
@@ -101,8 +101,8 @@ test('signing out removes answers kept on the device', async ({ page }) => {
 });
 
 test('when time runs out offline, the receipt shows what counted and the teacher can reopen it', async ({ page, browser, context }) => {
-  const email = 'gabriel.torres@demo.sibol.test';
-  await passwordLogin(page, email);
+  const username = 'gabriel.torres';
+  await passwordLogin(page, username);
   await expect(page).toHaveURL(/\/student$/);
   await openQuiz(page);
   await confirmClick(page, page.getByRole('button', { name: 'Start quiz' }));
@@ -111,14 +111,14 @@ test('when time runs out offline, the receipt shows what counted and the teacher
   await expect(page.locator('[data-save-status]')).toContainText('saved');
 
   // A few seconds left, then the connection drops and another answer is given offline.
-  moveDeadline(email, 8);
+  moveDeadline(username, 8);
   await page.reload();
   await context.setOffline(true);
   await questions.nth(1).getByLabel('True', { exact: true }).check();
   await expect(page.locator('[data-connection]')).toContainText('Time is up', { timeout: 20_000 });
 
   // The connection comes back long after the deadline: only the answer saved in time counts.
-  moveDeadline(email, -120);
+  moveDeadline(username, -120);
   await context.setOffline(false);
   await expect(page).toHaveURL(/\/student\/submissions\/\d+$/, { timeout: 20_000 });
   const submission = page.url().match(/submissions\/(\d+)$/)[1];

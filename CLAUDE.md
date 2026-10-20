@@ -57,6 +57,11 @@ The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL m
   (`Db::now()`); convert with `Core\Dates` for display and input.
 - **Schema changes:** add a new numbered file in `database/migrations/`, then run `bin/sibol.php migrate` and
   `schema:build`. Keep SQL valid on MariaDB 10.4 and MySQL 8 (JSON stored as TEXT; utf8mb4_unicode_ci).
+- **Accounts may have no email.** Students usually sign in with a username (`Services/Usernames.php` makes one
+  from the name); show `username`, never assume `users.email`, and look people up by username or email. Sign-in
+  slips (`Services/SignInSlips.php`) carry one-time codes; teachers reach a student's account only through
+  `Access::studentAccount()` (their classes, or a section they advise). A class's section name links it to a
+  `sections` row via `Sections::forClass()` whenever the class is saved.
 - **A student's deadline is their own.** Teachers can give one student their own due date, extra quiz minutes or
   excused status (`assignment_overrides`). Load assignments for a student with `Assessments::forStudent()`, and in
   SQL use `Overrides::joinSql()` / `dueSql()` / `notExcusedSql()` instead of `a.due_at`. Answers released "after

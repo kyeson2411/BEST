@@ -9,8 +9,10 @@ use Sibol\Core\Audit;
 use Sibol\Core\Db;
 use Sibol\Core\HttpException;
 use Sibol\Core\Response;
+use Sibol\Services\Notifier;
+use Sibol\Services\Sections;
 
-/** Subjects and academic periods (school years, quarters or terms). */
+/** Subjects, academic periods (school years, quarters or terms) and sections with their advisers. */
 final class StructureController extends Controller
 {
     public function subjects(): Response
@@ -108,6 +110,72 @@ final class StructureController extends Controller
         Audit::log('period.updated', 'period', $id);
         $this->flash('success', t('Academic period saved.'));
         return $this->redirect('/admin/academic-periods');
+    }
+
+    /** Sections come from the section names given to classes; here each one gets its adviser. */
+    public function sections(): Response
+    {
+        $o = $this->orgId();
+        return $this->view('admin/sections', [
+            'title' => t('Sections and advisers'),
+            'rows' => Db::all(
+                "SELECT se.*, ap.name AS period_name, ap.is_current, u.given_name, u.family_name, u.preferred_name, u.status AS adviser_status,
+                        (SELECT COUNT(*) FROM classes c WHERE c.section_id = se.id AND c.status = 'active') AS classes,
+                        (SELECT COUNT(*) FROM classes c WHERE c.section_id = se.id) AS all_classes,
+                        (SELECT COUNT(DISTINCT cm.user_id) FROM class_memberships cm JOIN classes c ON c.id = cm.class_id AND c.status = 'active'
+                          WHERE c.section_id = se.id AND cm.role = 'student' AND cm.status = 'active') AS students
+                 FROM sections se
+                 LEFT JOIN academic_periods ap ON ap.id = se.academic_period_id
+                 LEFT JOIN users u ON u.id = se.adviser_id
+                 WHERE se.organization_id = :o
+                 ORDER BY ap.is_current DESC, ap.starts_on DESC, se.grade_level, se.name",
+                ['o' => $o]
+            ),
+            'teachers' => Db::all("SELECT id, given_name, family_name, preferred_name FROM users WHERE organization_id = :o AND role = 'teacher' AND status <> 'deactivated' ORDER BY family_name, given_name", ['o' => $o]),
+        ]);
+    }
+
+    public function updateSection(int $id): Response
+    {
+        $admin = $this->user();
+        $o = (int) $admin['organization_id'];
+        $section = Db::one('SELECT * FROM sections WHERE id = :id AND organization_id = :o', ['id' => $id, 'o' => $o]);
+        if (!$section) {
+            throw HttpException::notFound();
+        }
+        $back = '/admin/sections#section-' . $id;
+        $data = $this->validate(['adviser_id' => 'nullable|int'], ['adviser_id' => t('Adviser')], $back);
+        $adviser = $data['adviser_id'] ? (int) $data['adviser_id'] : null;
+        if ($adviser && !Db::value("SELECT id FROM users WHERE id = :id AND organization_id = :o AND role = 'teacher' AND status <> 'deactivated'", ['id' => $adviser, 'o' => $o])) {
+            $this->fail('adviser_id', t('Choose a teacher from your school.'), $back);
+        }
+        if ($adviser === ($section['adviser_id'] !== null ? (int) $section['adviser_id'] : null)) {
+            return $this->redirect($back);
+        }
+        Db::update('sections', ['adviser_id' => $adviser, 'updated_at' => Db::now()], ['id' => $id]);
+        Audit::log('section.adviser_changed', 'section', $id, ['has_adviser' => $adviser !== null]);
+        if ($adviser) {
+            Notifier::send($o, [$adviser], 'class', t('You are the adviser of :section', ['section' => Sections::label($section)]), t('You can print sign-in slips for its students.'), '/teacher/advisory/' . $id);
+        }
+        $this->flash('success', $adviser ? t('Adviser saved.') : t('The section has no adviser now.'));
+        return $this->redirect($back);
+    }
+
+    public function deleteSection(int $id): Response
+    {
+        $o = $this->orgId();
+        $section = Db::one('SELECT * FROM sections WHERE id = :id AND organization_id = :o', ['id' => $id, 'o' => $o]);
+        if (!$section) {
+            throw HttpException::notFound();
+        }
+        if ((int) Db::value('SELECT COUNT(*) FROM classes WHERE section_id = :s', ['s' => $id]) > 0) {
+            $this->flash('error', t('Only a section without classes can be removed. Change the section of its classes first.'));
+            return $this->redirect('/admin/sections');
+        }
+        Db::delete('sections', ['id' => $id]);
+        Audit::log('section.removed', 'section', $id);
+        $this->flash('success', t('Section removed.'));
+        return $this->redirect('/admin/sections');
     }
 
     // ------------------------------------------------------------------------------------------

@@ -11,7 +11,9 @@ use Sibol\Core\HttpException;
 use Sibol\Core\Paginator;
 use Sibol\Core\Response;
 use Sibol\Services\Notifier;
+use Sibol\Services\Sections;
 use Sibol\Services\Settings;
+use Sibol\Services\SignInSlips;
 
 /** Classes (sections) across the school: who teaches and who studies where. */
 final class ClassController extends Controller
@@ -95,6 +97,7 @@ final class ClassController extends Controller
                 'academic_period_id' => $data['academic_period_id'],
                 'name' => $data['name'],
                 'section' => $data['section'],
+                'section_id' => Sections::forClass($o, $data['academic_period_id'], $data['grade_level'], $data['section']),
                 'grade_level' => $data['grade_level'],
                 'description' => $data['description'],
                 'status' => 'active',
@@ -121,7 +124,7 @@ final class ClassController extends Controller
         $class = $this->find($id, $o);
         $members = Db::all(
             'SELECT m.id AS membership_id, m.role, m.status, m.joined_via, m.joined_at, m.withdrawn_at,
-                    u.id, u.given_name, u.family_name, u.preferred_name, u.email, u.avatar_path, u.status AS user_status, u.grade_level
+                    u.id, u.given_name, u.family_name, u.preferred_name, u.email, u.username, u.avatar_path, u.status AS user_status, u.grade_level
              FROM class_memberships m JOIN users u ON u.id = m.user_id
              WHERE m.class_id = :c ORDER BY m.role DESC, m.status, u.family_name, u.given_name',
             ['c' => $id]
@@ -171,6 +174,7 @@ final class ClassController extends Controller
             'academic_period_id' => $data['academic_period_id'],
             'name' => $data['name'],
             'section' => $data['section'],
+            'section_id' => Sections::forClass($o, $data['academic_period_id'], $data['grade_level'], $data['section']),
             'grade_level' => $data['grade_level'],
             'description' => $data['description'],
             'updated_at' => Db::now(),
@@ -195,13 +199,14 @@ final class ClassController extends Controller
             $ids[] = (int) $this->request->int('user_id');
         }
         $missing = [];
-        $emails = preg_split('/[\s,;]+/', mb_strtolower($this->request->str('emails')), -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        foreach (array_unique($emails) as $email) {
-            $uid = Db::value('SELECT id FROM users WHERE organization_id = :o AND email = :e AND role = :r', ['o' => $o, 'e' => $email, 'r' => $role]);
+        $names = preg_split('/[\s,;]+/', mb_strtolower($this->request->str('emails')), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        foreach (array_unique($names) as $name) {
+            // An email address or a username.
+            $uid = Db::value('SELECT id FROM users WHERE organization_id = :o AND ' . (str_contains($name, '@') ? 'email' : 'username') . ' = :e AND role = :r', ['o' => $o, 'e' => $name, 'r' => $role]);
             if ($uid) {
                 $ids[] = (int) $uid;
             } else {
-                $missing[] = $email;
+                $missing[] = $name;
             }
         }
         $ids = array_values(array_unique(array_filter($ids)));
@@ -229,7 +234,7 @@ final class ClassController extends Controller
             Audit::log('class.member_added', 'class', $id, ['count' => count($added), 'role' => $role]);
         }
         if ($missing) {
-            $this->flash('warning', t('No :role account was found for: :emails. Invite them first.', ['role' => lcfirst_u(role_label($role)), 'emails' => implode(', ', array_slice($missing, 0, 10))]));
+            $this->flash('warning', t('No :role account was found for: :names. Invite them first.', ['role' => lcfirst_u(role_label($role)), 'names' => implode(', ', array_slice($missing, 0, 10))]));
         }
         $this->flash($added ? 'success' : 'info', $added ? tp(':count person added.', ':count people added.', count($added)) : t('No one new was added.'));
         return $this->redirect($back . '#members');
@@ -249,6 +254,20 @@ final class ClassController extends Controller
             ? t('Removed from the class. Their past work and grades are kept.')
             : t('Removed from the class. They no longer see it.'));
         return $this->redirect('/admin/classes/' . $classId . '#members');
+    }
+
+    /** Sign-in slips for the class's students who have not set up their account yet. */
+    public function slips(int $id): Response
+    {
+        $admin = $this->user();
+        $class = $this->find($id, (int) $admin['organization_id']);
+        $students = SignInSlips::invitedStudents([$id]);
+        if (!$students || $class['status'] !== 'active') {
+            $this->flash('info', t('Every student in this class has already set up their account. Print a password slip from a student\'s page if someone forgot theirs.'));
+            return $this->redirect('/admin/classes/' . $id . '#members');
+        }
+        SignInSlips::issue($students, $admin, $class['name'], '/admin/classes/' . $id);
+        return $this->redirect('/slips');
     }
 
     public function status(int $id): Response

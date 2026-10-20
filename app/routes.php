@@ -16,6 +16,7 @@ use Sibol\Controllers\PageController;
 use Sibol\Controllers\ProfileController;
 use Sibol\Controllers\SearchController;
 use Sibol\Controllers\SetupController;
+use Sibol\Controllers\SlipController;
 use Sibol\Controllers\Student;
 use Sibol\Controllers\Teacher;
 
@@ -29,6 +30,8 @@ $router->get('/invite/{token}', [AuthController::class, 'showInvite']);
 $router->post('/invite/{token}', [AuthController::class, 'acceptInvite']);
 $router->get('/reset/{token}', [AuthController::class, 'showReset']);
 $router->post('/reset/{token}', [AuthController::class, 'reset']);
+$router->get('/start', [AuthController::class, 'showStart']);
+$router->post('/start', [AuthController::class, 'start']);
 $router->get('/privacy', [PageController::class, 'privacy']);
 $router->get('/help', [PageController::class, 'help']);
 
@@ -58,6 +61,9 @@ $router->group('', ['auth'], static function ($r): void {
     $r->post('/notifications/read-all', [NotificationController::class, 'readAll']);
 
     $r->get('/search', [SearchController::class, 'index']);
+
+    // Printable sign-in slips that this person just issued (teachers, advisers and administrators).
+    $r->get('/slips', [SlipController::class, 'show'], ['role:admin,teacher']);
 
     $r->get('/avatars/{id}', [FileController::class, 'avatar']);
     $r->get('/school-logo', [FileController::class, 'logo']);
@@ -122,6 +128,12 @@ $router->group('/teacher', ['role:teacher'], static function ($r): void {
     $r->get('/classes/{id}', [Teacher\ClassController::class, 'show']);
     $r->post('/classes/{id}/roster', [Teacher\ClassController::class, 'addStudent']);
     $r->post('/classes/{classId}/roster/{id}/withdraw', [Teacher\ClassController::class, 'withdrawStudent']);
+    $r->post('/classes/{id}/slips', [Teacher\ClassController::class, 'slips']);
+    $r->post('/students/{id}/slip', [Teacher\ClassController::class, 'studentSlip']);
+
+    $r->get('/advisory', [Teacher\AdvisoryController::class, 'index']);
+    $r->get('/advisory/{id}', [Teacher\AdvisoryController::class, 'show']);
+    $r->post('/advisory/{id}/slips', [Teacher\AdvisoryController::class, 'slips']);
     $r->post('/classes/{id}/code', [Teacher\ClassController::class, 'joinCode']);
     $r->post('/classes/{id}/modules', [Teacher\ClassController::class, 'addModule']);
     $r->post('/classes/{classId}/modules/{id}', [Teacher\ClassController::class, 'updateModule']);
@@ -216,6 +228,7 @@ $router->group('/admin', ['role:admin'], static function ($r): void {
     $r->post('/users/{id}', [Admin\UserController::class, 'update']);
     $r->post('/users/{id}/status', [Admin\UserController::class, 'status']);
     $r->post('/users/{id}/link', [Admin\UserController::class, 'link']);
+    $r->post('/users/{id}/slip', [Admin\UserController::class, 'slip']);
 
     $r->get('/classes', [Admin\ClassController::class, 'index']);
     $r->get('/classes/new', [Admin\ClassController::class, 'create']);
@@ -225,6 +238,7 @@ $router->group('/admin', ['role:admin'], static function ($r): void {
     $r->post('/classes/{id}/members', [Admin\ClassController::class, 'addMembers']);
     $r->post('/classes/{classId}/members/{id}/remove', [Admin\ClassController::class, 'removeMember']);
     $r->post('/classes/{id}/status', [Admin\ClassController::class, 'status']);
+    $r->post('/classes/{id}/slips', [Admin\ClassController::class, 'slips']);
 
     $r->get('/subjects', [Admin\StructureController::class, 'subjects']);
     $r->post('/subjects', [Admin\StructureController::class, 'storeSubject']);
@@ -232,6 +246,9 @@ $router->group('/admin', ['role:admin'], static function ($r): void {
     $r->get('/academic-periods', [Admin\StructureController::class, 'periods']);
     $r->post('/academic-periods', [Admin\StructureController::class, 'storePeriod']);
     $r->post('/academic-periods/{id}', [Admin\StructureController::class, 'updatePeriod']);
+    $r->get('/sections', [Admin\StructureController::class, 'sections']);
+    $r->post('/sections/{id}', [Admin\StructureController::class, 'updateSection']);
+    $r->post('/sections/{id}/delete', [Admin\StructureController::class, 'deleteSection']);
 
     $r->get('/usage', [Admin\UsageController::class, 'index']);
     $r->get('/policies', [Admin\SettingsController::class, 'policies']);

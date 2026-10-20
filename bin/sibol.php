@@ -17,7 +17,7 @@ declare(strict_types=1);
  *   privacy:purge      Delete AI conversations older than each school's retention period
  *   lang:missing [fil] List interface strings that are not translated yet
  *   school:create      Create a real school and its first administrator (prints a one-time link)
- *   user:link EMAIL    Print a new invitation or password-reset link for an account
+ *   user:link EMAIL    Print a new invitation or password-reset link for an account (email or username)
  *   check              Show configuration problems (database, AI provider, folders)
  *   ai:eval            Run the AI check: 30 fixed prompts on the demo school, with a pass/fail table
  *                      and token cost (--demo forces demo mode, --case=A01,B02 runs some, --show prints answers)
@@ -94,22 +94,23 @@ try {
                 $slug .= '-' . bin2hex(random_bytes(2));
             }
             $now = Sibol\Core\Db::now();
-            $token = Sibol\Core\Db::transaction(static function () use ($name, $slug, $tz, $email, $given, $family, $now): string {
+            $username = Sibol\Services\Usernames::forPerson($given, $family);
+            $token = Sibol\Core\Db::transaction(static function () use ($name, $slug, $tz, $email, $username, $given, $family, $now): string {
                 $org = Sibol\Core\Db::insert('organizations', ['name' => $name, 'slug' => $slug, 'timezone' => $tz, 'default_language' => 'en', 'is_demo' => 0, 'created_at' => $now, 'updated_at' => $now]);
-                $admin = Sibol\Core\Db::insert('users', ['organization_id' => $org, 'role' => 'admin', 'status' => 'invited', 'email' => $email, 'given_name' => $given, 'family_name' => $family, 'created_at' => $now, 'updated_at' => $now]);
+                $admin = Sibol\Core\Db::insert('users', ['organization_id' => $org, 'role' => 'admin', 'status' => 'invited', 'email' => $email, 'username' => $username, 'given_name' => $given, 'family_name' => $family, 'created_at' => $now, 'updated_at' => $now]);
                 return Sibol\Services\Tokens::issue($admin, 'invitation', null);
             });
-            $out('Created "' . $name . '" and an administrator account for ' . $email . '.');
+            $out('Created "' . $name . '" and an administrator account for ' . $email . ' (username ' . $username . ').');
             $out('Give this one-time invitation link to that person privately (it expires in ' . Sibol\Services\Tokens::INVITE_DAYS . ' days):');
             $out(Sibol\Services\Tokens::link('invitation', $token));
             break;
 
         case 'user:link':
-            // php bin/sibol.php user:link person@school.edu.ph  (new invitation or password reset link)
-            $email = mb_strtolower(trim($argv[2] ?? ''));
-            $user = Sibol\Core\Db::one('SELECT id, status FROM users WHERE email = :e', ['e' => $email]);
+            // php bin/sibol.php user:link person@school.edu.ph  (or a username; new invitation or password reset link)
+            $login = mb_strtolower(trim($argv[2] ?? ''));
+            $user = Sibol\Core\Db::one('SELECT id, status FROM users WHERE ' . (str_contains($login, '@') ? 'email' : 'username') . ' = :l', ['l' => $login]);
             if (!$user || $user['status'] === 'deactivated') {
-                throw new RuntimeException('No active or invited account has that email.');
+                throw new RuntimeException('No active or invited account has that email or username.');
             }
             $purpose = $user['status'] === 'invited' ? 'invitation' : 'password_reset';
             $link = Sibol\Services\Tokens::link($purpose, Sibol\Services\Tokens::issue((int) $user['id'], $purpose, null));

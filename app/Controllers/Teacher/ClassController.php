@@ -13,6 +13,8 @@ use Sibol\Policies\Access;
 use Sibol\Repositories\TeacherRepo;
 use Sibol\Services\Notifier;
 use Sibol\Services\Settings;
+use Sibol\Services\SignInSlips;
+use Sibol\Services\Usernames;
 
 final class ClassController extends Controller
 {
@@ -35,12 +37,12 @@ final class ClassController extends Controller
         $rosterParams = ['c' => $id];
         $rosterFilter = '';
         if ($q !== '') {
-            $rosterFilter = " AND (u.given_name LIKE :q1 OR u.family_name LIKE :q2 OR u.email LIKE :q3 OR CONCAT(u.given_name, ' ', u.family_name) LIKE :q4)";
+            $rosterFilter = " AND (u.given_name LIKE :q1 OR u.family_name LIKE :q2 OR u.email LIKE :q3 OR CONCAT(u.given_name, ' ', u.family_name) LIKE :q4 OR u.username LIKE :q5)";
             $like = Db::like($q);
-            $rosterParams += ['q1' => $like, 'q2' => $like, 'q3' => $like, 'q4' => $like];
+            $rosterParams += ['q1' => $like, 'q2' => $like, 'q3' => $like, 'q4' => $like, 'q5' => $like];
         }
         $roster = Db::all(
-            "SELECT u.id, u.given_name, u.family_name, u.preferred_name, u.email, u.status AS account_status, u.avatar_path,
+            "SELECT u.id, u.given_name, u.family_name, u.preferred_name, u.email, u.username, u.status AS account_status, u.avatar_path,
                     cm.status, cm.joined_via, cm.joined_at, cm.withdrawn_at, cm.id AS membership_id,
                     (SELECT COUNT(*) FROM submissions s JOIN assignments a ON a.id = s.assignment_id WHERE a.class_id = cm.class_id AND s.student_id = u.id AND s.status = 'submitted') AS submitted
              FROM class_memberships cm JOIN users u ON u.id = cm.user_id
@@ -86,13 +88,14 @@ final class ClassController extends Controller
         $user = $this->user();
         $class = Access::teacherClass($user, $id);
         $back = '/teacher/classes/' . $id . '?tab=roster';
-        $data = $this->validate(['email' => 'required|email'], ['email' => t('Student email')], $back);
-        $student = Db::one('SELECT * FROM users WHERE email = :e AND organization_id = :o', ['e' => $data['email'], 'o' => (int) $user['organization_id']]);
+        $data = $this->validate(['student' => 'required|string|max:190'], ['student' => t('Student username or email')], $back);
+        $login = Usernames::clean((string) $data['student']);
+        $student = Db::one('SELECT * FROM users WHERE ' . (str_contains($login, '@') ? 'email' : 'username') . ' = :l AND organization_id = :o', ['l' => $login, 'o' => (int) $user['organization_id']]);
         if (!$student || $student['role'] !== 'student') {
-            $this->fail('email', t('No student account uses that email at your school. Ask your school administrator to invite the student first.'), $back);
+            $this->fail('student', t('No student at your school has that username or email. Ask your school administrator to add the student first.'), $back);
         }
         if ($student['status'] === 'deactivated') {
-            $this->fail('email', t('That account is deactivated. Ask your school administrator.'), $back);
+            $this->fail('student', t('That account is deactivated. Ask your school administrator.'), $back);
         }
         $membership = Db::one('SELECT * FROM class_memberships WHERE class_id = :c AND user_id = :u', ['c' => $id, 'u' => (int) $student['id']]);
         if ($membership && $membership['status'] === 'active') {
@@ -122,6 +125,37 @@ final class ClassController extends Controller
         Audit::log('class.student_withdrawn', 'class', $classId, ['student_id' => $id]);
         $this->flash('success', t(':name was removed from the class. Their past work and grades are kept.', ['name' => user_name($membership)]));
         return $this->redirect('/teacher/classes/' . $classId . '?tab=roster');
+    }
+
+    /** Sign-in slips for the students of this class who have not set up their account yet. */
+    public function slips(int $id): Response
+    {
+        $user = $this->user();
+        $class = Access::teacherClass($user, $id);
+        $students = $class['status'] === 'active' ? SignInSlips::invitedStudents([$id]) : [];
+        if (!$students) {
+            $this->flash('info', t('Every student in this class has already set up their account. Print a password slip for a student who forgot theirs.'));
+            return $this->redirect('/teacher/classes/' . $id . '?tab=roster');
+        }
+        SignInSlips::issue($students, $user, $class['name'], '/teacher/classes/' . $id . '?tab=roster');
+        return $this->redirect('/slips');
+    }
+
+    /**
+     * One slip for a student in a class this teacher teaches or a section they advise: setup for an
+     * account not set up yet, a new password otherwise. Audit-logged; the teacher never sees a password.
+     */
+    public function studentSlip(int $id): Response
+    {
+        $user = $this->user();
+        $student = Access::studentAccount($user, $id);
+        $back = SignInSlips::backPath($this->request->str('back'), 'teacher');
+        if ($student['status'] === 'deactivated') {
+            $this->flash('error', t('That account is deactivated. Ask your school administrator.'));
+            return $this->redirect($back);
+        }
+        SignInSlips::issue([$student], $user, user_name($student), $back);
+        return $this->redirect('/slips');
     }
 
     public function joinCode(int $id): Response

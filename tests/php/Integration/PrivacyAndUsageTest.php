@@ -21,8 +21,9 @@ final class PrivacyAndUsageTest extends IntegrationTestCase
         $json = (string) file_get_contents(Uploads::absolute($path));
         $data = json_decode($json, true);
 
-        self::assertSame('nicole.tan@demo.sibol.test', $data['account']['email']);
-        self::assertStringNotContainsString('andrea.cruz@demo.sibol.test', $json);
+        self::assertSame('nicole.tan', $data['account']['username']);
+        self::assertNull($data['account']['email'], 'students here have no email');
+        self::assertStringNotContainsString('andrea.cruz', $json);
         self::assertArrayNotHasKey('password_hash', $data['account']);
         foreach ($data['submissions'] as $s) {
             if ($s['feedback_status'] !== 'released') {
@@ -43,7 +44,8 @@ final class PrivacyAndUsageTest extends IntegrationTestCase
         $after = Db::one('SELECT * FROM users WHERE id = :u', ['u' => (int) $bea['id']]);
         self::assertSame('deactivated', $after['status']);
         self::assertNull($after['password_hash']);
-        self::assertStringEndsWith('@invalid.example', $after['email']);
+        self::assertNull($after['email']);
+        self::assertNull($after['username'], 'the username goes too, so it can be given to someone else');
         self::assertNotNull($after['anonymized_at']);
         self::assertSame(0, (int) Db::value('SELECT COUNT(*) FROM ai_conversations WHERE user_id = :u', ['u' => (int) $bea['id']]));
         self::assertSame(0, (int) Db::value("SELECT COUNT(*) FROM class_memberships WHERE user_id = :u AND status = 'active'", ['u' => (int) $bea['id']]));

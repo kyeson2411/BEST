@@ -104,18 +104,21 @@ All demo accounts share the password **`Sibol-demo-2026`**. On a local install t
 one-click buttons for a student, a teacher and an administrator (only when `APP_ENV=local`,
 `APP_DEMO_LOGIN=true` and you browse from the same computer).
 
-| Role | Email | Notes |
-|---|---|---|
-| School administrator | `teresa.villanueva@demo.sibol.test` | |
-| Teacher | `ramon.dizon@demo.sibol.test` | Science 9 – Narra and Molave |
-| Teacher | `liza.mercado@demo.sibol.test` | Mathematics 9 – Narra and Molave |
-| Teacher | `joy.santiago@demo.sibol.test` | English 9 – Narra |
-| Student | `andrea.cruz@demo.sibol.test` | Grade 9 Narra: graded work, feedback, companion history |
-| Student | `janelle.ocampo@demo.sibol.test` | Grade 9 Molave |
-| Invited (no password yet) | `carmela.reyes@demo.sibol.test`, `rafael.domingo@demo.sibol.test` | create a link from People |
-| Deactivated | `angelica.santos@demo.sibol.test` | cannot sign in |
+Like many students at the school, the demo students have no email address: they sign in with a username.
+Staff can sign in with their username or their email (`ramon.dizon@demo.sibol.test`, and so on).
 
-The other 16 students follow the same `given.family@demo.sibol.test` pattern. The demo school takes the real
+| Role | Username | Notes |
+|---|---|---|
+| School administrator | `teresa.villanueva` | |
+| Teacher | `ramon.dizon` | Science 9 – Narra and Molave; adviser of Grade 9 Narra |
+| Teacher | `liza.mercado` | Mathematics 9 – Narra and Molave; adviser of Grade 9 Molave |
+| Teacher | `joy.santiago` | English 9 – Narra |
+| Student | `andrea.cruz` | Grade 9 Narra: graded work, feedback, companion history |
+| Student | `janelle.ocampo` | Grade 9 Molave |
+| Invited (no password yet) | `carmela.reyes` (teacher), `rafael.domingo` (student) | print a sign-in slip or create a link |
+| Deactivated | `angelica.santos` | cannot sign in |
+
+The other 16 students follow the same `given.family` pattern. The demo school takes the real
 school's name with "(Demo)" added (from `SCHOOL_NAME`) so the screens look like the finished product, but every
 person, class, grade and conversation in it is invented. Every demo record is flagged in the database and the
 interface shows a "Demo school" band.
@@ -265,7 +268,7 @@ C:\xampp\php\php.exe bin\sibol.php <command>
 | `privacy:purge` | Delete companion conversations past each school's retention period. It also runs automatically once a day when an administrator opens the overview, so cron is optional. |
 | `lang:missing [fil]` | Count untranslated interface strings and write stubs to `storage/cache/`. |
 | `school:create "Name" email Given Family [timezone]` | Create a real school and its first administrator; prints a one-time invitation link. |
-| `user:link email` | Print a new invitation link (not yet accepted) or password reset link (active account). |
+| `user:link email-or-username` | Print a new invitation link (not yet accepted) or password reset link (active account). |
 | `ai:eval [--demo] [--case=A01,B02] [--show]` | Run the AI check on the demo school: a pass/fail table with token cost (see [Checking the AI before going live](#checking-the-ai-before-going-live)). |
 
 ## Tests
@@ -284,10 +287,12 @@ permission-filtered retrieval (other sections, drafts and scheduled materials ne
 a full demo companion turn, data export and erasure, daily limits and usage accounting, audit-log hygiene and
 retention purging, copying work to other sections without exposing drafts, extensions and excused work,
 reopening quiz attempts, the notification badge's count-only background check, retrieval of Filipino questions,
-headings and numbers, and the AI check (all 30 cases pass in demo mode and leave nothing behind; a scripted
+headings and numbers, the AI check (all 30 cases pass in demo mode and leave nothing behind; a scripted
 model that invents citations, ignores the language or writes graded work fails; one that follows the rules
-passes; its checks are unit-tested with good and bad answers).
-Last run: **89 tests, all passing**.
+passes; its checks are unit-tested with good and bad answers), usernames made from names, sign-in slip codes and
+who may print them, sections and advisers, and the QR encoder (published Reed-Solomon examples, format and
+version bits, and every symbol read back by an independent decoder).
+Last run: **106 tests, all passing**.
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -308,8 +313,10 @@ cited sources and answer reporting, administrator invitation and one-time links,
 class setup, a policy switch, a data export downloaded only by its owner, the audit log, Filipino text written
 by the page scripts, copying a material, a quiz and a lesson to another section as drafts, an extension and an
 excused student, quiz attempts in offline mode, the live notification badge, demo answers in the session's
-language (including a question written in Filipino), phone-width layout of 21 screens and structural
-accessibility checks on 31 screens. Last run: **58 tests, all passing**.
+language (including a question written in Filipino), students imported without email setting up their account
+from a printed slip's typed code, an adviser's password slip, a subject teacher's roster slips (and a 404 for a
+student outside their classes), choosing a section adviser, phone-width layout of 23 screens and structural
+accessibility checks on 34 screens. Last run: **62 tests, all passing**.
 
 ## Project layout
 
@@ -349,7 +356,10 @@ tools/             asset scripts (fonts and icons, school images with their orig
 7. In `my.ini`, set `max_allowed_packet=16M`. In `php.ini`, set `upload_max_filesize` and `post_max_size` to at
    least `UPLOAD_MAX_MB`.
 8. Do **not** run `db:seed` in production. Create the school and its first administrator from the command line,
-   then open the printed one-time link to set a password, and invite everyone else from **People**:
+   then open the printed one-time link to set a password, and add everyone else from **People** (one by one or
+   with a CSV import; students need no email address). Name each class's section (for example `Narra`) so the
+   section appears under **Subjects and terms → Sections and advisers**, choose its adviser, and print sign-in
+   slips from the import result, a class roster or the adviser's page:
    ```bat
    C:\xampp\php\php.exe bin\sibol.php migrate
    C:\xampp\php\php.exe bin\sibol.php school:create "Name of the School" principal@school.edu.ph Given Family
@@ -363,12 +373,26 @@ tools/             asset scripts (fonts and icons, school images with their orig
 **Accounts and sessions**
 - Passwords are hashed with PHP's `password_hash`; reset and invitation links are random 256-bit tokens of
   which only a SHA-256 hash is stored. Links work once and expire (invitations 14 days, resets 48 hours).
+- **Accounts without email.** Every account has a username that Sibol makes from the name (`juan.delacruz`,
+  then `juan.delacruz2`); administrators can change it. Email is optional. Students sign in with the username;
+  staff can use either. Usernames are unique across the database, so the sign-in page needs no school picker.
+- **Sign-in slips.** Instead of a link, an administrator, the section's adviser or a teacher of one of the
+  student's active classes can print a slip with the student's name, username, a one-time code and the same
+  code as a QR code of the link, with cut lines (six to an A4 page). An invited account gets a setup slip, an
+  active one a password slip (its current password keeps working until the slip is used). A student without
+  a phone camera types the code at `/start`. Codes are 12 characters from a 31-letter alphabet without 0/O,
+  1/I/L (about 59 bits), are stored only as SHA-256 hashes, work once, expire like links and cancel any earlier
+  unused link of the same kind; the code page is rate-limited per address. The printable page shows the codes
+  only to whoever issued them, for 30 minutes. Every slip is audit-logged with who printed it, never the code;
+  nobody ever sees or sets another person's password. Sections (a grade level's classes in a period, such as
+  Grade 9 Narra) come from the section name on each class; each can have one adviser.
 - The session ID is regenerated at sign-in and sign-out. Cookies are `HttpOnly`, `SameSite=Lax`, and `Secure`
   when configured. The signed-in user is reloaded on every request, so deactivation, role changes and
   "sign out other devices" take effect immediately. Idle sessions end after `SESSION_IDLE_MINUTES`; the
   notification badge's background check (count only) does not count as activity, so a page left open on a shared
   computer still signs out.
-- Sign-in is rate-limited per address and per email; failures use the same message whether or not the email exists.
+- Sign-in is rate-limited per address and per username or email; failures use the same message whether or not
+  the account exists.
 
 **Requests**
 - Every POST needs a per-session CSRF token, and requests whose `Origin` is another site are refused.
@@ -429,8 +453,8 @@ tools/             asset scripts (fonts and icons, school images with their orig
   students cannot be picked out.
 - The audit log records who did what and when, never passwords, tokens, keys or conversation text.
   Network addresses are stored only as hashes.
-- Sibol does not send email. It shows invitation and reset links to administrators to share, and never claims
-  an email was sent.
+- Sibol does not send email. It shows invitation and reset links to administrators to share, or prints them
+  on sign-in slips, and never claims an email was sent.
 - Under the Philippine Data Privacy Act of 2012, the school is the personal information controller. Appoint a
   Data Protection Officer, enter their contact in **Policies**, and review the privacy notice at `/privacy`
   before enrolling real students.
@@ -441,9 +465,9 @@ tools/             asset scripts (fonts and icons, school images with their orig
   labelled controls, error messages tied to their fields, status shown with words and icons, never colour alone,
   reduced-motion support, charts with table views, and layouts that work at 390 px.
 - The browser tests check structure (one heading level 1 per page, unique ids, names for every control and
-  link, image alternatives) on 31 screens and the absence of sideways scrolling on 21 phone screens.
+  link, image alternatives) on 34 screens and the absence of sideways scrolling on 23 phone screens.
   They are not a full audit; test with a screen reader before launch.
-- **Filipino:** every interface string is translated (2,433 of 2,433), for students, teachers and school
+- **Filipino:** every interface string is translated (2,536 of 2,536), for students, teachers and school
   administrators. That includes text written by scripts (save status, card counters, companion progress), which
   the server translates and hands to the page in `data-i18n` attributes, so the JavaScript holds no English.
   Strings added later fall back to English until they are added to `lang/fil.php`; run
@@ -455,7 +479,11 @@ tools/             asset scripts (fonts and icons, school images with their orig
 
 ## Known limitations
 
-- No email delivery, single sign-on or multi-factor authentication yet.
+- No email delivery, single sign-on or multi-factor authentication yet. People without email use printed
+  sign-in slips.
+- The QR codes on sign-in slips come from Sibol's own encoder (no library). The tests read every code back with
+  an independent decoder and check it against values published in the QR standard, but nobody has scanned a
+  printed slip with a phone yet: do that once on the school's printer before handing slips out.
 - Retrieval uses MySQL full-text search, not embeddings, so it matches words rather than meaning, and scanned
   PDFs without a text layer cannot be read.
 - Live AI providers were not tested in this build (no key was available); demo mode was tested end to end.

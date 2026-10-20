@@ -40,10 +40,11 @@ $typeLabel = ['export' => t('Copy of my data'), 'correction' => t('Correct my in
     </div>
     <dl class="dl" style="margin-bottom: 20px">
       <dt><?= e(t('Name')) ?></dt><dd><?= e($user['given_name'] . ' ' . $user['family_name']) ?></dd>
-      <dt><?= e(t('Email')) ?></dt><dd><?= e($user['email']) ?></dd>
+      <?php if (!empty($user['username'])): ?><dt><?= e(t('Username')) ?></dt><dd class="code-text"><?= e($user['username']) ?></dd><?php endif; ?>
+      <?php if (!empty($user['email'])): ?><dt><?= e(t('Email')) ?></dt><dd><?= e($user['email']) ?></dd><?php endif; ?>
       <?php if ($user['grade_level']): ?><dt><?= e(t('Grade level')) ?></dt><dd><?= e($user['grade_level']) ?></dd><?php endif; ?>
     </dl>
-    <p class="meta"><?= e(t('Your name and email come from school records. To correct them, send a correction request below.')) ?></p>
+    <p class="meta"><?= e(t('Your name, username and email come from school records. To correct them, send a correction request below.')) ?></p>
     <form method="post" action="<?= e(url('/settings/profile')) ?>">
       <?= csrf_field() ?>
       <?= field('text', 'preferred_name', t('Name you go by'), ['value' => (string) ($user['preferred_name'] ?? ''), 'optional_label' => true, 'hint' => t('Shown instead of your first name, for example a nickname.'), 'attrs' => ['maxlength' => 80]]) ?>

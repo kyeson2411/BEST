@@ -4,7 +4,8 @@
 
 <dl class="dl" style="margin-bottom: 24px">
   <dt><?= e(t('Name')) ?></dt><dd><?= e($invitee['given_name'] . ' ' . $invitee['family_name']) ?></dd>
-  <dt><?= e(t('Email')) ?></dt><dd><?= e($invitee['email']) ?></dd>
+  <?php if (!empty($invitee['username'])): ?><dt><?= e(t('Username')) ?></dt><dd><strong class="code-text"><?= e($invitee['username']) ?></strong><span class="table-sub"><?= e(t('You will type this to sign in.')) ?></span></dd><?php endif; ?>
+  <?php if (!empty($invitee['email'])): ?><dt><?= e(t('Email')) ?></dt><dd><?= e($invitee['email']) ?></dd><?php endif; ?>
 </dl>
 
 <form method="post" action="<?= e(url('/invite/' . $token)) ?>" novalidate>

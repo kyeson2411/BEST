@@ -6,16 +6,26 @@ namespace Sibol\Services;
 
 use Sibol\Core\Db;
 
-/** Single-use invitation and password-reset links. Only the SHA-256 of a token is stored. */
+/**
+ * Single-use invitation and password-reset links. Only the SHA-256 of a token is stored.
+ * Links that are copied are 256-bit random strings. Links printed on sign-in slips carry a short code
+ * instead (12 characters, about 59 bits) that a student can also type at /start; codes expire like
+ * links and the code page is rate-limited, so guessing one is not practical.
+ */
 final class Tokens
 {
     public const INVITE_DAYS = 14;
     public const RESET_HOURS = 48;
+    /** No 0/O, 1/I/L: easy to read aloud and to type from paper. */
+    private const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
-    /** Creates a fresh link and revokes older unused links of the same purpose. Returns the raw token. */
-    public static function issue(int $userId, string $purpose, ?int $createdBy): string
+    /**
+     * Creates a fresh link and revokes older unused links of the same purpose. Returns the raw token
+     * (a typeable code when $code is true).
+     */
+    public static function issue(int $userId, string $purpose, ?int $createdBy, bool $code = false): string
     {
-        $token = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+        $token = $code ? self::newCode() : rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
         $expires = $purpose === 'invitation'
             ? gmdate('Y-m-d H:i:s', time() + self::INVITE_DAYS * 86400)
             : gmdate('Y-m-d H:i:s', time() + self::RESET_HOURS * 3600);
@@ -39,6 +49,7 @@ final class Tokens
     /** @return array<string,mixed>|null the token row joined with its user, if still valid */
     public static function find(string $token, string $purpose): ?array
     {
+        $token = self::normalise($token);
         if ($token === '' || strlen($token) > 100) {
             return null;
         }
@@ -48,6 +59,38 @@ final class Tokens
              WHERE t.token_hash = :h AND t.purpose = :p AND t.used_at IS NULL AND t.revoked_at IS NULL AND t.expires_at > :now',
             ['h' => hash('sha256', $token), 'p' => $purpose, 'now' => Db::now()]
         );
+    }
+
+    /**
+     * A typed slip code in any case, with or without dashes and spaces ("abcd efgh-jkmn"), becomes the
+     * stored form ("ABCDEFGHJKMN"). Long link tokens are case-sensitive and left as they are.
+     */
+    public static function normalise(string $token): string
+    {
+        $token = trim($token);
+        $compact = strtoupper((string) preg_replace('/[\s-]+/', '', $token));
+        return strlen($compact) === 12 && strspn($compact, self::CODE_ALPHABET) === 12 ? $compact : $token;
+    }
+
+    /** "ABCDEFGHJKMN" → "ABCD-EFGH-JKMN", as printed on a slip. */
+    public static function displayCode(string $code): string
+    {
+        return implode('-', str_split(self::normalise($code), 4));
+    }
+
+    public static function isCode(string $token): bool
+    {
+        $normal = self::normalise($token);
+        return strlen($normal) === 12 && strspn($normal, self::CODE_ALPHABET) === 12;
+    }
+
+    private static function newCode(): string
+    {
+        $code = '';
+        for ($i = 0; $i < 12; $i++) {
+            $code .= self::CODE_ALPHABET[random_int(0, strlen(self::CODE_ALPHABET) - 1)];
+        }
+        return $code;
     }
 
     public static function consume(int $tokenId): void
@@ -61,8 +104,10 @@ final class Tokens
     }
 
     /** @return string|null error message when the password is too weak */
-    public static function passwordProblem(string $password, string $email = '', string $name = ''): ?string
+    public static function passwordProblem(string $password, ?string $email = '', string $name = '', ?string $username = ''): ?string
     {
+        $email = (string) $email;
+        $username = (string) $username;
         if (mb_strlen($password) < 10) {
             return t('Use at least 10 characters.');
         }
@@ -77,6 +122,9 @@ final class Tokens
         $local = mb_strtolower((string) strtok($email, '@'));
         if ($local !== '' && str_contains($lower, $local) && mb_strlen($local) >= 4) {
             return t('Do not include your email address in your password.');
+        }
+        if ($username !== '' && mb_strlen($username) >= 4 && str_contains($lower, mb_strtolower($username))) {
+            return t('Do not include your username in your password.');
         }
         if ($name !== '' && mb_strlen($name) >= 4 && str_contains($lower, mb_strtolower($name))) {
             return t('Do not include your name in your password.');

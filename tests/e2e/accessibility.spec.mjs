@@ -4,10 +4,10 @@ import { demoLogin } from './helpers.mjs';
 // Structural accessibility checks on the main screens: one h1, a page language, unique ids,
 // a name for every form control, button and link, and alternative text for images.
 const pages = {
-  guest: ['', 'login', 'privacy', 'help', 'login?lang=fil'],
+  guest: ['', 'login', 'start', 'privacy', 'help', 'login?lang=fil'],
   student: ['student', 'student/assignments', 'student/classes', 'companion/new', 'student/progress', 'student/calendar', 'student/learning', 'settings'],
-  teacher: ['teacher', 'teacher/review', 'teacher/assignments/new', 'teacher/materials/new', 'teacher/lessons', 'teacher/gradebook', 'teacher/insights'],
-  admin: ['admin', 'admin/users', 'admin/users/new', 'admin/users/import', 'admin/classes/new', 'admin/subjects', 'admin/usage', 'admin/policies', 'admin/settings', 'admin/privacy', 'admin/audit'],
+  teacher: ['teacher', 'teacher/review', 'teacher/assignments/new', 'teacher/materials/new', 'teacher/lessons', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory'],
+  admin: ['admin', 'admin/users', 'admin/users/new', 'admin/users/import', 'admin/classes/new', 'admin/subjects', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/settings', 'admin/privacy', 'admin/audit'],
 };
 
 async function audit(page) {

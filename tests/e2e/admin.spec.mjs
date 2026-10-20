@@ -39,11 +39,11 @@ test('a CSV import shows problems before anything is saved', async ({ page }) =>
   const dir = mkdtempSync(join(tmpdir(), 'sibol-'));
   const file = join(dir, 'people.csv');
   writeFileSync(file, [
-    'given_name,family_name,email,role,grade_level,class',
-    'Paulo,Santos,paulo.santos@example.org,student,Grade 9,Science 9 - Narra',
-    'Ria,Gomez,ria.gomez@example.org,student,Grade 9,',
-    'No,Email,,student,,',
-    'Andrea,Cruz,andrea.cruz@demo.sibol.test,student,Grade 9,',
+    'given_name,family_name,username,email,role,grade_level,class',
+    'Paulo,Santos,,paulo.santos@example.org,student,Grade 9,Science 9 - Narra',
+    'Ria,Gomez,,,student,Grade 9,',
+    'Bad,Mail,,not-an-email,student,,',
+    'Andrea,Cruz,,,student,Grade 9,',
   ].join('\n'));
   await page.goto('admin/users/import');
   await page.getByLabel('CSV file').setInputFiles(file);
@@ -51,6 +51,8 @@ test('a CSV import shows problems before anything is saved', async ({ page }) =>
 
   await expect(page.getByRole('heading', { name: 'Check the import' })).toBeVisible();
   await expect(page.getByText('The email address is not valid.')).toBeVisible();
+  // Without an email or username, Andrea is recognised by name, role and grade level.
+  await expect(page.getByText(/Treated as Andrea Cruz \(andrea\.cruz\)/)).toBeVisible();
   await expect(page.getByText('Already has an account; nothing to do.')).toBeVisible();
   await expect(page.locator('.stat').filter({ hasText: 'New accounts' })).toContainText('2');
 
@@ -107,7 +109,7 @@ test('a data export request is prepared by the admin and downloaded by the stude
   // Nicole Tan made the seeded request; her own settings page offers the download.
   const nicole = await browser.newPage();
   await nicole.goto('login');
-  await nicole.getByLabel('Email').fill('nicole.tan@demo.sibol.test');
+  await nicole.getByLabel('Username or email').fill('nicole.tan');
   await nicole.getByLabel('Password').fill('Sibol-demo-2026');
   await nicole.getByRole('button', { name: 'Sign in', exact: true }).click();
   await nicole.goto('settings#privacy');

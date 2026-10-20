@@ -39,7 +39,7 @@ test('a teacher copies a material to another section as a draft', async ({ page 
 
 test('Molave students see the copy only once it is published there', async ({ page, browser }) => {
   const student = await browser.newPage();
-  await passwordLogin(student, 'janelle.ocampo@demo.sibol.test');
+  await passwordLogin(student, 'janelle.ocampo');
   await expect(student).toHaveURL(/\/student$/);
   const materials = `student/classes/${ids().classes.sciMolave}?tab=materials`;
   await student.goto(materials);

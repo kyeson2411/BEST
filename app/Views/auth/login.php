@@ -4,13 +4,14 @@
 
 <form method="post" action="<?= e(url('/login')) ?>" novalidate>
   <?= csrf_field() ?>
-  <?= field('email', 'email', t('Email'), ['required' => true, 'hint' => t('Use the email address your school set up for you.'), 'attrs' => ['autocomplete' => 'username', 'autofocus' => true, 'inputmode' => 'email', 'spellcheck' => 'false']]) ?>
+  <?= field('text', 'login', t('Username or email'), ['required' => true, 'hint' => t('Use the username on your sign-in slip. Teachers can also use their email address.'), 'attrs' => ['autocomplete' => 'username', 'autofocus' => true, 'autocapitalize' => 'none', 'spellcheck' => 'false', 'maxlength' => 190]]) ?>
   <?= field('password', 'password', t('Password'), ['required' => true, 'attrs' => ['autocomplete' => 'current-password']]) ?>
   <button class="btn btn--primary btn--block" type="submit" data-busy="<?= e(t('Signing in…')) ?>"><?= e(t('Sign in')) ?></button>
 </form>
 
 <p class="auth__help">
-  <?= e(t('New to Sibol? Open the invitation link from your school to set up your account. Forgot your password? Your school administrator can send you a new password link.')) ?>
+  <a href="<?= e(url('/start')) ?>"><?= e(t('Have a sign-in slip? Type its code')) ?></a><br>
+  <?= e(t('Forgot your password? Ask your teacher, adviser or school administrator for a new sign-in slip.')) ?>
 </p>
 
 <ul class="auth__notes">

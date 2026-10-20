@@ -12,8 +12,9 @@ require BASE_PATH . '/app/bootstrap.php';
 
 use Sibol\Core\Db;
 
-$user = static fn (string $local): int => (int) Db::value('SELECT id FROM users WHERE email = :e', ['e' => $local . '@demo.sibol.test']);
+$user = static fn (string $username): int => (int) Db::value('SELECT id FROM users WHERE username = :u', ['u' => $username]);
 $class = static fn (string $name): int => (int) Db::value('SELECT id FROM classes WHERE name = :n', ['n' => $name]);
+$section = static fn (string $name): int => (int) Db::value('SELECT id FROM sections WHERE name = :n', ['n' => $name]);
 
 echo json_encode([
     'users' => [
@@ -25,12 +26,20 @@ echo json_encode([
         'ramon' => $user('ramon.dizon'),
         'carmela' => $user('carmela.reyes'),
         'admin' => $user('teresa.villanueva'),
+        'janelle' => $user('janelle.ocampo'),
+        'enzo' => $user('enzo.castillo'),
+        'joy' => $user('joy.santiago'),
+    ],
+    'sections' => [
+        'narra' => $section('Narra'),
+        'molave' => $section('Molave'),
     ],
     'classes' => [
         'sciNarra' => $class('Science 9 – Narra'),
         'sciMolave' => $class('Science 9 – Molave'),
         'mathNarra' => $class('Mathematics 9 – Narra'),
         'mathMolave' => $class('Mathematics 9 – Molave'),
+        'engNarra' => $class('English 9 – Narra'),
     ],
     'beaSubmission' => (int) Db::value('SELECT id FROM submissions WHERE student_id = :u ORDER BY id LIMIT 1', ['u' => $user('bea.ramos')]),
     'beaConversation' => (int) Db::value('SELECT id FROM ai_conversations WHERE user_id = :u ORDER BY id LIMIT 1', ['u' => $user('bea.ramos')]),

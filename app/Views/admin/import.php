@@ -27,7 +27,8 @@
     <dl class="dl">
       <dt>given_name</dt><dd><?= e(t('Required.')) ?></dd>
       <dt>family_name</dt><dd><?= e(t('Required.')) ?></dd>
-      <dt>email</dt><dd><?= e(t('Required and unique. Used to sign in.')) ?></dd>
+      <dt>username</dt><dd><?= e(t('Optional. Leave empty and Sibol makes one from the name, such as juan.delacruz.')) ?></dd>
+      <dt>email</dt><dd><?= e(t('Optional and unique. Students without email sign in with their username.')) ?></dd>
       <dt>role</dt><dd><?= e(t('student, teacher or admin. Blank means student.')) ?></dd>
       <dt>grade_level</dt><dd><?= e(t('Optional, students only. Your list: :grades.', ['grades' => implode(', ', $grades) ?: t('none set')])) ?></dd>
       <dt>class</dt><dd><?= e(t('Optional. The exact name of an active class, to enrol the person.')) ?></dd>
@@ -36,6 +37,7 @@
       <details style="margin-top: 12px"><summary class="meta"><?= e(tp('Show :count active class name', 'Show :count active class names', count($classes))) ?></summary>
         <ul style="margin: 8px 0 0; padding-left: 1.2em"><?php foreach ($classes as $c): ?><li><?= e($c) ?></li><?php endforeach; ?></ul></details>
     <?php endif; ?>
-    <p class="meta" style="margin-top: 12px"><?= e(t('Use real school records only with your school\'s permission. Imported people receive invitation links you share yourself.')) ?></p>
+    <p class="meta" style="margin-top: 12px"><?= e(t('Someone who already has an account is recognised by email or username, or else by the same name, role and grade level. Imported people get one-time codes you print on sign-in slips or share as links.')) ?></p>
+    <p class="meta"><?= e(t('Use real school records only with your school\'s permission.')) ?></p>
   </aside>
 </div>

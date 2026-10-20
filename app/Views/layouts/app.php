@@ -118,7 +118,7 @@ $bottomItems = array_slice($bottomItems, 0, 4);
           <div class="menu__panel" role="menu">
             <div class="menu__head">
               <span class="menu__name"><?= e(user_name($user)) ?></span>
-              <span class="menu__sub"><?= e($user['email'] ?? '') ?></span>
+              <span class="menu__sub"><?= e(($user['email'] ?? '') ?: ($user['username'] ?? '')) ?></span>
               <span class="menu__sub"><?= e(role_label((string) ($user['role'] ?? ''))) ?></span>
             </div>
             <a class="menu__item" role="menuitem" href="<?= e(url('/settings')) ?>"><?= icon('user', 'icon--sm') ?><?= e(t('Account and preferences')) ?></a>

@@ -84,12 +84,12 @@ $archived = $class['status'] !== 'active';
       <h2 class="sr-only" id="roster-title"><?= e(t('Roster')) ?></h2>
       <form class="toolbar" method="get" action="<?= e(url($base)) ?>" role="search">
         <input type="hidden" name="tab" value="roster">
-        <div class="field field--grow"><label class="field__label" for="roster-q"><?= e(t('Find a student')) ?></label><input class="input" id="roster-q" type="search" name="q" value="<?= e($q) ?>" placeholder="<?= e(t('Name or email')) ?>"></div>
+        <div class="field field--grow"><label class="field__label" for="roster-q"><?= e(t('Find a student')) ?></label><input class="input" id="roster-q" type="search" name="q" value="<?= e($q) ?>" placeholder="<?= e(t('Name or username')) ?>"></div>
         <button class="btn btn--secondary" type="submit"><?= e(t('Search')) ?></button>
         <?php if ($q !== ''): ?><a class="btn btn--quiet" href="<?= e(url($base, ['tab' => 'roster'])) ?>"><?= e(t('Clear')) ?></a><?php endif; ?>
       </form>
       <?php if (!$roster): ?>
-        <?= partial('empty', ['compact' => true, 'title' => $q !== '' ? t('No students match “:q”', ['q' => $q]) : t('No students yet'), 'body' => t('Share the class code or add students by email.')]) ?>
+        <?= partial('empty', ['compact' => true, 'title' => $q !== '' ? t('No students match “:q”', ['q' => $q]) : t('No students yet'), 'body' => t('Share the class code or add students by username.')]) ?>
       <?php else: ?>
         <div class="table-frame">
           <table class="table table--stack">
@@ -100,12 +100,18 @@ $archived = $class['status'] !== 'active';
                 <tr>
                   <td class="cell-primary">
                     <span class="cluster" style="flex-wrap:nowrap"><?= partial('avatar', ['person' => $r, 'size' => 'sm']) ?>
-                      <span><strong><?= e(user_name($r)) ?></strong><span class="table-sub"><?= e($r['email']) ?></span></span></span>
-                    <?php if ($r['status'] !== 'active'): ?><?= badge(t('Removed'), 'neutral') ?><?php elseif ($r['account_status'] === 'invited'): ?><?= badge(t('Invitation pending'), 'amber') ?><?php endif; ?>
+                      <span><strong><?= e(user_name($r)) ?></strong><span class="table-sub code-text"><?= e((string) $r['username']) ?></span></span></span>
+                    <?php if ($r['status'] !== 'active'): ?><?= badge(t('Removed'), 'neutral') ?><?php elseif ($r['account_status'] === 'invited'): ?><?= badge(t('Not set up yet'), 'amber') ?><?php endif; ?>
                   </td>
                   <td data-label="<?= e(t('Joined')) ?>"><?= e(fmt_date($r['joined_at'])) ?> <span class="table-sub"><?= e(['code' => t('with class code'), 'teacher' => t('added by a teacher'), 'admin' => t('added by the school'), 'import' => t('school import')][$r['joined_via']] ?? '') ?></span></td>
                   <td class="num" data-label="<?= e(t('Work handed in')) ?>"><?= (int) $r['submitted'] ?> / <?= $dueCount ?></td>
                   <td class="actions">
+                    <?php if ($r['status'] === 'active' && !$archived && $r['account_status'] !== 'deactivated'): $setup = $r['account_status'] === 'invited'; ?>
+                      <form method="post" action="<?= e(url('/teacher/students/' . (int) $r['id'] . '/slip')) ?>" class="inline-form" data-confirm="<?= e($setup ? t('Prints a sign-in slip with a new one-time code so :name can set up their account. An earlier slip or link for them stops working.', ['name' => user_name($r)]) : t('Prints a slip with a one-time code so :name can choose a new password. Their current password keeps working until the slip is used. Slips are recorded in the audit log.', ['name' => user_name($r)])) ?>" data-confirm-title="<?= e($setup ? t('Print a sign-in slip?') : t('Print a password slip?')) ?>" data-confirm-action="<?= e(t('Print slip')) ?>">
+                        <?= csrf_field() ?><input type="hidden" name="back" value="<?= e($base . '?tab=roster') ?>">
+                        <button class="btn btn--quiet btn--sm" type="submit"><?= icon('printer', 'icon--sm') ?><?= e($setup ? t('Sign-in slip') : t('Password slip')) ?></button>
+                      </form>
+                    <?php endif; ?>
                     <?php if ($r['status'] === 'active' && !$archived): ?>
                       <form method="post" action="<?= e(url($base . '/roster/' . (int) $r['id'] . '/withdraw')) ?>" data-confirm="<?= e(t(':name will lose access to this class. Their submitted work and grades are kept.', ['name' => user_name($r)])) ?>" data-confirm-title="<?= e(t('Remove from class?')) ?>" data-confirm-action="<?= e(t('Remove')) ?>" data-confirm-tone="danger">
                         <?= csrf_field() ?><button class="btn btn--danger-quiet btn--sm" type="submit"><?= e(t('Remove')) ?></button>
@@ -121,11 +127,23 @@ $archived = $class['status'] !== 'active';
     </section>
     <aside class="stack">
       <?php if (!$archived): ?>
+        <?php $notSetUp = count(array_filter($activeStudents, static fn ($r) => $r['account_status'] === 'invited')); ?>
+        <section class="panel" aria-labelledby="slips-title">
+          <h2 class="panel__title" id="slips-title"><?= e(t('Sign-in slips')) ?></h2>
+          <?php if ($notSetUp): ?>
+            <p class="meta"><?= e(tp(':count student has not set up their account yet. Print slips with their username and a one-time code, then hand them out in class.', ':count students have not set up their account yet. Print slips with their username and a one-time code, then hand them out in class.', $notSetUp)) ?></p>
+            <form method="post" action="<?= e(url($base . '/slips')) ?>" data-confirm="<?= e(t('Each slip gets a new one-time code; earlier slips or links for these students stop working.')) ?>" data-confirm-title="<?= e(t('Print sign-in slips?')) ?>" data-confirm-action="<?= e(t('Print slips')) ?>">
+              <?= csrf_field() ?><button class="btn btn--secondary" type="submit"><?= icon('printer', 'icon--sm') ?><?= e(tp('Print :count slip', 'Print :count slips', $notSetUp)) ?></button>
+            </form>
+          <?php else: ?>
+            <p class="meta" style="margin:0"><?= e(t('Everyone has set up their account. If a student forgets their password, print them a password slip from the list.')) ?></p>
+          <?php endif; ?>
+        </section>
         <section class="panel" aria-labelledby="add-title">
           <h2 class="panel__title" id="add-title"><?= e(t('Add a student')) ?></h2>
           <form method="post" action="<?= e(url($base . '/roster')) ?>">
             <?= csrf_field() ?>
-            <?= field('email', 'email', t('Student email'), ['required' => true, 'hint' => t('The student must already have a Sibol account at your school.')]) ?>
+            <?= field('text', 'student', t('Student username or email'), ['required' => true, 'hint' => t('The student must already have a Sibol account at your school.'), 'attrs' => ['autocapitalize' => 'none', 'spellcheck' => 'false', 'maxlength' => 190]]) ?>
             <button class="btn btn--primary" type="submit"><?= e(t('Add to class')) ?></button>
           </form>
         </section>

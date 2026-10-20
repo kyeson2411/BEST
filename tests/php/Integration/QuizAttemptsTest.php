@@ -88,11 +88,11 @@ final class QuizAttemptsTest extends IntegrationTestCase
         self::assertFalse(Assessments::canReopen($sub, $quiz), 'An attempt in progress is still open');
 
         $lab = Db::one("SELECT * FROM assignments WHERE title LIKE 'Lab report%'");
-        $kyla = Db::one("SELECT s.* FROM submissions s JOIN users u ON u.id = s.student_id WHERE s.assignment_id = :a AND u.email = 'kyla.navarro@demo.sibol.test'", ['a' => (int) $lab['id']]);
+        $kyla = Db::one("SELECT s.* FROM submissions s JOIN users u ON u.id = s.student_id WHERE s.assignment_id = :a AND u.username = 'kyla.navarro'", ['a' => (int) $lab['id']]);
         self::assertFalse(Assessments::canReopen($kyla, $lab), 'Written assignments are returned for changes instead');
 
         $respiratory = Db::one("SELECT * FROM assignments WHERE title = 'Respiratory and circulatory systems check' AND class_id = :c", ['c' => $this->classId('Science 9 – Narra')]);
-        $older = Db::one("SELECT s.* FROM submissions s JOIN users u ON u.id = s.student_id WHERE s.assignment_id = :a AND u.email = 'patricia.lim@demo.sibol.test' ORDER BY s.attempt_no LIMIT 1", ['a' => (int) $respiratory['id']]);
+        $older = Db::one("SELECT s.* FROM submissions s JOIN users u ON u.id = s.student_id WHERE s.assignment_id = :a AND u.username = 'patricia.lim' ORDER BY s.attempt_no LIMIT 1", ['a' => (int) $respiratory['id']]);
         $copy = $older;
         unset($copy['id']);
         $copy['attempt_no'] = (int) $older['attempt_no'] + 1;

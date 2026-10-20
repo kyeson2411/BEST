@@ -12,11 +12,14 @@ use Sibol\Core\Paginator;
 use Sibol\Core\Response;
 use Sibol\Core\Session;
 use Sibol\Services\Settings;
+use Sibol\Services\SignInSlips;
 use Sibol\Services\Tokens;
+use Sibol\Services\Usernames;
 
 /**
  * People in the school. Sibol does not send email: invitation and reset links are shown
- * once to the administrator, who shares them through the school's usual channel.
+ * once to the administrator, who shares them through the school's usual channel, or printed
+ * on sign-in slips for people without email. Everyone gets a username; email is optional.
  */
 final class UserController extends Controller
 {
@@ -30,8 +33,8 @@ final class UserController extends Controller
         $where = ['u.organization_id = :o'];
         $params = ['o' => $o];
         if ($q !== '') {
-            $where[] = "(CONCAT(u.given_name, ' ', u.family_name) LIKE :q1 OR u.preferred_name LIKE :q2 OR u.email LIKE :q3)";
-            $params += ['q1' => Db::like($q), 'q2' => Db::like($q), 'q3' => Db::like($q)];
+            $where[] = "(CONCAT(u.given_name, ' ', u.family_name) LIKE :q1 OR u.preferred_name LIKE :q2 OR u.email LIKE :q3 OR u.username LIKE :q4)";
+            $params += ['q1' => Db::like($q), 'q2' => Db::like($q), 'q3' => Db::like($q), 'q4' => Db::like($q)];
         }
         if (in_array($role, ['admin', 'teacher', 'student'], true)) {
             $where[] = 'u.role = :role';
@@ -48,7 +51,7 @@ final class UserController extends Controller
         $sql = ' FROM users u WHERE ' . implode(' AND ', $where);
         $pager = new Paginator((int) Db::value('SELECT COUNT(*)' . $sql, $params), $this->page(), 30);
         $rows = Db::all(
-            "SELECT u.id, u.role, u.status, u.email, u.given_name, u.family_name, u.preferred_name, u.grade_level, u.last_login_at, u.anonymized_at,
+            "SELECT u.id, u.role, u.status, u.email, u.username, u.given_name, u.family_name, u.preferred_name, u.grade_level, u.last_login_at, u.anonymized_at,
                     (SELECT COUNT(*) FROM class_memberships m JOIN classes c ON c.id = m.class_id AND c.status = 'active' WHERE m.user_id = u.id AND m.status = 'active') AS classes"
             . $sql . ' ORDER BY u.family_name, u.given_name' . $pager->limitSql(),
             $params
@@ -90,12 +93,16 @@ final class UserController extends Controller
             'given_name' => 'required|string|max:80',
             'family_name' => 'required|string|max:80',
             'preferred_name' => 'nullable|string|max:80',
-            'email' => 'required|email',
+            'username' => 'nullable|string|max:40',
+            'email' => 'nullable|email',
             'role' => 'required|in:student,teacher,admin',
             'grade_level' => 'nullable|string|max:40',
             'class_id' => 'nullable|int',
         ], $this->labels(), '/admin/users/new');
         $this->assertEmailFree($data['email'], null, '/admin/users/new');
+        $data['username'] = $data['username'] === null
+            ? Usernames::forPerson((string) $data['given_name'], (string) $data['family_name'])
+            : $this->checkUsername((string) $data['username'], null, '/admin/users/new');
         $class = null;
         if ($data['class_id']) {
             $class = Db::one("SELECT id, name FROM classes WHERE id = :id AND organization_id = :o AND status = 'active'", ['id' => $data['class_id'], 'o' => $o]);
@@ -111,6 +118,7 @@ final class UserController extends Controller
                 'role' => $data['role'],
                 'status' => 'invited',
                 'email' => $data['email'],
+                'username' => $data['username'],
                 'given_name' => $data['given_name'],
                 'family_name' => $data['family_name'],
                 'preferred_name' => $data['preferred_name'],
@@ -184,11 +192,13 @@ final class UserController extends Controller
             'given_name' => 'required|string|max:80',
             'family_name' => 'required|string|max:80',
             'preferred_name' => 'nullable|string|max:80',
-            'email' => 'required|email',
+            'username' => 'required|string|max:40',
+            'email' => 'nullable|email',
             'role' => 'required|in:student,teacher,admin',
             'grade_level' => 'nullable|string|max:40',
         ], $this->labels(), $back);
         $this->assertEmailFree($data['email'], $id, $back);
+        $data['username'] = $this->checkUsername((string) $data['username'], $id, $back);
         if ($data['role'] !== $person['role']) {
             if ((int) $admin['id'] === $id) {
                 $this->fail('role', t('You cannot change your own role. Ask another administrator.'), $back);
@@ -206,6 +216,7 @@ final class UserController extends Controller
             'family_name' => $data['family_name'],
             'preferred_name' => $data['preferred_name'],
             'email' => $data['email'],
+            'username' => $data['username'],
             'role' => $data['role'],
             'grade_level' => $data['role'] === 'student' ? $data['grade_level'] : null,
             'updated_at' => Db::now(),
@@ -272,6 +283,20 @@ final class UserController extends Controller
         return $this->redirect($back);
     }
 
+    /** A printed sign-in slip instead of a link: setup for an invited account, a new password otherwise. */
+    public function slip(int $id): Response
+    {
+        $admin = $this->user();
+        $person = $this->find($id, (int) $admin['organization_id']);
+        $back = '/admin/users/' . $id;
+        if ($person['status'] === 'deactivated') {
+            $this->flash('error', t('Reactivate the account first.'));
+            return $this->redirect($back);
+        }
+        SignInSlips::issue([$person], $admin, user_name($person), $back);
+        return $this->redirect('/slips');
+    }
+
     // ------------------------------------------------------------------------------------------
 
     private function find(int $id, int $orgId): array
@@ -288,12 +313,27 @@ final class UserController extends Controller
         return (int) Db::value("SELECT COUNT(*) FROM users WHERE organization_id = :o AND role = 'admin' AND status = 'active'", ['o' => $orgId]);
     }
 
-    private function assertEmailFree(string $email, ?int $exceptId, string $back): void
+    private function assertEmailFree(?string $email, ?int $exceptId, string $back): void
     {
+        if ($email === null) {
+            return;
+        }
         $taken = Db::value('SELECT id FROM users WHERE email = :e' . ($exceptId ? ' AND id <> :id' : ''), $exceptId ? ['e' => $email, 'id' => $exceptId] : ['e' => $email]);
         if ($taken) {
             $this->fail('email', t('Another account already uses this email address.'), $back);
         }
+    }
+
+    private function checkUsername(string $username, ?int $exceptId, string $back): string
+    {
+        $username = Usernames::clean($username);
+        if (!Usernames::valid($username)) {
+            $this->fail('username', t('Use 3 to 40 small letters, digits, dots, hyphens or underscores, starting and ending with a letter or digit.'), $back);
+        }
+        if (!Usernames::available($username, $exceptId)) {
+            $this->fail('username', t('Another account already uses this username.'), $back);
+        }
+        return $username;
     }
 
     /** The raw link is kept in the session only until the next page shows it once. */
@@ -319,6 +359,7 @@ final class UserController extends Controller
             'given_name' => t('Given name'),
             'family_name' => t('Family name'),
             'preferred_name' => t('Preferred name'),
+            'username' => t('Username'),
             'email' => t('Email address'),
             'role' => t('Role'),
             'grade_level' => t('Grade level'),

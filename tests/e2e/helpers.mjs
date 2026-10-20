@@ -20,10 +20,10 @@ export async function demoLogin(page, role) {
   await expect(page).toHaveURL(new RegExp(`/${role}$`));
 }
 
-/** Signs in with an email and password. */
-export async function passwordLogin(page, email, password = DEMO_PASSWORD) {
+/** Signs in with a username (students) or an email address (staff can use either) and a password. */
+export async function passwordLogin(page, login, password = DEMO_PASSWORD) {
   await page.goto('login');
-  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Username or email').fill(login);
   await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 }

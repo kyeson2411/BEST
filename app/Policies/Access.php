@@ -124,6 +124,48 @@ final class Access
         return $row;
     }
 
+    /**
+     * A student whose sign-in $user may help with (printing a sign-in or password slip): any student of
+     * the school for an administrator; for a teacher, a student actively enrolled in an active class
+     * they teach, or in an active class of a section they advise.
+     * @return array<string,mixed>
+     */
+    public static function studentAccount(array $user, int $studentId): array
+    {
+        $params = ['s' => $studentId, 'o' => (int) $user['organization_id']];
+        $sql = "SELECT u.* FROM users u WHERE u.id = :s AND u.organization_id = :o AND u.role = 'student' AND u.anonymized_at IS NULL";
+        if ($user['role'] === 'teacher') {
+            $sql .= " AND EXISTS (
+                SELECT 1 FROM class_memberships sm
+                JOIN classes c ON c.id = sm.class_id AND c.status = 'active'
+                LEFT JOIN class_memberships tm ON tm.class_id = c.id AND tm.user_id = :t1 AND tm.role = 'teacher' AND tm.status = 'active'
+                LEFT JOIN sections se ON se.id = c.section_id AND se.adviser_id = :t2
+                WHERE sm.user_id = u.id AND sm.role = 'student' AND sm.status = 'active' AND (tm.id IS NOT NULL OR se.id IS NOT NULL))";
+            $params += ['t1' => (int) $user['id'], 't2' => (int) $user['id']];
+        } elseif ($user['role'] !== 'admin') {
+            throw HttpException::notFound();
+        }
+        $student = Db::one($sql, $params);
+        if (!$student) {
+            throw HttpException::notFound();
+        }
+        return $student;
+    }
+
+    /** A section the teacher advises. @return array<string,mixed> */
+    public static function adviserSection(array $user, int $sectionId): array
+    {
+        $section = Db::one(
+            'SELECT se.*, ap.name AS period_name FROM sections se LEFT JOIN academic_periods ap ON ap.id = se.academic_period_id
+             WHERE se.id = :id AND se.organization_id = :o AND se.adviser_id = :u',
+            ['id' => $sectionId, 'o' => (int) $user['organization_id'], 'u' => (int) $user['id']]
+        );
+        if (!$section) {
+            throw HttpException::notFound();
+        }
+        return $section;
+    }
+
     /** SQL condition (alias m) for materials a student may see right now. */
     public static function releasedMaterialSql(string $alias = 'm'): string
     {

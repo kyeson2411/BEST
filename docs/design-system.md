@@ -44,7 +44,7 @@ Rules:
 |---|---|---|
 | **Besley** (variable, 400–900) | Page titles, empty-state headlines, date numerals in entry lists, the companion's source tags | A Clarendon revival: the face of 19th-century field guides, school primers and specimen labels. Used sparingly. |
 | **Atkinson Hyperlegible Next** (variable, 200–800) | All UI and reading text | Designed by the Braille Institute so that easily confused letters (I l 1, O 0) stay distinct, which matters for students. |
-| **Atkinson Hyperlegible Mono** | Class join codes and submission receipt numbers only | Codes are typed by hand, so glyph clarity is functional. Not used for decoration. |
+| **Atkinson Hyperlegible Mono** | Class join codes, submission receipt numbers, usernames and sign-in slip codes only | Codes are typed by hand, so glyph clarity is functional. Not used for decoration. |
 
 Scale (classic typographic progression, 16px base):
 
@@ -105,6 +105,13 @@ empty state (Besley headline + one sentence + one action), toast region (`aria-l
 `<dialog>`), popover menu, skeleton lines, progress meter (`<meter>`/SVG with text value), inline SVG charts with a text summary.
 
 Icons: Lucide, 1.75px stroke, 20px in navigation, 16px inline, always paired with text or an accessible name.
+
+**Printed sign-in slips** (`shared/slips.php`) are the one paper artefact. Each slip is a fresh sheet
+(`--paper-raised` on screen, white in print) with a dashed `--line-control` border that doubles as the cut line
+and a scissors icon in its corner; the seal and school name head it, the person's name is in Besley, and the
+username and code are in the mono face. The QR code is pure black on white with a four-module quiet zone, the only
+colours outside the palette, because scanners need full contrast. Print styles drop the app chrome, start each
+section on a new page and fit six slips to an A4 page in two columns.
 
 ## School identity
 

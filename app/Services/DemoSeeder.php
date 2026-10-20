@@ -140,15 +140,18 @@ final class DemoSeeder
         ]);
     }
 
+    /** Staff have school email; students, like many here, sign in with a username only. */
     private function person(string $key, string $role, string $given, string $family, array $extra = []): int
     {
-        $email = $extra['email'] ?? strtolower(str_replace([' ', '.'], '', $given)) . '.' . strtolower(str_replace(' ', '', $family)) . '@' . self::DOMAIN;
+        $username = Usernames::forPerson($given, $family);
+        $email = $role === 'student' ? null : ($extra['email'] ?? $username . '@' . self::DOMAIN);
         $status = $extra['status'] ?? 'active';
         $row = [
             'organization_id' => $this->org,
             'role' => $role,
             'status' => $status,
             'email' => $email,
+            'username' => $username,
             'password_hash' => $status === 'invited' ? null : $this->hash,
             'given_name' => $given,
             'family_name' => $family,
@@ -237,6 +240,7 @@ final class DemoSeeder
                 'academic_period_id' => $this->mod['period'],
                 'name' => $name,
                 'section' => $section,
+                'section_id' => Sections::forClass($this->org, $this->mod['period'], 'Grade 9', $section),
                 'grade_level' => 'Grade 9',
                 'description' => null,
                 'status' => 'active',
@@ -257,6 +261,9 @@ final class DemoSeeder
                 Db::insert('class_memberships', ['class_id' => $id, 'user_id' => $this->u['angelica'], 'role' => 'student', 'status' => 'withdrawn', 'joined_via' => 'import', 'joined_at' => $this->ago('-105 days'), 'withdrawn_at' => $this->ago('-20 days')]);
             }
         }
+        // Class advisers: Ramon Dizon for Grade 9 Narra, Liza Mercado for Grade 9 Molave.
+        Db::exec('UPDATE sections SET adviser_id = :u WHERE organization_id = :o AND name = :n', ['u' => $this->u['ramon'], 'o' => $this->org, 'n' => 'Narra']);
+        Db::exec('UPDATE sections SET adviser_id = :u WHERE organization_id = :o AND name = :n', ['u' => $this->u['liza'], 'o' => $this->org, 'n' => 'Molave']);
         $modules = [
             'sci_narra_1' => ['sci_narra', 'Module 1: Respiratory and circulatory systems', 1],
             'sci_narra_2' => ['sci_narra', 'Module 2: Heredity and variation', 2],

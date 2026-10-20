@@ -395,6 +395,11 @@
     b.addEventListener('click', function () { history.back(); });
   });
 
+  /* Print buttons (printable pages also print from the browser's own menu). */
+  $all('[data-print]').forEach(function (b) {
+    b.addEventListener('click', function () { window.print(); });
+  });
+
   /* KaTeX for maths, when the page loaded it. */
   window.Sibol.renderMath = function (root) {
     if (typeof window.renderMathInElement !== 'function') return;

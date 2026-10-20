@@ -19,13 +19,13 @@ test.describe('The school landing page', () => {
 
 test.describe('Signing in and out', () => {
   test('a wrong password is refused with a clear message', async ({ page }) => {
-    await passwordLogin(page, 'andrea.cruz@demo.sibol.test', 'not-the-password-1');
-    await expect(page.getByText('The email or password is not correct.')).toBeVisible();
+    await passwordLogin(page, 'andrea.cruz', 'not-the-password-1');
+    await expect(page.getByText('The username or password is not correct.')).toBeVisible();
     await expect(page).toHaveURL(/\/login$/);
   });
 
   test('the documented demo password signs a student in', async ({ page }) => {
-    await passwordLogin(page, 'andrea.cruz@demo.sibol.test');
+    await passwordLogin(page, 'andrea.cruz');
     await expect(page).toHaveURL(/\/student$/);
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Andrea');
   });

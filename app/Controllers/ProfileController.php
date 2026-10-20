@@ -77,7 +77,7 @@ final class ProfileController extends Controller
             throw new ValidationException(['current_password' => t('Your current password is not correct.')], [], '/settings#password');
         }
         $data = $this->validate(['password' => 'required|string|confirmed'], ['password' => t('New password')], '/settings#password');
-        $problem = Tokens::passwordProblem((string) $data['password'], (string) $user['email'], (string) $user['given_name']);
+        $problem = Tokens::passwordProblem((string) $data['password'], $user['email'], (string) $user['given_name'], $user['username']);
         if ($problem !== null) {
             $this->fail('password', $problem, '/settings#password');
         }

@@ -49,6 +49,12 @@ final class AuditLabels
             case 'user.invitation_link': return t('Created a new invitation link');
             case 'user.reset_link': return t('Created a password reset link');
             case 'users.imported': return tp('Imported :count person from CSV', 'Imported :count people from CSV', $n('created'));
+            case 'user.setup_slip': return t('Printed a sign-in slip');
+            case 'user.reset_slip': return t('Printed a password slip');
+            case 'user.signin_slips':
+                return tp('Printed :count sign-in or password slip', 'Printed :count sign-in or password slips', $n('setup') + $n('reset'));
+            case 'section.adviser_changed': return !empty($meta['has_adviser']) ? t('Chose a section adviser') : t('Removed a section adviser');
+            case 'section.removed': return t('Removed an empty section');
 
             case 'class.created': return t('Created a class');
             case 'class.updated': return t('Updated class details');
@@ -152,6 +158,7 @@ final class AuditLabels
             'lesson' => ['SELECT l.id, l.title AS label FROM lessons l JOIN classes c ON c.id = l.class_id WHERE c.organization_id = :o AND l.id IN %s', null],
             'subject' => ['SELECT id, name AS label FROM subjects WHERE organization_id = :o AND id IN %s', null],
             'period' => ['SELECT id, name AS label FROM academic_periods WHERE organization_id = :o AND id IN %s', null],
+            'section' => ["SELECT id, CONCAT(COALESCE(CONCAT(grade_level, ' – '), ''), name) AS label FROM sections WHERE organization_id = :o AND id IN %s", '/admin/sections#section-'],
             'privacy_request' => ["SELECT id, CONCAT('#', id) AS label FROM privacy_requests WHERE organization_id = :o AND id IN %s", '/admin/privacy/requests/'],
             'ai_report' => ["SELECT id, CONCAT('#', id) AS label FROM ai_reports WHERE organization_id = :o AND id IN %s", '/admin/privacy/reports/'],
         ];

@@ -34,7 +34,7 @@ final class Grades
             $params['only'] = $onlyStudent;
         }
         $students = Db::all(
-            "SELECT u.id, u.given_name, u.family_name, u.preferred_name, u.email
+            "SELECT u.id, u.given_name, u.family_name, u.preferred_name, u.email, u.username
              FROM class_memberships cm JOIN users u ON u.id = cm.user_id
              WHERE cm.class_id = :c AND cm.role = 'student' AND cm.status = 'active'" . $studentFilter . '
              ORDER BY u.family_name, u.given_name',

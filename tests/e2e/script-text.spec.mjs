@@ -5,7 +5,7 @@ import { passwordLogin } from './helpers.mjs';
 // language like the rest of the page: the server translates it and passes it in data-i18n attributes.
 // Janelle is used only here, and is switched back to English at the end.
 test('a student reading in Filipino sees Filipino text written by the page scripts', async ({ page }) => {
-  await passwordLogin(page, 'janelle.ocampo@demo.sibol.test');
+  await passwordLogin(page, 'janelle.ocampo');
   await expect(page).toHaveURL(/\/student$/);
 
   // A flashcard deck and a companion session, made while the interface is still in English.

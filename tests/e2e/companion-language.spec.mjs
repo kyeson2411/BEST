@@ -4,7 +4,7 @@ import { passwordLogin } from './helpers.mjs';
 // Demo answers follow the session's language and the language of the question, the same rule a
 // connected model is given, and a question written in Filipino still finds the English class notes.
 // Sofia is used only here.
-const SOFIA = 'sofia.delacruz@demo.sibol.test';
+const SOFIA = 'sofia.delacruz';
 
 async function startSession(page, language, question) {
   await page.goto('companion/new');

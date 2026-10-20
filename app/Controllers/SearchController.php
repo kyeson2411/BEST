@@ -94,9 +94,9 @@ final class SearchController extends Controller
     {
         $o = (int) $user['organization_id'];
         return [
-            ['label' => t('People'), 'icon' => 'users', 'items' => array_map(static fn ($r) => ['title' => user_name($r), 'meta' => role_label((string) $r['role']) . ', ' . $r['email'] . ($r['status'] !== 'active' ? ', ' . $r['status'] : ''), 'url' => '/admin/users/' . (int) $r['id']],
-                Db::all("SELECT id, given_name, family_name, preferred_name, email, role, status FROM users WHERE organization_id = :o AND (given_name LIKE :q1 OR family_name LIKE :q2 OR email LIKE :q3 OR CONCAT(given_name, ' ', family_name) LIKE :q4) ORDER BY family_name LIMIT 12",
-                    ['o' => $o, 'q1' => $like, 'q2' => $like, 'q3' => $like, 'q4' => $like]))],
+            ['label' => t('People'), 'icon' => 'users', 'items' => array_map(static fn ($r) => ['title' => user_name($r), 'meta' => role_label((string) $r['role']) . ', ' . ($r['username'] ?: $r['email']) . ($r['status'] !== 'active' ? ', ' . $r['status'] : ''), 'url' => '/admin/users/' . (int) $r['id']],
+                Db::all("SELECT id, given_name, family_name, preferred_name, email, username, role, status FROM users WHERE organization_id = :o AND (given_name LIKE :q1 OR family_name LIKE :q2 OR email LIKE :q3 OR CONCAT(given_name, ' ', family_name) LIKE :q4 OR username LIKE :q5) ORDER BY family_name LIMIT 12",
+                    ['o' => $o, 'q1' => $like, 'q2' => $like, 'q3' => $like, 'q4' => $like, 'q5' => $like]))],
             ['label' => t('Classes'), 'icon' => 'school', 'items' => array_map(static fn ($r) => ['title' => $r['name'], 'meta' => $r['subject'] . ', ' . $r['status'], 'url' => '/admin/classes/' . (int) $r['id']],
                 Db::all('SELECT c.id, c.name, c.status, s.name AS subject FROM classes c JOIN subjects s ON s.id = c.subject_id WHERE c.organization_id = :o AND (c.name LIKE :q1 OR s.name LIKE :q2) LIMIT 12', ['o' => $o, 'q1' => $like, 'q2' => $like]))],
             ['label' => t('Subjects'), 'icon' => 'layers', 'items' => array_map(static fn ($r) => ['title' => $r['name'], 'meta' => (string) $r['code'], 'url' => '/admin/subjects'],

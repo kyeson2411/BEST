@@ -36,7 +36,8 @@ $activeClasses = array_values(array_filter($memberships, static fn ($m) => $m['s
             <?= field('text', 'given_name', t('Given name'), ['value' => $person['given_name'], 'required' => true, 'attrs' => ['maxlength' => 80]]) ?>
             <?= field('text', 'family_name', t('Family name'), ['value' => $person['family_name'], 'required' => true, 'attrs' => ['maxlength' => 80]]) ?>
             <?= field('text', 'preferred_name', t('Preferred name'), ['value' => (string) $person['preferred_name'], 'optional_label' => true, 'attrs' => ['maxlength' => 80]]) ?>
-            <?= field('email', 'email', t('Email address'), ['value' => $person['email'], 'required' => true]) ?>
+            <?= field('text', 'username', t('Username'), ['value' => (string) $person['username'], 'required' => true, 'hint' => t('Used to sign in. Changing it takes effect at their next sign-in.'), 'class' => 'code-text', 'attrs' => ['maxlength' => 40, 'autocapitalize' => 'none', 'spellcheck' => 'false']]) ?>
+            <?= field('email', 'email', t('Email address'), ['value' => (string) $person['email'], 'optional_label' => true]) ?>
             <?= field('select', 'role', t('Role'), [
                 'value' => $person['role'],
                 'options' => ['student' => t('Student'), 'teacher' => t('Teacher'), 'admin' => t('School administrator')],
@@ -84,7 +85,8 @@ $activeClasses = array_values(array_filter($memberships, static fn ($m) => $m['s
       <section class="panel" aria-labelledby="access-title">
         <h2 class="panel__title" id="access-title"><?= e(t('Access')) ?></h2>
         <dl class="dl">
-          <dt><?= e(t('Email')) ?></dt><dd style="overflow-wrap:anywhere"><?= e($person['email']) ?></dd>
+          <dt><?= e(t('Username')) ?></dt><dd class="code-text" style="overflow-wrap:anywhere"><?= e((string) $person['username']) ?></dd>
+          <?php if ($person['email']): ?><dt><?= e(t('Email')) ?></dt><dd style="overflow-wrap:anywhere"><?= e($person['email']) ?></dd><?php endif; ?>
           <dt><?= e(t('Last sign-in')) ?></dt><dd><?= $person['last_login_at'] ? time_tag($person['last_login_at'], 'datetime') : e(t('Never')) ?></dd>
           <dt><?= e(t('Account created')) ?></dt><dd><?= time_tag($person['created_at']) ?></dd>
           <?php if ($pendingLink): ?><dt><?= e($pendingLink['purpose'] === 'invitation' ? t('Invitation link') : t('Reset link')) ?></dt><dd><?= e(t('Unused, expires :date', ['date' => fmt_date($pendingLink['expires_at'], 'datetime_short')])) ?></dd><?php endif; ?>
@@ -94,6 +96,10 @@ $activeClasses = array_values(array_filter($memberships, static fn ($m) => $m['s
             <form method="post" action="<?= e(url($base . '/link')) ?>"<?= $pendingLink ? ' data-confirm="' . e(t('The link you created earlier will stop working.')) . '" data-confirm-title="' . e(t('Create a new link?')) . '" data-confirm-action="' . e(t('Create link')) . '"' : '' ?>>
               <?= csrf_field() ?>
               <button class="btn btn--secondary btn--block" type="submit"><?= icon($person['status'] === 'invited' ? 'mail' : 'key-round', 'icon--sm') ?><?= e($person['status'] === 'invited' ? t('Create invitation link') : t('Create password reset link')) ?></button>
+            </form>
+            <form method="post" action="<?= e(url($base . '/slip')) ?>" data-confirm="<?= e($pendingLink ? t('A printed slip replaces the link you created earlier, which stops working.') : t('The slip has a one-time code. Hand it to the person yourself.')) ?>" data-confirm-title="<?= e(t('Print a sign-in slip?')) ?>" data-confirm-action="<?= e(t('Print slip')) ?>">
+              <?= csrf_field() ?>
+              <button class="btn btn--secondary btn--block" type="submit"><?= icon('printer', 'icon--sm') ?><?= e($person['status'] === 'invited' ? t('Print sign-in slip') : t('Print password slip')) ?></button>
             </form>
           <?php endif; ?>
           <?php if ($person['status'] === 'deactivated'): ?>

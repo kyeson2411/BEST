@@ -13,6 +13,7 @@ use Sibol\Core\RateLimiter;
 use Sibol\Core\Response;
 use Sibol\Core\Session;
 use Sibol\Services\Tokens;
+use Sibol\Services\Usernames;
 
 final class AuthController extends Controller
 {
@@ -28,46 +29,49 @@ final class AuthController extends Controller
         ], 'layouts/auth');
     }
 
+    /** Signs in with a username (students' usual way) or an email address. */
     public function login(): Response
     {
-        $email = mb_strtolower($this->request->str('email'));
+        $login = Usernames::clean($this->request->str('login'));
         $password = (string) ($this->request->post['password'] ?? '');
         $ip = $this->request->ip();
 
-        if (!RateLimiter::attempt('login-ip', $ip, 40, 900) || RateLimiter::tooMany('login-email', $email, 8, 900)) {
-            Session::withInput(['email' => $email], ['email' => t('Too many sign-in attempts. Wait 15 minutes, then try again.')]);
+        if (!RateLimiter::attempt('login-ip', $ip, 40, 900) || RateLimiter::tooMany('login-name', $login, 8, 900)) {
+            Session::withInput(['login' => $login], ['login' => t('Too many sign-in attempts. Wait 15 minutes, then try again.')]);
             return $this->redirect('/login');
         }
 
         $errors = [];
-        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = t('Enter the email address your school gave you.');
+        if ($login === '') {
+            $errors['login'] = t('Enter your username or email address.');
         }
         if ($password === '') {
             $errors['password'] = t('Enter your password.');
         }
         if ($errors) {
-            Session::withInput(['email' => $email], $errors);
+            Session::withInput(['login' => $login], $errors);
             return $this->redirect('/login');
         }
 
-        $user = Db::one('SELECT * FROM users WHERE email = :e', ['e' => $email]);
+        $user = str_contains($login, '@')
+            ? Db::one('SELECT * FROM users WHERE email = :e', ['e' => $login])
+            : Db::one('SELECT * FROM users WHERE username = :u', ['u' => $login]);
         $valid = password_verify($password, (string) ($user['password_hash'] ?? self::DUMMY_HASH)) && $user !== null;
 
         if (!$valid || $user['status'] !== 'active') {
-            RateLimiter::attempt('login-email', $email, 8, 900);
-            $message = t('The email or password is not correct.');
+            RateLimiter::attempt('login-name', $login, 8, 900);
+            $message = t('The username or password is not correct.');
             if ($valid && $user['status'] === 'deactivated') {
                 $message = t('This account has been deactivated. Contact your school administrator if you need access.');
             }
-            Session::withInput(['email' => $email], ['password' => $message]);
+            Session::withInput(['login' => $login], ['password' => $message]);
             return $this->redirect('/login');
         }
 
         if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
             Db::update('users', ['password_hash' => password_hash($password, PASSWORD_DEFAULT)], ['id' => (int) $user['id']]);
         }
-        RateLimiter::clear('login-email', $email);
+        RateLimiter::clear('login-name', $login);
         Auth::login($user);
         Audit::log('auth.login', 'user', (int) $user['id'], [], $user);
 
@@ -109,11 +113,39 @@ final class AuthController extends Controller
         return $this->redirect('/login');
     }
 
+    /** "Have a sign-in slip?": the code printed on a slip, typed instead of scanning its QR code. */
+    public function showStart(): Response
+    {
+        return $this->view('auth/start', ['title' => t('Use a sign-in slip')], 'layouts/auth');
+    }
+
+    public function start(): Response
+    {
+        $raw = $this->request->str('code');
+        if (!RateLimiter::attempt('start-ip', $this->request->ip(), 60, 900)) {
+            Session::withInput(['code' => $raw], ['code' => t('Too many tries. Wait 15 minutes, then try again.')]);
+            return $this->redirect('/start');
+        }
+        if (!Tokens::isCode($raw)) {
+            Session::withInput(['code' => $raw], ['code' => t('Type the 12 letters and numbers from your slip, for example ABCD-EFGH-JKMN.')]);
+            return $this->redirect('/start');
+        }
+        $code = Tokens::normalise($raw);
+        if (Tokens::find($code, 'invitation')) {
+            return $this->redirect('/invite/' . $code);
+        }
+        if (Tokens::find($code, 'password_reset')) {
+            return $this->redirect('/reset/' . $code);
+        }
+        Session::withInput(['code' => $raw], ['code' => t('That code does not work. It may be mistyped, already used or expired. Check it, or ask your teacher or adviser for a new slip.')]);
+        return $this->redirect('/start');
+    }
+
     public function showInvite(string $token): Response
     {
         $row = Tokens::find($token, 'invitation');
         if (!$row || $row['status'] !== 'invited') {
-            return $this->invalidLink(t('This invitation link is no longer valid'), t('Invitation links work once and expire after 14 days. Ask your school administrator for a new link.'));
+            return $this->invalidLink(t('This invitation link is no longer valid'), t('Invitation links and slips work once and expire after 14 days. Ask your teacher, adviser or school administrator for a new one.'));
         }
         if (Auth::check()) {
             Auth::logout();
@@ -130,14 +162,14 @@ final class AuthController extends Controller
     {
         $row = Tokens::find($token, 'invitation');
         if (!$row || $row['status'] !== 'invited') {
-            return $this->invalidLink(t('This invitation link is no longer valid'), t('Ask your school administrator for a new link.'));
+            return $this->invalidLink(t('This invitation link is no longer valid'), t('Ask your teacher, adviser or school administrator for a new one.'));
         }
         $data = $this->validate([
             'preferred_name' => 'nullable|string|max:80',
             'language' => 'required|in:en,fil',
             'password' => 'required|string|confirmed',
         ], ['preferred_name' => t('Name you go by'), 'password' => t('Password')]);
-        $problem = Tokens::passwordProblem((string) $data['password'], (string) $row['email'], (string) $row['given_name']);
+        $problem = Tokens::passwordProblem((string) $data['password'], $row['email'], (string) $row['given_name'], $row['username']);
         if ($problem !== null) {
             $this->fail('password', $problem);
         }
@@ -163,7 +195,7 @@ final class AuthController extends Controller
     {
         $row = Tokens::find($token, 'password_reset');
         if (!$row || $row['status'] !== 'active') {
-            return $this->invalidLink(t('This password link is no longer valid'), t('Password links work once and expire after 48 hours. Ask your school administrator for a new one.'));
+            return $this->invalidLink(t('This password link is no longer valid'), t('Password links and slips work once and expire after 48 hours. Ask your teacher, adviser or school administrator for a new one.'));
         }
         return $this->view('auth/reset', ['title' => t('Choose a new password'), 'person' => $row, 'token' => $token], 'layouts/auth');
     }
@@ -172,10 +204,10 @@ final class AuthController extends Controller
     {
         $row = Tokens::find($token, 'password_reset');
         if (!$row || $row['status'] !== 'active') {
-            return $this->invalidLink(t('This password link is no longer valid'), t('Ask your school administrator for a new one.'));
+            return $this->invalidLink(t('This password link is no longer valid'), t('Ask your teacher, adviser or school administrator for a new one.'));
         }
         $data = $this->validate(['password' => 'required|string|confirmed'], ['password' => t('Password')]);
-        $problem = Tokens::passwordProblem((string) $data['password'], (string) $row['email'], (string) $row['given_name']);
+        $problem = Tokens::passwordProblem((string) $data['password'], $row['email'], (string) $row['given_name'], $row['username']);
         if ($problem !== null) {
             $this->fail('password', $problem);
         }

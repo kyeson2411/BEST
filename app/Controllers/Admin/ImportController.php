@@ -10,21 +10,27 @@ use Sibol\Core\Db;
 use Sibol\Core\Response;
 use Sibol\Core\Session;
 use Sibol\Core\Uploads;
+use Sibol\Services\Sections;
 use Sibol\Services\Settings;
+use Sibol\Services\SignInSlips;
 use Sibol\Services\Tokens;
+use Sibol\Services\Usernames;
 
 /**
  * Spreadsheet import: upload → preview with row-level problems → confirm.
- * Nothing is written until the administrator confirms the preview.
+ * Nothing is written until the administrator confirms the preview. Email and username are optional:
+ * Sibol makes a username from the name, and new accounts get a one-time code that can be printed on
+ * sign-in slips.
  */
 final class ImportController extends Controller
 {
     private const MAX_ROWS = 1000;
     private const MAX_BYTES = 2097152;
-    private const HEADERS = ['given_name', 'family_name', 'email', 'role', 'grade_level', 'class'];
+    private const HEADERS = ['given_name', 'family_name', 'username', 'email', 'role', 'grade_level', 'class'];
     private const ALIASES = [
         'given_name' => ['given_name', 'given name', 'first_name', 'first name', 'firstname', 'pangalan'],
         'family_name' => ['family_name', 'family name', 'last_name', 'last name', 'lastname', 'surname', 'apelyido'],
+        'username' => ['username', 'user name', 'user_name', 'login'],
         'email' => ['email', 'email address', 'e-mail'],
         'role' => ['role', 'type'],
         'grade_level' => ['grade_level', 'grade level', 'grade', 'baitang'],
@@ -45,8 +51,8 @@ final class ImportController extends Controller
     {
         $rows = [
             self::HEADERS,
-            ['Juan', 'Dela Cruz', 'juan.delacruz@example.org', 'student', 'Grade 9', ''],
-            ['Maria', 'Santos', 'maria.santos@example.org', 'teacher', '', ''],
+            ['Juan', 'Dela Cruz', '', '', 'student', 'Grade 9', ''],
+            ['Maria', 'Santos', '', 'maria.santos@example.org', 'teacher', '', ''],
         ];
         $out = "\xEF\xBB\xBF";
         foreach ($rows as $r) {
@@ -78,25 +84,27 @@ final class ImportController extends Controller
             $classes[self::normalise((string) $c['name'])] = ['id' => (int) $c['id'], 'name' => (string) $c['name']];
         }
         $grades = (array) Settings::get($o, 'grade_levels', []);
-        $emails = array_values(array_filter(array_map(static fn ($l) => mb_strtolower(trim((string) ($l[$header['email']] ?? ''))), $lines)));
-        $existing = [];
-        if ($emails) {
-            foreach (array_chunk(array_unique($emails), 400) as $chunk) {
-                [$in, $params] = Db::in($chunk, 'e');
-                foreach (Db::all('SELECT id, email, organization_id, role, given_name, family_name, preferred_name FROM users WHERE email IN ' . $in, $params) as $u) {
-                    $existing[mb_strtolower((string) $u['email'])] = $u;
-                }
-            }
+        $column = static fn (string $key, callable $clean): array => isset($header[$key])
+            ? array_values(array_unique(array_filter(array_map(static fn ($l) => $clean(trim((string) ($l[$header[$key]] ?? ''))), $lines))))
+            : [];
+        $byEmail = self::existing('email', $column('email', 'mb_strtolower'));
+        $byUsername = self::existing('username', $column('username', [Usernames::class, 'clean']));
+        // Without an email or a username, someone already in the school is recognised by name, role and grade.
+        $byName = [];
+        foreach (Db::all('SELECT id, role, given_name, family_name, preferred_name, grade_level, username FROM users WHERE organization_id = :o AND anonymized_at IS NULL', ['o' => $o]) as $u) {
+            $byName[self::nameKey((string) $u['role'], (string) $u['given_name'], (string) $u['family_name'], (string) $u['grade_level'])] = $u;
         }
 
         $rows = [];
-        $seen = [];
+        $seenEmail = [];
+        $seenUsername = [];
         foreach ($lines as $i => $line) {
             $get = static fn (string $key): string => isset($header[$key]) ? trim((string) ($line[$header[$key]] ?? '')) : '';
             $row = [
                 'line' => $i + 2,
                 'given_name' => mb_substr($get('given_name'), 0, 80),
                 'family_name' => mb_substr($get('family_name'), 0, 80),
+                'username' => Usernames::clean($get('username')),
                 'email' => mb_strtolower($get('email')),
                 'role' => mb_strtolower($get('role')) ?: 'student',
                 'grade_level' => $get('grade_level'),
@@ -110,8 +118,11 @@ final class ImportController extends Controller
             if ($row['given_name'] === '' || $row['family_name'] === '') {
                 $row['problems'][] = t('Given and family names are required.');
             }
-            if (!filter_var($row['email'], FILTER_VALIDATE_EMAIL) || mb_strlen($row['email']) > 190) {
+            if ($row['email'] !== '' && (!filter_var($row['email'], FILTER_VALIDATE_EMAIL) || mb_strlen($row['email']) > 190)) {
                 $row['problems'][] = t('The email address is not valid.');
+            }
+            if ($row['username'] !== '' && !Usernames::valid($row['username'])) {
+                $row['problems'][] = t('The username can have 3 to 40 small letters, digits, dots, hyphens or underscores.');
             }
             if (in_array($row['role'], ['teacher', 'guro'], true)) {
                 $row['role'] = 'teacher';
@@ -139,21 +150,43 @@ final class ImportController extends Controller
                     $row['class_name'] = $match['name'];
                 }
             }
-            if ($row['email'] !== '' && isset($seen[$row['email']])) {
-                $row['problems'][] = t('The same email appears on line :line.', ['line' => $seen[$row['email']]]);
+            if ($row['email'] !== '' && isset($seenEmail[$row['email']])) {
+                $row['problems'][] = t('The same email appears on line :line.', ['line' => $seenEmail[$row['email']]]);
             }
-            $seen[$row['email']] = $seen[$row['email']] ?? $row['line'];
-            $match = $existing[$row['email']] ?? null;
+            if ($row['username'] !== '' && isset($seenUsername[$row['username']])) {
+                $row['problems'][] = t('The same username appears on line :line.', ['line' => $seenUsername[$row['username']]]);
+            }
+            if ($row['email'] !== '') {
+                $seenEmail[$row['email']] = $seenEmail[$row['email']] ?? $row['line'];
+            }
+            if ($row['username'] !== '') {
+                $seenUsername[$row['username']] = $seenUsername[$row['username']] ?? $row['line'];
+            }
+
+            $match = ($row['email'] !== '' ? ($byEmail[$row['email']] ?? null) : null)
+                ?? ($row['username'] !== '' ? ($byUsername[$row['username']] ?? null) : null);
+            $byNameOnly = false;
+            if (!$match && $row['email'] === '' && $row['username'] === '') {
+                $match = $byName[self::nameKey($row['role'], $row['given_name'], $row['family_name'], $row['grade_level'])] ?? null;
+                $byNameOnly = $match !== null;
+            }
             if ($match && !$row['problems']) {
-                if ((int) $match['organization_id'] !== $o) {
-                    $row['problems'][] = t('This email belongs to an account outside your school.');
-                } elseif ($row['class_id'] && $match['role'] === $row['role']) {
-                    $row['action'] = 'enrol';
-                    $row['user_id'] = (int) $match['id'];
-                    $row['notes'][] = t('Already has an account; will only be added to the class.');
+                if (isset($match['organization_id']) && (int) $match['organization_id'] !== $o) {
+                    $row['problems'][] = $row['email'] !== '' && isset($byEmail[$row['email']])
+                        ? t('This email belongs to an account outside your school.')
+                        : t('This username belongs to an account outside your school.');
                 } else {
-                    $row['action'] = 'skip';
-                    $row['notes'][] = t('Already has an account; nothing to do.');
+                    if ($byNameOnly) {
+                        $row['notes'][] = t('Treated as :name (:username), who already has an account with this name. To add a different person with the same name, give them a username in the file.', ['name' => user_name($match), 'username' => (string) $match['username']]);
+                    }
+                    if ($row['class_id'] && $match['role'] === $row['role']) {
+                        $row['action'] = 'enrol';
+                        $row['user_id'] = (int) $match['id'];
+                        $row['notes'][] = t('Already has an account; will only be added to the class.');
+                    } else {
+                        $row['action'] = 'skip';
+                        $row['notes'][] = t('Already has an account; nothing to do.');
+                    }
                 }
             }
             if ($row['problems']) {
@@ -186,37 +219,51 @@ final class ImportController extends Controller
         }
         Session::set('import_preview', null);
         $created = [];
+        $slips = [];
         $enrolled = 0;
-        Db::transaction(function () use ($preview, $o, $admin, &$created, &$enrolled): void {
+        Db::transaction(function () use ($preview, $o, $admin, &$created, &$slips, &$enrolled): void {
+            $reserved = [];
             foreach ($preview['rows'] as $row) {
                 if ($row['action'] === 'create') {
-                    if (Db::value('SELECT id FROM users WHERE email = :e', ['e' => $row['email']])) {
-                        continue; // created by someone else since the preview
+                    // Taken by someone else since the preview.
+                    if (($row['email'] !== '' && Db::value('SELECT id FROM users WHERE email = :e', ['e' => $row['email']]))
+                        || ($row['username'] !== '' && !Usernames::available($row['username']))) {
+                        continue;
                     }
+                    $username = $row['username'] !== '' ? $row['username'] : Usernames::forPerson($row['given_name'], $row['family_name'], $reserved);
+                    $reserved[$username] = true;
                     $id = Db::insert('users', [
                         'organization_id' => $o,
                         'role' => $row['role'],
                         'status' => 'invited',
-                        'email' => $row['email'],
+                        'email' => $row['email'] !== '' ? $row['email'] : null,
+                        'username' => $username,
                         'given_name' => $row['given_name'],
                         'family_name' => $row['family_name'],
                         'grade_level' => $row['grade_level'] !== '' ? $row['grade_level'] : null,
                         'created_at' => Db::now(),
                         'updated_at' => Db::now(),
                     ]);
-                    $token = Tokens::issue($id, 'invitation', (int) $admin['id']);
-                    $created[] = ['name' => $row['given_name'] . ' ' . $row['family_name'], 'email' => $row['email'], 'role' => $row['role'], 'class' => $row['class_name'], 'url' => Tokens::link('invitation', $token)];
+                    $code = Tokens::issue($id, 'invitation', (int) $admin['id'], true);
                     if ($row['class_id']) {
                         $this->enrol((int) $row['class_id'], $id, $row['role']);
                     }
+                    $group = $row['role'] !== 'student' ? t('Staff') : ($row['class_id'] ? Sections::groupFor($id) : '');
+                    $slip = SignInSlips::slip(['given_name' => $row['given_name'], 'family_name' => $row['family_name'], 'username' => $username], 'invitation', $code, $group);
+                    $slips[] = $slip;
+                    $created[] = ['name' => $row['given_name'] . ' ' . $row['family_name'], 'username' => $username, 'email' => $row['email'], 'role' => $row['role'], 'class' => $row['class_name'], 'url' => $slip['url'], 'code' => $slip['code']];
                 } elseif ($row['action'] === 'enrol' && $row['class_id']) {
                     $enrolled += $this->enrol((int) $row['class_id'], (int) $row['user_id'], $row['role']) ? 1 : 0;
                 }
             }
         });
         Audit::log('users.imported', null, null, ['created' => count($created), 'enrolled' => $enrolled]);
-        // Links are kept briefly so the administrator can download them as a file.
+        // Links are kept briefly so the administrator can download them or print them as slips.
         Session::set('import_links', ['at' => time(), 'rows' => $created]);
+        if ($slips) {
+            usort($slips, static fn ($a, $b) => [$a['group'], $a['name']] <=> [$b['group'], $b['name']]);
+            SignInSlips::remember($slips, t('Imported people'), '/admin/users?status=invited');
+        }
         return $this->view('admin/import_done', [
             'title' => t('Import complete'),
             'crumbs' => [[t('People'), '/admin/users'], [t('Import complete'), null]],
@@ -230,10 +277,10 @@ final class ImportController extends Controller
     {
         $data = Session::get('import_links');
         if (!is_array($data) || time() - (int) $data['at'] > 1800) {
-            $this->flash('error', t('The invitation links are no longer available here. Create new links from each person\'s page.'));
+            $this->flash('error', t('The invitation links are no longer available here. Create new links or slips from each person\'s page.'));
             return $this->redirect('/admin/users');
         }
-        $out = "\xEF\xBB\xBF" . "name,email,role,class,invitation_link\r\n";
+        $out = "\xEF\xBB\xBF" . "name,username,email,role,class,code,invitation_link\r\n";
         foreach ($data['rows'] as $r) {
             $out .= implode(',', array_map(static function ($v): string {
                 $v = (string) $v;
@@ -241,7 +288,7 @@ final class ImportController extends Controller
                     $v = "'" . $v;
                 }
                 return '"' . str_replace('"', '""', $v) . '"';
-            }, [$r['name'], $r['email'], $r['role'], (string) $r['class'], $r['url']])) . "\r\n";
+            }, [$r['name'], $r['username'] ?? '', $r['email'], $r['role'], (string) $r['class'], $r['code'] ?? '', $r['url']])) . "\r\n";
         }
         return Response::html($out)
             ->header('Content-Type', 'text/csv; charset=utf-8')
@@ -277,7 +324,7 @@ final class ImportController extends Controller
                 }
             }
         }
-        $missing = array_diff(['given_name', 'family_name', 'email'], array_keys($header));
+        $missing = array_diff(['given_name', 'family_name'], array_keys($header));
         if ($missing) {
             return t('The first row must name the columns. Missing: :cols. Download the template to see the expected layout.', ['cols' => implode(', ', $missing)]);
         }
@@ -296,6 +343,28 @@ final class ImportController extends Controller
             return t('The file has a header row but no people.');
         }
         return [$header, $lines];
+    }
+
+    /**
+     * Accounts that already use these emails or usernames, in any school (the import refuses another school's).
+     * @param list<string> $values
+     * @return array<string,array<string,mixed>>
+     */
+    private static function existing(string $column, array $values): array
+    {
+        $found = [];
+        foreach (array_chunk($values, 400) as $chunk) {
+            [$in, $params] = Db::in($chunk, 'v');
+            foreach (Db::all("SELECT id, email, username, organization_id, role, given_name, family_name, preferred_name FROM users WHERE $column IN " . $in, $params) as $u) {
+                $found[mb_strtolower((string) $u[$column])] = $u;
+            }
+        }
+        return $found;
+    }
+
+    private static function nameKey(string $role, string $given, string $family, string $grade): string
+    {
+        return mb_strtolower($role . '|' . trim($given) . '|' . trim($family) . '|' . ($role === 'student' ? trim($grade) : ''));
     }
 
     private function enrol(int $classId, int $userId, string $role): bool

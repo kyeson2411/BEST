@@ -62,7 +62,7 @@ $statusBadge = static function (array $u): string {
           <tr>
             <td class="cell-primary">
               <a class="row__title" href="<?= e(url('/admin/users/' . (int) $u['id'])) ?>"><?= e(user_name($u)) ?></a>
-              <span class="table-sub"><?= e($u['email']) ?></span>
+              <span class="table-sub"><?= e(implode(' · ', array_filter([(string) $u['username'], (string) $u['email']]))) ?></span>
               <span class="summary-line only-mobile"><?= $statusBadge($u) ?><span><?= e(role_label($u['role'])) ?><?= $u['grade_level'] ? ', ' . e($u['grade_level']) : '' ?></span><span><?= e(tp(':count class', ':count classes', (int) $u['classes'])) ?></span></span>
             </td>
             <td data-label="<?= e(t('Role')) ?>"><?= e(role_label($u['role'])) ?><?php if ($u['grade_level']): ?><span class="table-sub"><?= e($u['grade_level']) ?></span><?php endif; ?></td>

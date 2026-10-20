@@ -17,7 +17,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 89 PHP tests, 58 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 106 PHP tests, 62 browser tests, all passing |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
 
@@ -28,6 +28,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Student, teacher, school administrator roles | Done | |
 | Super administrator | Documented only | Multiple schools can share a database; creating a school is a command-line task (`school:create`). There is no cross-school admin screen. |
 | Invitation onboarding with one-time links | Done | Links are shown to the administrator (no email); browser test covers invite → set password → reuse refused |
+| Accounts without email: usernames, sign-in slips, advisers | Done | Migration 009: optional email, unique usernames made from names (`Services/Usernames.php`), sections from class section names with one adviser each (`Services/Sections.php`). Sign-in by username or email. Printable setup and password slips with a typeable one-time code and a QR code (`Services/SignInSlips.php`, `Services/Qr.php`, `/start`), from the import result, a class roster, the adviser's page or a person's page; teachers and advisers reach only students of their own classes or section (`Access::studentAccount`, 404 otherwise); audit-logged without codes. PHPUnit `AccountsWithoutEmailTest`, `UsernamesAndCodesTest`, `QrTest` (independent decoder, published test vectors); browser `signin-slips.spec`. Not yet scanned from paper with a phone |
 | CSV import with preview and row-level problems | Done | browser test with valid, invalid, duplicate and existing rows |
 | Time-limited, revocable class codes | Done | teacher class page; policy switch disables all codes |
 
@@ -96,9 +97,9 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Requirement | Status | Notes |
 |---|---|---|
 | Design direction ("field notes meets a learning studio"), Lucide icons, no fake analytics | Done | `docs/design-system.md`; usage and insight numbers come from real records only |
-| Layouts at 1440, 1024 and 390 px | Done | screenshots; phone test on 20 screens |
-| WCAG 2.2 AA structure and contrast | Partial | automated structural checks on 31 screens and contrast maths; no manual screen-reader test |
-| Filipino interface | Done (needs review) | all 2,433 strings translated; companion answers follow the session and question language, in demo mode too; drafted with AI, not yet reviewed by a Filipino teacher |
+| Layouts at 1440, 1024 and 390 px | Done | screenshots; phone test on 23 screens |
+| WCAG 2.2 AA structure and contrast | Partial | automated structural checks on 34 screens and contrast maths; no manual screen-reader test |
+| Filipino interface | Done (needs review) | all 2,536 strings translated; companion answers follow the session and question language, in demo mode too; drafted with AI, not yet reviewed by a Filipino teacher |
 | Text written by scripts is translated | Done | `Services/ScriptStrings.php` via `data-i18n`; `ScriptStringsTest` fails on English literals in `public/assets/js`; browser `script-text.spec` checks Filipino flashcard and companion text |
 | Email delivery, SSO, MFA | Not done | |
 | Virus scanning of uploads | Not done | |

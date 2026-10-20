@@ -5,8 +5,8 @@ import { demoLogin } from './helpers.mjs';
 // scrolling and keep the bottom navigation reachable.
 const screens = {
   student: ['student', 'student/assignments', 'student/classes', 'companion', 'student/progress', 'student/calendar', 'student/learning'],
-  teacher: ['teacher', 'teacher/review', 'teacher/assignments', 'teacher/materials', 'teacher/gradebook', 'teacher/insights'],
-  admin: ['admin', 'admin/users', 'admin/classes', 'admin/usage', 'admin/policies', 'admin/privacy', 'admin/audit'],
+  teacher: ['teacher', 'teacher/review', 'teacher/assignments', 'teacher/materials', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory'],
+  admin: ['admin', 'admin/users', 'admin/classes', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/privacy', 'admin/audit'],
 };
 
 for (const [role, paths] of Object.entries(screens)) {
@@ -29,7 +29,7 @@ test('the sign-in page fits a phone with the seal pinned to the photo', async ({
   const seal = await page.locator('.auth__seal').boundingBox();
   expect(seal.y).toBeLessThan(photo.y + photo.height);
   expect(seal.y + seal.height).toBeGreaterThan(photo.y + photo.height);
-  await expect(page.getByLabel('Email')).toBeInViewport();
+  await expect(page.getByLabel('Username or email')).toBeInViewport();
 });
 
 test('the menu drawer opens from the bottom bar', async ({ page }) => {

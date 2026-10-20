@@ -42,7 +42,7 @@ $labels = [
       <?php foreach ($rows as $r): [$label, $tone] = $labels[$r['action']]; ?>
         <tr>
           <td class="num" data-label="<?= e(t('Line')) ?>"><?= (int) $r['line'] ?></td>
-          <td class="cell-primary"><span class="row__title"><?= e(trim($r['given_name'] . ' ' . $r['family_name']) ?: '—') ?></span><span class="table-sub"><?= e($r['email'] ?: '—') ?></span></td>
+          <td class="cell-primary"><span class="row__title"><?= e(trim($r['given_name'] . ' ' . $r['family_name']) ?: '—') ?></span><span class="table-sub"><?= e(implode(' · ', array_filter([$r['username'] ?? '', $r['email']])) ?: ($r['action'] === 'create' ? t('Username made from the name') : '—')) ?></span></td>
           <td data-label="<?= e(t('Role')) ?>"><?= e(in_array($r['role'], ['student', 'teacher', 'admin'], true) ? role_label($r['role']) : $r['role']) ?><?php if ($r['grade_level'] !== ''): ?><span class="table-sub"><?= e($r['grade_level']) ?></span><?php endif; ?></td>
           <td data-label="<?= e(t('Class')) ?>"><?= e($r['class_name'] ?? ($r['class_input'] ?: '—')) ?></td>
           <td data-label="<?= e(t('Result')) ?>"><?= badge($label, $tone) ?>
@@ -55,7 +55,7 @@ $labels = [
 
 <div class="form-actions" style="margin-top: 24px">
   <?php if ($create + $enrol > 0): ?>
-    <form method="post" action="<?= e(url('/admin/users/import/confirm')) ?>" data-confirm="<?= e(t(':n new accounts will be created with invitation links, and :m class enrolments added.', ['n' => $create, 'm' => $enrol + count(array_filter($rows, static fn ($r) => $r['action'] === 'create' && $r['class_id']))])) ?>" data-confirm-title="<?= e(t('Import now?')) ?>" data-confirm-action="<?= e(t('Import')) ?>">
+    <form method="post" action="<?= e(url('/admin/users/import/confirm')) ?>" data-confirm="<?= e(t(':n new accounts will be created with one-time sign-in codes, and :m class enrolments added.', ['n' => $create, 'm' => $enrol + count(array_filter($rows, static fn ($r) => $r['action'] === 'create' && $r['class_id']))])) ?>" data-confirm-title="<?= e(t('Import now?')) ?>" data-confirm-action="<?= e(t('Import')) ?>">
       <?= csrf_field() ?><input type="hidden" name="key" value="<?= e($key) ?>">
       <button class="btn btn--primary" type="submit" data-busy="<?= e(t('Importing…')) ?>"><?= icon('user-plus', 'icon--sm') ?><?= e(tp('Import :count person', 'Import :count people', $create + $enrol)) ?></button>
     </form>

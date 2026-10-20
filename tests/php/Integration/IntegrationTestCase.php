@@ -37,14 +37,14 @@ abstract class IntegrationTestCase extends TestCase
         Settings::flush();
     }
 
-    /** A demo account as the app loads it for a signed-in request. */
-    protected function person(string $emailLocal): array
+    /** A demo account (by username, e.g. "andrea.cruz") as the app loads it for a signed-in request. */
+    protected function person(string $username): array
     {
         $user = Db::one(
-            'SELECT u.*, o.name AS org_name, o.timezone AS org_timezone FROM users u JOIN organizations o ON o.id = u.organization_id WHERE u.email = :e',
-            ['e' => $emailLocal . '@demo.sibol.test']
+            'SELECT u.*, o.name AS org_name, o.timezone AS org_timezone FROM users u JOIN organizations o ON o.id = u.organization_id WHERE u.username = :u',
+            ['u' => $username]
         );
-        self::assertNotNull($user, 'Missing demo account ' . $emailLocal);
+        self::assertNotNull($user, 'Missing demo account ' . $username);
         return $user;
     }
 

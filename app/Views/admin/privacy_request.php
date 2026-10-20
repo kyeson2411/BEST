@@ -50,7 +50,7 @@ $erased = $person['anonymized_at'] !== null;
               <?= csrf_field() ?>
               <ul class="plain-list">
                 <li><?= e(tp(':count companion conversation', ':count companion conversations', (int) $counts['conversations'])) ?>, <?= e(tp(':count practice set', ':count practice sets', (int) $counts['practice'])) ?>, <?= e(tp(':count study session', ':count study sessions', (int) $counts['sessions'])) ?> <?= e(t('and :n shared excerpts are deleted.', ['n' => (int) $counts['shares']])) ?></li>
-                <li><?= e(t('Name, email, photo and preferences are removed; the account becomes “Former :role” and can no longer sign in.', ['role' => lcfirst_u(role_label($person['role']))])) ?></li>
+                <li><?= e(t('Name, username, email, photo and preferences are removed; the account becomes “Former :role” and can no longer sign in.', ['role' => lcfirst_u(role_label($person['role']))])) ?></li>
               </ul>
               <?= checkbox('include_records', tp('Also delete :count submission with its grades and files', 'Also delete :count submissions with their grades and files', (int) $counts['submissions']), false, t('Leave unticked to keep school records, which then no longer show who submitted them.')) ?>
               <?= field('textarea', 'resolution_note', t('Note for the record'), ['rows' => 2, 'optional_label' => true, 'attrs' => ['maxlength' => 2000]]) ?>

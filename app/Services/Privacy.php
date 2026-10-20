@@ -19,7 +19,7 @@ final class Privacy
     /** Builds a JSON export of everything Sibol holds about a person and stores it outside the web root. */
     public static function export(int $userId): string
     {
-        $user = Db::one('SELECT id, role, email, given_name, family_name, preferred_name, grade_level, language, timezone, status, created_at, last_login_at FROM users WHERE id = :u', ['u' => $userId]);
+        $user = Db::one('SELECT id, role, username, email, given_name, family_name, preferred_name, grade_level, language, timezone, status, created_at, last_login_at FROM users WHERE id = :u', ['u' => $userId]);
         $data = [
             'generated_at' => gmdate('c'),
             'about' => 'This file contains the information Sibol holds about you. Times are in UTC.',
@@ -82,7 +82,8 @@ final class Privacy
                 'given_name' => 'Former',
                 'family_name' => ucfirst((string) $user['role']) . ' ' . $userId,
                 'preferred_name' => null,
-                'email' => 'erased-' . $userId . '-' . bin2hex(random_bytes(3)) . '@invalid.example',
+                'email' => null,
+                'username' => null,
                 'password_hash' => null,
                 'avatar_path' => null,
                 'preferences' => null,

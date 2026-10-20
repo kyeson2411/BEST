@@ -50,7 +50,7 @@ final class GradebookController extends Controller
         $book = Grades::classBook($id, (int) $user['organization_id']);
         $out = fopen('php://temp', 'w+');
         fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM so spreadsheet apps read names correctly
-        $header = [t('Family name'), t('Given name'), t('Email')];
+        $header = [t('Family name'), t('Given name'), t('Username'), t('Email')];
         foreach ($book['assignments'] as $a) {
             $header[] = $a['title'] . ' (/' . fmt_number($a['points_possible'], 2) . ')';
         }
@@ -58,7 +58,7 @@ final class GradebookController extends Controller
         $header[] = t('Descriptor');
         fputcsv($out, array_map([$this, 'cell'], $header));
         foreach ($book['students'] as $s) {
-            $row = [$s['family_name'], $s['given_name'], $s['email']];
+            $row = [$s['family_name'], $s['given_name'], (string) $s['username'], (string) $s['email']];
             foreach ($book['assignments'] as $a) {
                 $cell = $book['cells'][(int) $s['id']][(int) $a['id']] ?? null;
                 $row[] = $cell === null ? '' : ($cell['state'] === 'graded' ? fmt_number($cell['score'], 2) : (['missing' => t('missing'), 'pending' => t('to grade'), 'excused' => t('excused')][$cell['state']] ?? ''));

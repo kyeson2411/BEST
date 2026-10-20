@@ -31,7 +31,7 @@ test('a teacher gives one student more time and excuses another', async ({ page 
 });
 
 test('the student uses his own due date and extra minutes', async ({ page }) => {
-  await passwordLogin(page, 'carlo.reyes@demo.sibol.test');
+  await passwordLogin(page, 'carlo.reyes');
   await expect(page).toHaveURL(/\/student$/);
   await expect(page.locator('main')).toContainText(QUIZ);
 
@@ -54,7 +54,7 @@ test('answers released after the due date wait for the extension', async ({ page
 });
 
 test('the excused student sees the work as excused', async ({ page }) => {
-  await passwordLogin(page, 'paolo.aquino@demo.sibol.test');
+  await passwordLogin(page, 'paolo.aquino');
   await expect(page).toHaveURL(/\/student$/);
   await page.goto(`student/assignments/${ids().sciPastQuiz}`);
   await expect(page.getByText('You are excused from this work')).toBeVisible();
