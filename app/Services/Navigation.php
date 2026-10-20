@@ -51,7 +51,7 @@ final class Navigation
                     ['label' => t('Overview'), 'icon' => 'layout-dashboard', 'url' => '/admin', 'exact' => true, 'bottom' => true],
                     ['label' => t('People'), 'icon' => 'users', 'url' => '/admin/users', 'bottom' => true],
                     ['label' => t('Classes'), 'icon' => 'school', 'url' => '/admin/classes', 'bottom' => true],
-                    ['label' => t('Subjects and terms'), 'icon' => 'layers', 'url' => '/admin/subjects', 'also' => ['/admin/academic-periods', '/admin/sections']],
+                    ['label' => t('Subjects and terms'), 'icon' => 'layers', 'url' => '/admin/subjects', 'also' => ['/admin/academic-periods', '/admin/sections', '/admin/competencies']],
                     ['label' => t('AI usage'), 'icon' => 'gauge', 'url' => '/admin/usage'],
                     ['label' => t('Policies'), 'icon' => 'sliders-horizontal', 'url' => '/admin/policies'],
                     ['label' => t('Privacy and safety'), 'short' => t('Privacy'), 'icon' => 'shield-check', 'url' => '/admin/privacy', 'count' => self::adminOpenItems((int) $user['organization_id']), 'bottom' => true],

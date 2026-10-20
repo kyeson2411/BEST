@@ -18,6 +18,7 @@ use Sibol\Services\Ai\Generators;
 use Sibol\Services\Ai\Retrieval;
 use Sibol\Services\Ai\Usage;
 use Sibol\Services\Assessments;
+use Sibol\Services\Competencies;
 use Sibol\Services\Grades;
 use Sibol\Services\Notifier;
 use Sibol\Services\Overrides;
@@ -159,6 +160,7 @@ final class AssignmentController extends Controller
         $user = $this->user();
         $a = Access::teacherAssignment($user, $id);
         $classes = TeacherRepo::classes($user);
+        $questions = Assessments::questions($id);
         return $this->view('teacher/assignment_edit', [
             'title' => t('Edit :title', ['title' => $a['title']]),
             'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], '/teacher/assignments/' . $id], [t('Edit'), null]],
@@ -169,7 +171,10 @@ final class AssignmentController extends Controller
             'modules' => $this->modules([(int) $a['class_id']]),
             'categories' => Grades::categoryOptions((int) $user['organization_id']),
             'gradingPeriods' => $this->gradingPeriods([(int) $a['class_id']]),
-            'questions' => Assessments::questions($id),
+            'questions' => $questions,
+            // The school's learning competencies for this class, and those questions are already tagged with.
+            'competencies' => Competencies::forClass((int) $a['class_id']),
+            'tagged' => Competencies::byIds(array_column($questions, 'competency_id')),
             'rubric' => json_decode((string) ($a['rubric'] ?? ''), true) ?: [],
             'locked' => Assessments::hasAttempts($id),
             'problems' => Assessments::publishProblems($a),
@@ -239,6 +244,28 @@ final class AssignmentController extends Controller
         $this->afterQuestionChange($a, (int) $user['id']);
         $this->flash('success', t('Question saved.'));
         return $this->redirect('/teacher/assignments/' . $assignmentId . '/edit#q-' . $id);
+    }
+
+    /** Tags a question with the learning competency it assesses. Allowed after students have answered: it is not the question. */
+    public function tagQuestion(int $assignmentId, int $id): Response
+    {
+        $a = Access::teacherAssignment($this->user(), $assignmentId);
+        $this->question($assignmentId, $id);
+        $back = '/teacher/assignments/' . $assignmentId . '/edit#q-' . $id;
+        $code = trim($this->request->str('code'));
+        if ($code === '') {
+            Competencies::tagQuestion($id, null);
+            $this->flash('success', t('The question has no competency now.'));
+            return $this->redirect($back);
+        }
+        $competency = Competencies::findForClass((int) $a['class_id'], $code);
+        if ($competency === null) {
+            $this->flash('error', t('":code" is not on your school\'s list of competencies for this class.', ['code' => $code]));
+            return $this->redirect($back);
+        }
+        Competencies::tagQuestion($id, (int) $competency['id']);
+        $this->flash('success', t('Question tagged with :code.', ['code' => $competency['code']]));
+        return $this->redirect($back);
     }
 
     public function deleteQuestion(int $assignmentId, int $id): Response

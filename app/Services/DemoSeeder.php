@@ -70,6 +70,7 @@ final class DemoSeeder
         }
         Db::transaction(function (): void {
             $this->assignments();
+            $this->competencies();
             $this->activity();
         });
         $this->companion();
@@ -567,6 +568,40 @@ final class DemoSeeder
             $this->actAs($teacher);
             Assessments::release($sub, $assignment, $this->u[$teacher]);
             Db::update('submissions', ['released_at' => $when], ['id' => (int) $sub['id']]);
+        }
+    }
+
+    /**
+     * Sample learning competencies for Science 9, marked as samples (codes starting with DEMO-), so nobody takes them
+     * for the MATATAG curriculum's: a real school imports its own list. The demo quizzes' questions and the lessons
+     * are tagged with them, so class insights show results by competency.
+     */
+    private function competencies(): void
+    {
+        $add = fn (string $code, int $quarter, string $description): int => Db::insert('competencies', [
+            'organization_id' => $this->org, 'code' => $code, 'description' => $description,
+            'subject_id' => $this->mod['subject_science'], 'grade_level' => 'Grade 9', 'quarter' => $quarter, 'is_sample' => 1,
+            'created_at' => $this->ago('-100 days'), 'updated_at' => $this->ago('-100 days'),
+        ]);
+        $gas = $add('DEMO-SCI9-Q1-01', 1, 'Explain how the respiratory and circulatory systems work together to bring oxygen to the cells and remove carbon dioxide.');
+        $heart = $add('DEMO-SCI9-Q1-02', 1, 'Identify the parts of the heart and the blood vessels and describe what each one does.');
+        $breathing = $add('DEMO-SCI9-Q1-03', 1, 'Describe how the diaphragm and the ribs change the size of the chest cavity during breathing.');
+        $genes = $add('DEMO-SCI9-Q2-01', 2, 'Explain how traits pass from parents to offspring through genes and alleles, including patterns beyond simple dominance.');
+        $punnett = $add('DEMO-SCI9-Q2-02', 2, 'Use a Punnett square to predict the offspring of a cross and express the results as ratios.');
+        [$in, $params] = Db::in([$this->c['sci_narra'], $this->c['sci_molave']], 'c');
+        $topics = ['Gas exchange' => $gas, 'The heart' => $heart, 'Blood vessels' => $heart, 'Breathing' => $breathing,
+            'Vocabulary' => $genes, 'Non-Mendelian inheritance' => $genes, 'Punnett squares' => $punnett];
+        foreach ($topics as $topic => $id) {
+            Db::exec(
+                "UPDATE questions q JOIN assignments a ON a.id = q.assignment_id SET q.competency_id = :id WHERE q.topic = :t AND a.class_id IN $in",
+                ['id' => $id, 't' => $topic] + $params
+            );
+        }
+        foreach (['Gas exchange in the alveoli' => $gas, 'Punnett squares in practice' => $punnett] as $title => $id) {
+            Db::exec(
+                "INSERT INTO lesson_competencies (lesson_id, competency_id) SELECT l.id, :id FROM lessons l WHERE l.title = :t AND l.class_id IN $in",
+                ['id' => $id, 't' => $title] + $params
+            );
         }
     }
 

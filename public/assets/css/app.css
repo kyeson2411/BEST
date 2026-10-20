@@ -497,6 +497,12 @@ legend { padding: 0; margin-bottom: var(--s-2); font-weight: 700; font-size: var
 .error-page { padding: var(--s-7) 0; max-width: 58ch; }
 .error-page__code { font-family: var(--font-display); font-size: 4rem; font-weight: 700; color: var(--sage); line-height: 1; margin-bottom: var(--s-3); }
 
+/* Learning competencies: the code under a question (a tag, editable after answers), the list in a lesson's details. */
+.competency-tag { margin-top: var(--s-4); padding-top: var(--s-3); border-top: 1px solid var(--rule); }
+.competency-tag__code { max-width: 16rem; }
+.competency-pick > summary { cursor: pointer; font-weight: 600; margin-bottom: var(--s-2); }
+.competency-pick__quarter { margin: var(--s-3) 0 var(--s-2); font-size: 0.8125rem; font-weight: 700; color: var(--ink-3); }
+
 /* Two-step sign-in: the QR code beside its typed key, and the recovery codes (printable). */
 .two-step { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--s-5); align-items: start; }
 .two-step__qr { display: block; width: 200px; height: 200px; border: 1px solid var(--rule); border-radius: 6px; }
@@ -1180,6 +1186,7 @@ input[type="file"]::file-selector-button:hover { background: var(--sage-soft); }
 .dll__table .prose { font-size: inherit; }
 .dll__table .prose > :last-child { margin-bottom: 0; }
 .dll__sources { margin: 0; padding-left: 1.25em; }
+.dll__codes { margin: 0 0 var(--s-2); padding-left: 1.25em; }
 .dll__blank { display: block; min-height: 2.5em; }
 @media print {
   .dll__head th, .dll__table th[scope="row"], .dll__part th { background: none; }

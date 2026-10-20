@@ -1,4 +1,4 @@
-<?php /** @var array $class @var list<array> $topics @var list<array> $completion @var list<array> $questions @var int $enrolled @var string|null $ideas @var int|null $aiRemaining */
+<?php /** @var array $class @var list<array> $topics @var list<array> $competencies @var list<array> $completion @var list<array> $questions @var int $enrolled @var string|null $ideas @var int|null $aiRemaining */
 use Sibol\Services\Insights;
 
 $flagged = array_values(array_filter($topics, static fn ($t) => $t['students'] >= Insights::MIN_STUDENTS && $t['correct_pct'] < Insights::WEAK_PCT));
@@ -30,6 +30,53 @@ $past = array_values(array_filter($completion, static fn ($c) => $c['due_at'] !=
         </ul>
         <details class="how"><summary><?= e(t('How this is calculated')) ?></summary><div>
           <p><?= e(t('Each bar is the share of correct answers to automatically marked questions tagged with that topic, across all submitted attempts. A topic is flagged when at least :n students answered and fewer than :pct% of answers were correct.', ['n' => Insights::MIN_STUDENTS, 'pct' => (int) Insights::WEAK_PCT])) ?></p>
+        </div></details>
+      <?php endif; ?>
+    </section>
+
+    <section class="section" id="competencies" aria-labelledby="lc-title">
+      <?php
+      $taught = count(array_filter($competencies, static fn ($c) => $c['lessons'] > 0));
+      $assessed = count(array_filter($competencies, static fn ($c) => $c['attempts'] > 0));
+      ?>
+      <div class="section__head"><h2 class="section__title" id="lc-title"><?= e(t('Learning competencies')) ?></h2>
+        <?php if ($competencies): ?><span class="meta"><?= e(t(':taught of :total taught in a lesson, :assessed with answered questions', ['taught' => $taught, 'total' => count($competencies), 'assessed' => $assessed])) ?></span><?php endif; ?></div>
+      <?php if (!$competencies): ?>
+        <p class="meta"><?= e(t('Your school has not added learning competencies for this subject yet. Once an administrator imports them, tag questions and lessons with their codes to see results here.')) ?></p>
+      <?php else: ?>
+        <div class="table-frame">
+          <table class="table table--stack">
+            <caption class="sr-only"><?= e(t('Results by learning competency')) ?></caption>
+            <thead><tr>
+              <th scope="col"><?= e(t('Competency')) ?></th>
+              <th scope="col" class="num"><?= e(t('Lessons')) ?></th>
+              <th scope="col" class="num"><?= e(t('Questions')) ?></th>
+              <th scope="col"><?= e(t('Correct answers')) ?></th>
+            </tr></thead>
+            <tbody>
+              <?php foreach ($competencies as $c):
+                  $small = $c['students'] < Insights::MIN_STUDENTS;
+                  $weak = !$small && $c['correct_pct'] !== null && $c['correct_pct'] < Insights::WEAK_PCT; ?>
+                <tr>
+                  <td class="cell-primary"><strong class="code-text"><?= e($c['code']) ?></strong><?php if ($c['is_sample']): ?> <?= badge(t('Sample'), 'neutral') ?><?php endif; ?><?php if ($weak): ?> <?= badge(t('May need reteaching'), 'amber', 'circle-alert') ?><?php endif; ?>
+                    <span class="table-sub"><?= e(($c['quarter'] ? t('Quarter :n', ['n' => $c['quarter']]) . ' · ' : '') . $c['description']) ?></span></td>
+                  <td class="num" data-label="<?= e(t('Lessons')) ?>"><?= (int) $c['lessons'] ?></td>
+                  <td class="num" data-label="<?= e(t('Questions')) ?>"><?= (int) $c['questions'] ?></td>
+                  <td data-label="<?= e(t('Correct answers')) ?>" style="min-width: 180px">
+                    <?php if ($c['correct_pct'] === null): ?>
+                      <span class="meta"><?= e($c['questions'] ? t('No answers yet') : t('Not assessed yet')) ?></span>
+                    <?php else: ?>
+                      <?= partial('meter', ['value' => $c['correct_pct'], 'label' => fmt_number($c['correct_pct']) . '%']) ?>
+                      <span class="table-sub"><?= e(tp(':count student', ':count students', $c['students'])) ?><?= $small ? ', ' . e(t('too few to judge')) : '' ?></span>
+                    <?php endif; ?>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+        <details class="how"><summary><?= e(t('How this is calculated')) ?></summary><div>
+          <p><?= e(t('Each question can be tagged with the one competency it assesses, and each lesson with those it teaches (on the question in the assignment\'s editor, and in the lesson\'s details). The share is of correct answers to automatically marked questions with that competency, in submitted work. A competency is flagged when at least :n students answered and fewer than :pct% of answers were correct.', ['n' => Insights::MIN_STUDENTS, 'pct' => (int) Insights::WEAK_PCT])) ?></p>
         </div></details>
       <?php endif; ?>
     </section>

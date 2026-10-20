@@ -15,6 +15,7 @@ use Sibol\Services\Ai\AiException;
 use Sibol\Services\Ai\Generators;
 use Sibol\Services\Ai\Retrieval;
 use Sibol\Services\Ai\Usage;
+use Sibol\Services\Competencies;
 use Sibol\Services\GradingPeriods;
 use Sibol\Services\LessonPlans;
 use Sibol\Services\Notifier;
@@ -153,6 +154,8 @@ final class LessonController extends Controller
             'content' => json_decode((string) $lesson['draft_content'], true) ?: [],
             'modules' => Db::all('SELECT id, title FROM modules WHERE class_id = :c ORDER BY position', ['c' => (int) $lesson['class_id']]),
             'copyPanel' => SectionCopies::panel($user, 'lesson', $lesson),
+            'competencies' => Competencies::forClass((int) $lesson['class_id']),
+            'chosen' => array_map('intval', array_column(Competencies::ofLesson($id), 'id')),
             'katex' => true,
         ]);
     }
@@ -192,6 +195,9 @@ final class LessonController extends Controller
             'objectives' => $content['objectives'], 'draft_content' => json_encode($content, JSON_UNESCAPED_UNICODE),
             'has_unpublished_changes' => $lesson['status'] === 'published' ? 1 : 0, 'updated_at' => Db::now(),
         ], ['id' => $id]);
+        if ($this->request->bool('competencies_shown')) {
+            Competencies::tagLesson($id, (int) $lesson['class_id'], $this->request->arr('competencies'));
+        }
         $this->flash('success', $lesson['status'] === 'published' ? t('Draft saved. Students still see the published version until you publish the changes.') : t('Draft saved.'));
         return $this->redirect($back);
     }
@@ -231,6 +237,7 @@ final class LessonController extends Controller
             'lesson' => $lesson,
             'content' => $content,
             'dll' => LessonPlans::dll($lesson, $content),
+            'competencies' => Competencies::ofLesson($id),
             'info' => [
                 'school' => (string) $class['org_name'],
                 'grade' => (string) ($lesson['grade_level'] ?: $class['grade_level']),
@@ -291,6 +298,10 @@ final class LessonController extends Controller
         $copy['created_at'] = Db::now();
         $copy['updated_at'] = Db::now();
         $newId = Db::insert('lessons', $copy);
+        Db::exec(
+            'INSERT INTO lesson_competencies (lesson_id, competency_id) SELECT :copy, competency_id FROM lesson_competencies WHERE lesson_id = :source',
+            ['copy' => $newId, 'source' => $id]
+        );
         $this->flash('success', t('Copy created as a draft.'));
         return $this->redirect('/teacher/lessons/' . $newId);
     }

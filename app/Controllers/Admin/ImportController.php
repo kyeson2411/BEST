@@ -10,6 +10,7 @@ use Sibol\Core\Db;
 use Sibol\Core\Response;
 use Sibol\Core\Session;
 use Sibol\Core\Uploads;
+use Sibol\Services\Csv;
 use Sibol\Services\Mailer;
 use Sibol\Services\Sections;
 use Sibol\Services\Settings;
@@ -338,48 +339,7 @@ final class ImportController extends Controller
     /** @return array{0:array<string,int>,1:list<array<int,string>>}|string */
     private function parse(string $content)
     {
-        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content) ?? '';
-        if (!mb_check_encoding($content, 'UTF-8')) {
-            $content = mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
-        }
-        $content = str_replace(["\r\n", "\r"], "\n", $content);
-        $firstLine = strtok($content, "\n") ?: '';
-        $delimiter = substr_count($firstLine, ';') > substr_count($firstLine, ',') ? ';' : ',';
-        $handle = fopen('php://temp', 'r+');
-        fwrite($handle, $content);
-        rewind($handle);
-        $headerRow = fgetcsv($handle, 0, $delimiter);
-        if (!$headerRow) {
-            return t('The file is empty.');
-        }
-        $header = [];
-        foreach ($headerRow as $i => $name) {
-            $name = mb_strtolower(trim((string) $name));
-            foreach (self::ALIASES as $key => $aliases) {
-                if (in_array($name, $aliases, true) && !isset($header[$key])) {
-                    $header[$key] = $i;
-                }
-            }
-        }
-        $missing = array_diff(['given_name', 'family_name'], array_keys($header));
-        if ($missing) {
-            return t('The first row must name the columns. Missing: :cols. Download the template to see the expected layout.', ['cols' => implode(', ', $missing)]);
-        }
-        $lines = [];
-        while (($line = fgetcsv($handle, 0, $delimiter)) !== false) {
-            if ($line === [null] || implode('', array_map('trim', array_map('strval', $line))) === '') {
-                continue;
-            }
-            $lines[] = $line;
-            if (count($lines) > self::MAX_ROWS) {
-                return t('The file has more than :n rows. Split it into smaller files.', ['n' => self::MAX_ROWS]);
-            }
-        }
-        fclose($handle);
-        if (!$lines) {
-            return t('The file has a header row but no people.');
-        }
-        return [$header, $lines];
+        return Csv::read($content, self::ALIASES, ['given_name', 'family_name'], self::MAX_ROWS, t('The file has a header row but no people.'));
     }
 
     /**

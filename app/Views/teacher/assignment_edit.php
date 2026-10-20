@@ -2,6 +2,7 @@
 /**
  * @var array $assignment @var string $kind @var list<array> $questions @var array $rubric @var bool $locked @var list<string> $problems
  * @var list<array> $materials @var list<int> $resources @var list<array> $allMaterials @var int|null $aiRemaining
+ * @var list<array> $competencies the class's learning competencies @var array<int,array> $tagged competencies questions use, by id
  */
 $a = $assignment;
 $isQuiz = $kind === 'quiz';
@@ -55,6 +56,11 @@ $base = '/teacher/assignments/' . (int) $a['id'];
         <?php if (!$questions): ?>
           <?= partial('empty', ['compact' => true, 'title' => t('No questions yet'), 'body' => t('Write questions below, or draft them from your class materials with the AI panel.')]) ?>
         <?php endif; ?>
+        <?php if ($competencies): ?>
+          <datalist id="competency-codes">
+            <?php foreach ($competencies as $c): ?><option value="<?= e($c['code']) ?>"><?= e(($c['quarter'] ? t('Q:n', ['n' => (int) $c['quarter']]) . ' · ' : '') . str_limit($c['description'], 120)) ?></option><?php endforeach; ?>
+          </datalist>
+        <?php endif; ?>
         <ol class="questions">
           <?php foreach ($questions as $i => $q): ?>
             <li class="question" id="q-<?= (int) $q['id'] ?>">
@@ -62,7 +68,7 @@ $base = '/teacher/assignments/' . (int) $a['id'];
                 <summary class="question__head" style="cursor:pointer; list-style:none">
                   <span class="question__no" aria-hidden="true"></span>
                   <span class="question__prompt"><?= e(str_limit($q['prompt'], 160)) ?>
-                    <span class="row__meta" style="font-weight:400"><span><?= e($typeLabels[$q['qtype']]) ?></span><?php if ($q['topic']): ?><span><?= e($q['topic']) ?></span><?php endif; ?></span>
+                    <span class="row__meta" style="font-weight:400"><span><?= e($typeLabels[$q['qtype']]) ?></span><?php if ($q['topic']): ?><span><?= e($q['topic']) ?></span><?php endif; ?><?php if (isset($tagged[(int) $q['competency_id']])): ?><span class="code-text"><?= e($tagged[(int) $q['competency_id']]['code']) ?></span><?php endif; ?></span>
                   </span>
                   <span class="cluster" style="flex-shrink:0">
                     <?php if (!(int) $q['reviewed']): ?><?= badge(t('AI draft: needs review'), 'amber') ?><?php elseif ((int) $q['ai_generated']): ?><?= badge(t('AI draft, reviewed'), 'neutral') ?><?php endif; ?>
@@ -88,6 +94,18 @@ $base = '/teacher/assignments/' . (int) $a['id'];
                       <form method="post" action="<?= e(url($base . '/questions/' . (int) $q['id'] . '/move')) ?>"><?= csrf_field() ?><input type="hidden" name="direction" value="down"><button class="btn btn--quiet btn--sm" type="submit"<?= $i === count($questions) - 1 ? ' disabled' : '' ?>><?= icon('arrow-down', 'icon--sm') ?><?= e(t('Move down')) ?></button></form>
                       <form method="post" action="<?= e(url($base . '/questions/' . (int) $q['id'] . '/delete')) ?>" data-confirm="<?= e(t('This question will be removed.')) ?>" data-confirm-title="<?= e(t('Remove question?')) ?>" data-confirm-action="<?= e(t('Remove')) ?>" data-confirm-tone="danger"><?= csrf_field() ?><button class="btn btn--danger-quiet btn--sm" type="submit"><?= e(t('Remove')) ?></button></form>
                     </div>
+                  <?php endif; ?>
+                  <?php if ($competencies || isset($tagged[(int) $q['competency_id']])): $tag = $tagged[(int) $q['competency_id']] ?? null; ?>
+                    <?php /* The competency the question assesses: a tag, so it can change after students have answered. */ ?>
+                    <form class="competency-tag" method="post" action="<?= e(url($base . '/questions/' . (int) $q['id'] . '/competency')) ?>">
+                      <?= csrf_field() ?>
+                      <label class="field__label" for="qc-<?= (int) $q['id'] ?>"><?= e(t('Learning competency')) ?></label>
+                      <div class="cluster">
+                        <input class="input competency-tag__code code-text" id="qc-<?= (int) $q['id'] ?>" name="code" list="competency-codes" value="<?= e($tag['code'] ?? '') ?>" maxlength="60" autocomplete="off" aria-describedby="qc-<?= (int) $q['id'] ?>-hint">
+                        <button class="btn btn--secondary btn--sm" type="submit"><?= e(t('Save competency')) ?></button>
+                      </div>
+                      <p class="field__hint" id="qc-<?= (int) $q['id'] ?>-hint"><?= e($tag ? $tag['description'] : t('Type or choose a code from your school\'s list. Leave it empty for none.')) ?></p>
+                    </form>
                   <?php endif; ?>
                 </div>
               </details>

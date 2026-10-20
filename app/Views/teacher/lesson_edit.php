@@ -49,6 +49,24 @@ $published = $lesson['status'] === 'published';
         <?= field('text', 'reading_level', t('Reading level'), ['value' => (string) $lesson['reading_level'], 'attrs' => ['maxlength' => 40]]) ?>
         <?= field('text', 'lesson_format', t('Format'), ['value' => (string) $lesson['lesson_format'], 'attrs' => ['maxlength' => 40]]) ?>
       </section>
+      <section class="panel" aria-labelledby="lc-title">
+        <h2 class="panel__title" id="lc-title"><?= e(t('Learning competencies')) ?></h2>
+        <?php if (!$competencies): ?>
+          <p class="meta" style="margin:0"><?= e(t('Your school has not added learning competencies for this class\'s subject yet. An administrator imports them under Subjects and terms.')) ?></p>
+        <?php else: ?>
+          <input type="hidden" name="competencies_shown" value="1">
+          <?php $chosenCodes = array_column(array_filter($competencies, static fn ($c) => in_array((int) $c['id'], $chosen, true)), 'code'); ?>
+          <?php if ($chosenCodes): ?><p class="code-text" style="margin:0 0 8px"><?= e(implode(', ', $chosenCodes)) ?></p><?php endif; ?>
+          <details class="competency-pick"<?= $chosen ? '' : ' open' ?>>
+            <summary><?= e($chosenCodes ? t('Change') : t('Choose')) ?></summary>
+            <p class="fieldset-hint"><?= e(t('What this lesson teaches. Saved with the draft; students do not see it. The Daily Lesson Log lists them with their codes.')) ?></p>
+            <?php $quarter = false; foreach ($competencies as $c): ?>
+              <?php if ($c['quarter'] !== $quarter): $quarter = $c['quarter']; ?><p class="competency-pick__quarter"><?= e($quarter ? t('Quarter :n', ['n' => (int) $quarter]) : t('Any quarter')) ?></p><?php endif; ?>
+              <?= checkbox('competencies[]', $c['code'], in_array((int) $c['id'], $chosen, true), $c['description'], (string) $c['id'], 'lc-' . (int) $c['id']) ?>
+            <?php endforeach; ?>
+          </details>
+        <?php endif; ?>
+      </section>
       <section class="panel" aria-labelledby="src-title">
         <h2 class="panel__title" id="src-title"><?= e(t('Sources')) ?></h2>
         <?php if (empty($content['sources'])): ?>

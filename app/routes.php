@@ -246,6 +246,7 @@ $router->group('/teacher', ['role:teacher', 'notices'], static function ($r): vo
     $r->post('/assignments/{assignmentId}/questions/{id}/delete', [Teacher\AssignmentController::class, 'deleteQuestion']);
     $r->post('/assignments/{assignmentId}/questions/{id}/approve', [Teacher\AssignmentController::class, 'approveQuestion']);
     $r->post('/assignments/{assignmentId}/questions/{id}/move', [Teacher\AssignmentController::class, 'moveQuestion']);
+    $r->post('/assignments/{assignmentId}/questions/{id}/competency', [Teacher\AssignmentController::class, 'tagQuestion']);
     $r->post('/assignments/{id}/rubric', [Teacher\AssignmentController::class, 'saveRubric']);
     $r->get('/assignments/{id}/preview', [Teacher\AssignmentController::class, 'preview']);
     $r->get('/assignments/{id}/print', [Teacher\AssignmentController::class, 'printView']);
@@ -348,6 +349,11 @@ $router->group('/admin', ['role:admin', 'notices'], static function ($r): void {
     $r->post('/grading/preset', [Admin\GradingController::class, 'preset']);
     $r->post('/grading/groups', [Admin\GradingController::class, 'groups']);
     $r->post('/grading/transmutation', [Admin\GradingController::class, 'transmutation']);
+    $r->get('/competencies', [Admin\CompetencyController::class, 'index']);
+    $r->get('/competencies/template', [Admin\CompetencyController::class, 'template']);
+    $r->post('/competencies/import', [Admin\CompetencyController::class, 'preview']);
+    $r->post('/competencies/import/confirm', [Admin\CompetencyController::class, 'confirm']);
+    $r->post('/competencies/{id}/archive', [Admin\CompetencyController::class, 'archive']);
     $r->get('/sections', [Admin\StructureController::class, 'sections']);
     $r->post('/sections/{id}', [Admin\StructureController::class, 'updateSection']);
     $r->post('/sections/{id}/delete', [Admin\StructureController::class, 'deleteSection']);

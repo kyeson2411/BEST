@@ -4,6 +4,7 @@
  * rows Sibol has nothing for stay blank to write in by hand. The log's labels follow the lesson's language.
  * @var array $lesson @var array $content @var array $dll from LessonPlans::dll
  * @var array{school:string,grade:string,teacher:string,area:string,quarter:string} $info
+ * @var list<array> $competencies the lesson's learning competencies, listed with their codes under I.C
  */
 $cites = [];
 foreach ((array) ($content['sources'] ?? []) as $s) {
@@ -60,6 +61,11 @@ foreach ((array) ($content['sources'] ?? []) as $s) {
                     <li id="dll-source-<?= (int) $s['n'] ?>"><?= e((string) $s['title']) ?><?php if (!empty($s['where'])): ?>, <?= e((string) $s['where']) ?><?php endif; ?></li>
                   <?php endforeach; ?>
                 </ol>
+              <?php elseif ($row['key'] === 'objectives' && $competencies): ?>
+                <ul class="dll__codes">
+                  <?php foreach ($competencies as $c): ?><li><strong class="code-text"><?= e($c['code']) ?></strong> <?= e($c['description']) ?></li><?php endforeach; ?>
+                </ul>
+                <?php if ($row['text'] !== ''): ?><div class="prose"><?= markdown($row['text'], ['citations' => $cites, 'heading_base' => 4]) ?></div><?php endif; ?>
               <?php elseif ($row['text'] !== ''): ?>
                 <div class="prose"><?= markdown($row['text'], ['citations' => $cites, 'heading_base' => 4]) ?></div>
               <?php else: ?>

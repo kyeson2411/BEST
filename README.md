@@ -409,8 +409,11 @@ and only older Sibol archives removed), and Google sign-in against a fake Google
 PKCE challenge; ID tokens refused for another client, issuer, nonce or school, an expired or future time, an
 unverified email, no signature, a changed payload or an unknown key; a state used once and only within ten
 minutes; Google's keys cached; existing accounts only, invited ones set up, roles untouched; and two-step sign-in
-still asking for its code).
-Last run: **188 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
+still asking for its code), and learning competencies (the import's check of every row, adding and updating but
+never deleting, an archived code coming back, the school's own column names and semicolons, a class offered only
+its subject's and grade's list, a lesson keeping only offered tags, results by competency matching the topics they
+were tagged from, and copies keeping their tags).
+Last run: **195 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -455,8 +458,10 @@ pages, a quiz and files not kept show the offline page in the person's language;
 name, message or form token; signing out removes the kept file), a teacher turning on two-step sign-in (the code
 step after the password and after a reset link, each app code and recovery code working once, and an
 administrator switching it off with the teacher told), Google sign-in staying off until it is set up (no button,
-its addresses not found), phone-width layout of 41 screens and structural accessibility checks on 58 screens.
-Last run: **104 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
+its addresses not found), an administrator importing learning competencies after checking each row and a
+teacher tagging a locked quiz's question and a lesson (an unknown code refused; insights and the Daily Lesson Log
+showing the code), phone-width layout of 46 screens and structural accessibility checks on 63 screens.
+Last run: **107 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
 
 ## Versions and performance
 
@@ -814,6 +819,24 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   - **Not done yet:** the school's own DLL template file has not been provided, so this is one lesson, not a week
     with a column per day. A DOCX or XLSX export waits for that file.
   - **Access:** teachers of the class only; others get a 404.
+  - **Competencies:** the lesson's learning competencies are listed under I.C with their codes, before the
+    objectives.
+- **Learning competencies.** The school's own list (for example the MATATAG curriculum's, with its codes) is
+  imported by an administrator under **Subjects and terms → Learning competencies**, from a CSV with the columns
+  `code` and `description`, and optionally `subject` (a subject's name or code), `grade_level` and `quarter`
+  (1 to 4). Every row is checked first: new, changed, unchanged, or a problem such as a missing code or
+  description, a code repeated in the file, an unknown subject or a quarter outside 1 to 4. Importing adds and
+  updates; nothing is ever deleted, and an administrator can archive a code so it is no longer offered.
+  - **Never made up:** Sibol ships no codes. The demo school's five are labelled samples (`DEMO-SCI9-...`, marked
+    "Sample"), not MATATAG codes.
+  - **Tagging:** a class is offered the competencies for its subject and grade level (and any without them). Each
+    question is tagged with the one competency it assesses, as in a table of specifications, by typing or
+    choosing its code under the question; this works even after students have answered, because it does not
+    change the question. A lesson lists the competencies it teaches in its details. Copies to other sections
+    and duplicates keep their tags.
+  - **Insights:** a class's insights list each competency with the lessons that teach it, the questions that
+    assess it, and the share of correct answers to those questions in submitted work, flagged for reteaching
+    like topics, and marked "too few to judge" when fewer than three students answered.
 - **Who may need a nudge.** A class's overview lists, by name, students with two or more pieces of work missing
   or handed in late among those due in the last 14 days. Each student's own due dates count, excused work is left
   out, and a student marked absent from work done in class counts as missing, as in the gradebook. The list is

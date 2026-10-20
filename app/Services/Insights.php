@@ -47,6 +47,71 @@ final class Insights
         return $out;
     }
 
+    /**
+     * Results by learning competency for the class's list (and any competency its questions or lessons use): lessons
+     * that teach it, questions that assess it, and correct answers to those questions in submitted work. Shares
+     * from fewer than MIN_STUDENTS students are not judged.
+     *
+     * @return list<array{id:int,code:string,description:string,quarter:?int,is_sample:bool,lessons:int,questions:int,attempts:int,students:int,correct:int,correct_pct:?float}>
+     */
+    public static function competencies(int $classId): array
+    {
+        $results = [];
+        foreach (Db::all(
+            "SELECT q.competency_id AS id, COUNT(*) AS attempts, COUNT(DISTINCT s.student_id) AS students, SUM(sa.is_correct) AS correct
+             FROM submission_answers sa
+             JOIN submissions s ON s.id = sa.submission_id AND s.status = 'submitted'
+             JOIN questions q ON q.id = sa.question_id
+             JOIN assignments a ON a.id = q.assignment_id
+             WHERE a.class_id = :c AND sa.is_correct IS NOT NULL AND q.competency_id IS NOT NULL
+             GROUP BY q.competency_id",
+            ['c' => $classId]
+        ) as $r) {
+            $results[(int) $r['id']] = $r;
+        }
+        $questions = [];
+        foreach (Db::all(
+            "SELECT q.competency_id AS id, COUNT(*) AS n FROM questions q JOIN assignments a ON a.id = q.assignment_id
+             WHERE a.class_id = :c AND a.status <> 'archived' AND q.competency_id IS NOT NULL GROUP BY q.competency_id",
+            ['c' => $classId]
+        ) as $r) {
+            $questions[(int) $r['id']] = (int) $r['n'];
+        }
+        $lessons = [];
+        foreach (Db::all(
+            "SELECT lc.competency_id AS id, COUNT(*) AS n FROM lesson_competencies lc JOIN lessons l ON l.id = lc.lesson_id
+             WHERE l.class_id = :c AND l.status <> 'archived' GROUP BY lc.competency_id",
+            ['c' => $classId]
+        ) as $r) {
+            $lessons[(int) $r['id']] = (int) $r['n'];
+        }
+        $list = [];
+        foreach (Competencies::forClass($classId) as $c) {
+            $list[(int) $c['id']] = $c;
+        }
+        $list += Competencies::byIds(array_merge(array_keys($results), array_keys($questions), array_keys($lessons)));
+        $out = [];
+        foreach ($list as $id => $c) {
+            $r = $results[$id] ?? null;
+            $attempts = $r ? (int) $r['attempts'] : 0;
+            $out[] = [
+                'id' => $id,
+                'code' => (string) $c['code'],
+                'description' => (string) $c['description'],
+                'quarter' => $c['quarter'] !== null ? (int) $c['quarter'] : null,
+                'is_sample' => (bool) $c['is_sample'],
+                'lessons' => $lessons[$id] ?? 0,
+                'questions' => $questions[$id] ?? 0,
+                'attempts' => $attempts,
+                'students' => $r ? (int) $r['students'] : 0,
+                'correct' => $r ? (int) $r['correct'] : 0,
+                'correct_pct' => $attempts > 0 ? round((int) $r['correct'] / $attempts * 100, 1) : null,
+            ];
+        }
+        usort($out, static fn ($a, $b) => [$a['quarter'] ?? 9, $a['code']] <=> [$b['quarter'] ?? 9, $b['code']]);
+        return $out;
+    }
+
     /** @return list<array<string,mixed>> per objective question */
     public static function questions(int $classId, ?int $assignmentId = null): array
     {

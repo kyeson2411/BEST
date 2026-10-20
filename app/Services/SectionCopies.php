@@ -35,7 +35,7 @@ final class SectionCopies
         'max_attempts', 'time_limit_minutes', 'points_possible', 'allow_text', 'allow_files', 'allow_resubmission', 'rubric',
         'feedback_release', 'answer_key_release', 'ai_assisted',
     ];
-    private const QUESTION_FIELDS = ['position', 'qtype', 'prompt', 'points', 'options', 'answer_key', 'explanation', 'topic', 'source_ref', 'ai_generated', 'reviewed'];
+    private const QUESTION_FIELDS = ['position', 'qtype', 'prompt', 'points', 'options', 'answer_key', 'explanation', 'topic', 'competency_id', 'source_ref', 'ai_generated', 'reviewed'];
     private const LESSON_FIELDS = ['title', 'grade_level', 'duration_minutes', 'reading_level', 'language', 'lesson_format', 'objectives', 'ai_assisted'];
 
     /**
@@ -195,6 +195,10 @@ final class SectionCopies
                 'created_at' => Db::now(),
                 'updated_at' => Db::now(),
             ]);
+            Db::exec(
+                'INSERT INTO lesson_competencies (lesson_id, competency_id) SELECT :copy, competency_id FROM lesson_competencies WHERE lesson_id = :source',
+                ['copy' => $id, 'source' => (int) $source['id']]
+            );
             Audit::log('lesson.copied', 'lesson', $id, ['from' => (int) $source['id'], 'class_id' => (int) $target['id']]);
             return $id;
         });

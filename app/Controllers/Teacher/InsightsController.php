@@ -46,6 +46,7 @@ final class InsightsController extends Controller
             'crumbs' => [[t('Insights'), '/teacher/insights'], [$class['name'], null]],
             'class' => $class,
             'topics' => Insights::topics($id),
+            'competencies' => Insights::competencies($id),
             'completion' => Insights::completion($id),
             'questions' => Insights::questions($id),
             'enrolled' => (int) Db::value("SELECT COUNT(*) FROM class_memberships WHERE class_id = :c AND role = 'student' AND status = 'active'", ['c' => $id]),

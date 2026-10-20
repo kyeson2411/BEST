@@ -7,7 +7,7 @@ const pages = {
   guest: ['', 'login', 'start', 'privacy', 'help', 'login?lang=fil', 'offline'],
   student: ['student', 'student/assignments', 'student/classes', 'companion/new', 'student/progress', 'student/progress/report', 'student/review', 'student/calendar', 'student/learning', 'settings', 'feedback'],
   teacher: ['teacher', 'teacher/review', 'teacher/comments', 'teacher/assignments/new', 'teacher/materials/new', 'teacher/lessons', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback', 'settings', 'settings/two-step'],
-  admin: ['admin', 'admin/users', 'admin/users/new', 'admin/users/import', 'admin/classes/new', 'admin/subjects', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/settings', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot', 'admin/grading', 'admin/academic-periods'],
+  admin: ['admin', 'admin/users', 'admin/users/new', 'admin/users/import', 'admin/classes/new', 'admin/subjects', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/settings', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot', 'admin/grading', 'admin/academic-periods', 'admin/competencies', 'admin/integrations'],
 };
 
 async function audit(page) {
@@ -74,6 +74,12 @@ test('the grading page with the comment bank, a class page and a Daily Lesson Lo
   expect(await audit(page), 'class page').toEqual([]);
   await page.goto(`teacher/lessons/${ids().lessonGasExchange}/dll`);
   expect(await audit(page), 'Daily Lesson Log').toEqual([]);
+  await page.goto(`teacher/lessons/${ids().lessonGasExchange}`);
+  expect(await audit(page), 'lesson editor with its competencies').toEqual([]);
+  await page.goto(`teacher/insights/${ids().classes.sciNarra}`);
+  expect(await audit(page), 'class insights by competency').toEqual([]);
+  await page.goto(`teacher/assignments/${ids().sciPastQuiz}/edit`);
+  expect(await audit(page), 'quiz editor with competency codes').toEqual([]);
 });
 
 test('an adviser\'s progress reports pass structural accessibility checks', async ({ page }) => {
