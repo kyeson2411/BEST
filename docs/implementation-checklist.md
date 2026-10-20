@@ -16,7 +16,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 40 PHP tests, 40 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 47 PHP tests, 41 browser tests, all passing |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
 
@@ -93,6 +93,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Design direction ("field notes meets a learning studio"), Lucide icons, no fake analytics | Done | `docs/design-system.md`; usage and insight numbers come from real records only |
 | Layouts at 1440, 1024 and 390 px | Done | screenshots; phone test on 20 screens |
 | WCAG 2.2 AA structure and contrast | Partial | automated structural checks on 31 screens and contrast maths; no manual screen-reader test |
-| Filipino interface | Done (needs review) | all 2,316 strings translated; drafted with AI, not yet reviewed by a Filipino teacher |
+| Filipino interface | Done (needs review) | all 2,340 strings translated; drafted with AI, not yet reviewed by a Filipino teacher |
+| Text written by scripts is translated | Done | `Services/ScriptStrings.php` via `data-i18n`; `ScriptStringsTest` fails on English literals in `public/assets/js`; browser `script-text.spec` checks Filipino flashcard and companion text |
 | Email delivery, SSO, MFA | Not done | |
 | Virus scanning of uploads | Not done | |

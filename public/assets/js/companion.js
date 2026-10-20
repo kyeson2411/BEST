@@ -9,6 +9,7 @@
   var exchanges = doc.getElementById('exchanges');
   var scroller = doc.getElementById('thread-scroll');
   var sessions = doc.getElementById('sessions');
+  var S = window.Sibol.strings(doc.querySelector('[data-companion]'));
   var controller = null;
 
   function $(sel, root) { return (root || doc).querySelector(sel); }
@@ -49,14 +50,14 @@
     if (copy) {
       var body = $(copy.getAttribute('data-copy-message'));
       if (body && navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(body.innerText.trim()).then(function () { window.Sibol.toast('Copied'); });
+        navigator.clipboard.writeText(body.innerText.trim()).then(function () { window.Sibol.toast(S('copied')); });
       } else if (body) {
         var range = doc.createRange();
         range.selectNodeContents(body);
         var sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
-        window.Sibol.toast('Text selected. Press Ctrl+C to copy.', 'info');
+        window.Sibol.toast(S('copy_selected'), 'info');
       }
       return;
     }
@@ -111,13 +112,14 @@
     sendBtn.hidden = on;
     stopBtn.hidden = !on;
     input.readOnly = on;
-    if (statusEl) statusEl.textContent = on ? 'Sibol is answering.' : '';
+    // Screen readers read this line out. When a turn ends, its last message ("Answer ready.", an error) stays.
+    if (statusEl && on) statusEl.textContent = S('answering');
   }
 
   function questionNode(text) {
     var wrap = el('div', 'msg msg--user');
     var who = el('div', 'msg__who');
-    who.appendChild(el('span', null, 'You'));
+    who.appendChild(el('span', null, S('you')));
     wrap.appendChild(who);
     wrap.appendChild(el('div', 'msg__body', text));
     return wrap;
@@ -126,14 +128,14 @@
     var art = el('article', 'msg msg--assistant is-streaming');
     art.setAttribute('aria-busy', 'true');
     var who = el('div', 'msg__who');
-    who.appendChild(el('span', null, 'Sibol'));
+    who.appendChild(el('span', null, S('assistant')));
     art.appendChild(who);
     var body = el('div', 'msg__body');
     var dots = el('span', 'thinking-dots');
     dots.appendChild(el('i'));
     dots.appendChild(el('i'));
     dots.appendChild(el('i'));
-    dots.appendChild(doc.createTextNode(' Thinking'));
+    dots.appendChild(doc.createTextNode(' ' + S('thinking')));
     body.appendChild(dots);
     art.appendChild(body);
     return art;
@@ -164,7 +166,7 @@
       body.textContent = message;
       if (retry !== false) {
         var actions = el('div', 'msg__actions');
-        var btn = el('button', 'btn btn--quiet', 'Try again');
+        var btn = el('button', 'btn btn--quiet', S('try_again'));
         btn.type = 'button';
         btn.setAttribute('data-regenerate', '');
         actions.appendChild(btn);
@@ -177,7 +179,7 @@
       var ev;
       try { ev = JSON.parse(line); } catch (e) { return; }
       if (ev.type === 'meta' && ev.sources && !started) {
-        $('.thinking-dots', body) && ($('.thinking-dots', body).lastChild.textContent = ' Reading ' + ev.sources + (ev.sources === 1 ? ' passage' : ' passages') + ' from your materials');
+        $('.thinking-dots', body) && ($('.thinking-dots', body).lastChild.textContent = ' ' + S('reading', { count: ev.sources }));
       } else if (ev.type === 'delta') {
         append(ev.text);
       } else if (ev.type === 'done') {
@@ -186,20 +188,22 @@
         live.remove();
         exchange.classList.remove('exchange--live');
         if (window.Sibol.renderMath) window.Sibol.renderMath(exchange);
-        if (statusEl) statusEl.textContent = 'Answer ready.';
+        if (statusEl) statusEl.textContent = S('ready');
         if (ev.title) {
           var heading = doc.getElementById('thread-title');
           if (heading) heading.textContent = ev.title;
           var current = doc.querySelector('.session-link[aria-current="page"] .session-link__title');
           if (current) current.textContent = ev.title;
-          doc.title = ev.title + ' – Sibol';
+          // Keep the layout's " – app name" suffix.
+          var dash = doc.title.lastIndexOf(' – ');
+          doc.title = ev.title + (dash === -1 ? '' : doc.title.slice(dash));
         }
         if (ev.remaining) {
           var left = form.querySelector('[data-remaining]');
           if (left) left.textContent = ev.remaining;
         }
       } else if (ev.type === 'error') {
-        fail(ev.message || 'Something went wrong.', ev.code !== 'limit');
+        fail(ev.message || S('failed'), ev.code !== 'limit');
       }
     }
 
@@ -212,8 +216,8 @@
     }).then(function (res) {
       var type = res.headers.get('content-type') || '';
       if (!res.ok || type.indexOf('json') !== -1 && type.indexOf('ndjson') === -1) {
-        return res.json().then(function (j) { fail(j.error || 'The request could not be completed.', res.status >= 500); },
-          function () { fail('The request could not be completed (' + res.status + ').'); });
+        return res.json().then(function (j) { fail(j.error || S('request_failed'), res.status >= 500); },
+          function () { fail(S('request_failed_status', { status: res.status })); });
       }
       var reader = res.body.getReader();
       var decoder = new TextDecoder();
@@ -222,7 +226,7 @@
         return reader.read().then(function (r) {
           if (r.done) {
             if (buffer) handle(buffer);
-            if (!finished) fail('The answer was interrupted. Try again.');
+            if (!finished) fail(S('interrupted'));
             return;
           }
           buffer += decoder.decode(r.value, { stream: true });
@@ -238,16 +242,17 @@
         finished = true;
         live.classList.remove('is-streaming');
         live.removeAttribute('aria-busy');
-        var note = el('p', 'meta', 'Stopped. What was written so far has been saved.');
+        var note = el('p', 'meta', S('stopped'));
         live.appendChild(note);
+        if (statusEl) statusEl.textContent = S('stopped');
         var actions = el('div', 'msg__actions');
-        var btn = el('button', 'btn btn--quiet', 'Try again');
+        var btn = el('button', 'btn btn--quiet', S('try_again'));
         btn.type = 'button';
         btn.setAttribute('data-regenerate', '');
         actions.appendChild(btn);
         live.appendChild(actions);
       } else if (!finished) {
-        fail('The connection was lost. Check your internet connection and try again.');
+        fail(S('connection_lost'));
       }
     }).finally(function () {
       controller = null;

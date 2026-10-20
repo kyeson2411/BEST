@@ -4,6 +4,7 @@
   'use strict';
   var box = document.querySelector('[data-material-status]');
   if (!box || box.getAttribute('data-working') !== '1') return;
+  var S = window.Sibol.strings(box);
   var csrf = (window.Sibol && window.Sibol.csrf) || '';
   var badge = box.querySelector('[data-status-badge]');
   var detail = box.querySelector('[data-status-detail]');
@@ -17,7 +18,7 @@
       badge.appendChild(b);
     }
     if (detail) {
-      detail.textContent = s.status === 'ready' ? s.chunks + ' passages indexed.' : (s.error || 'Working…');
+      detail.textContent = s.status === 'ready' ? S('indexed', { count: s.chunks }) + '.' : (s.error || S('working'));
     }
   }
 
@@ -32,6 +33,6 @@
       if (s.status === 'ready' || s.status === 'failed' || s.status === 'unsupported') window.location.reload();
     })
     .catch(function () {
-      if (detail) detail.textContent = 'Could not start processing. Reload the page to try again.';
+      if (detail) detail.textContent = S('start_failed');
     });
 })();

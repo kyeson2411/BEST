@@ -38,7 +38,8 @@ $working = in_array($status, ['uploaded', 'extracting', 'indexing'], true);
   <div class="stack">
     <?php if ($isFile): ?>
       <section class="section" aria-labelledby="proc-title" data-material-status="<?= e(url('/teacher/materials/' . (int) $material['id'] . '/status')) ?>"
-               data-process-url="<?= e(url('/teacher/materials/' . (int) $material['id'] . '/process')) ?>" data-working="<?= $working ? '1' : '0' ?>">
+               data-process-url="<?= e(url('/teacher/materials/' . (int) $material['id'] . '/process')) ?>" data-working="<?= $working ? '1' : '0' ?>"
+               data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::material()) ?>">
         <div class="section__head"><h2 class="section__title" id="proc-title"><?= e(t('Companion access')) ?></h2></div>
         <p style="margin:0 0 8px"><span data-status-badge><?= badge($pLabel, $pTone) ?></span>
           <span class="meta" data-status-detail><?php if ($status === 'ready'): ?><?= e(tp(':count passage indexed', ':count passages indexed', $chunkCount)) ?><?= $version['page_count'] ? ', ' . e(tp(':count page', ':count pages', (int) $version['page_count'])) : '' ?>.<?php endif; ?></span></p>

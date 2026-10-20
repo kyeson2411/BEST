@@ -4,6 +4,7 @@
   'use strict';
   var form = document.querySelector('[data-quiz]');
   if (!form) return;
+  var S = window.Sibol.strings(form);
   var status = form.querySelector('[data-save-status]');
   var total = form.querySelectorAll('.question').length;
   var dirty = false;
@@ -22,7 +23,7 @@
 
   function updateCount(suffix) {
     if (!status) return;
-    status.textContent = answeredCount() + ' of ' + total + ' answered' + (suffix ? ' · ' + suffix : '');
+    status.textContent = S('answered', { count: answeredCount(), total: total }) + (suffix ? ' · ' + suffix : '');
   }
 
   function save() {
@@ -37,15 +38,15 @@
       credentials: 'same-origin'
     }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
-        if (res.ok && res.body.saved) { dirty = false; updateCount('saved ' + res.body.saved_at); }
+        if (res.ok && res.body.saved) { dirty = false; updateCount(S('saved_at', { time: res.body.saved_at })); }
         else if (res.body && res.body.redirect) { window.location.href = res.body.redirect; }
-        else { updateCount('not saved yet'); }
+        else { updateCount(S('not_saved')); }
       })
-      .catch(function () { updateCount('offline, will retry'); })
+      .catch(function () { updateCount(S('offline')); })
       .finally(function () { saving = false; });
   }
 
-  form.addEventListener('change', function () { dirty = true; updateCount('unsaved changes'); });
+  form.addEventListener('change', function () { dirty = true; updateCount(S('unsaved')); });
   form.addEventListener('input', function () { dirty = true; });
   setInterval(save, 30000);
   window.addEventListener('beforeunload', function (e) {

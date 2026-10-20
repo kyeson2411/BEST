@@ -3,6 +3,7 @@
   'use strict';
   var form = document.querySelector('[data-flashcards]');
   if (!form) return;
+  var S = window.Sibol.strings(form);
   var cards = Array.prototype.slice.call(form.querySelectorAll('[data-card]'));
   var progress = form.querySelector('[data-card-progress]');
   var doneBox = form.querySelector('[data-cards-done]');
@@ -11,7 +12,7 @@
 
   function show(i) {
     cards.forEach(function (c, n) { c.hidden = n !== i; });
-    if (progress) progress.textContent = 'Card ' + (i + 1) + ' of ' + cards.length;
+    if (progress) progress.textContent = S('card', { n: i + 1, total: cards.length });
     var flip = cards[i] && cards[i].querySelector('[data-flip]');
     if (flip) flip.focus();
   }
@@ -25,7 +26,7 @@
       if (progress) progress.textContent = '';
       doneBox.hidden = false;
       var text = doneBox.querySelector('[data-done-text]');
-      if (text) text.textContent = 'You knew ' + known + ' of ' + cards.length + ' cards.';
+      if (text) text.textContent = S('done', { score: known, total: cards.length });
       var submit = doneBox.querySelector('button');
       if (submit) submit.focus();
       return;
@@ -41,7 +42,7 @@
       var showingBack = !back.hidden;
       back.hidden = showingBack;
       front.hidden = !showingBack;
-      side.textContent = showingBack ? 'Front' : 'Back';
+      side.textContent = showingBack ? S('front') : S('back');
     });
     card.querySelector('[data-known]').addEventListener('click', function () { next(true); });
     card.querySelector('[data-again]').addEventListener('click', function () { next(false); });

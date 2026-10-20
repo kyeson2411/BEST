@@ -21,7 +21,7 @@ $historyLabels = ['submitted' => t('Submitted by the student'), 'graded' => t('G
   </div>
 </div>
 
-<form method="post" action="<?= e(url($base . '/grade')) ?>" id="grade-form" data-unsaved-warning>
+<form method="post" action="<?= e(url($base . '/grade')) ?>" id="grade-form" data-unsaved-warning data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::grading()) ?>">
   <?= csrf_field() ?>
   <input type="hidden" name="next_id" value="<?= (int) $nextId ?>">
   <div class="layout-split layout-split--wide-aside">

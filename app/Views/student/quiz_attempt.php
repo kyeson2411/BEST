@@ -4,7 +4,8 @@ $deadline = $submission['deadline_at'] ? \Sibol\Core\Dates::format($submission['
 $answered = count(array_filter($saved, static fn ($v) => trim((string) $v) !== ''));
 ?>
 <form method="post" action="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/attempt')) ?>" id="quiz-form" data-quiz
-      data-autosave-url="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/attempt')) ?>" data-no-busy>
+      data-autosave-url="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/attempt')) ?>" data-no-busy
+      data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::quiz()) ?>">
   <?= csrf_field() ?>
   <div class="quiz-bar">
     <div>

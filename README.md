@@ -243,10 +243,11 @@ C:\xampp\php\php.exe vendor\bin\phpunit
 ```
 
 They cover the Markdown sanitiser, citation checking, validation, automatic marking, chunking, prompt
-source-wrapping, password rules, translations, and against the database: class and record permissions,
+source-wrapping, password rules, translations (including a check that the scripts hold no English text), and
+against the database: class and record permissions,
 permission-filtered retrieval (other sections, drafts and scheduled materials never reach a prompt),
 a full demo companion turn, data export and erasure, daily limits and usage accounting, audit-log hygiene and
-retention purging. Last run: **40 tests, all passing**.
+retention purging. Last run: **47 tests, all passing**.
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -264,8 +265,9 @@ sign-in and sign-out, role homes, permission boundaries for every role (403 for 
 areas, 404 for records outside your classes, CSRF), a teacher building a quiz with AI drafts that must be
 approved before publishing, a student taking it and receiving a receipt, grade release, the companion with
 cited sources and answer reporting, administrator invitation and one-time links, CSV import with a preview,
-class setup, a policy switch, a data export downloaded only by its owner, the audit log, phone-width layout
-of 21 screens and structural accessibility checks on 31 screens. Last run: **40 tests, all passing**.
+class setup, a policy switch, a data export downloaded only by its owner, the audit log, Filipino text written
+by the page scripts, phone-width layout of 21 screens and structural accessibility checks on 31 screens.
+Last run: **41 tests, all passing**.
 
 ## Project layout
 
@@ -379,8 +381,10 @@ tools/             asset scripts (fonts and icons, school images with their orig
 - The browser tests check structure (one heading level 1 per page, unique ids, names for every control and
   link, image alternatives) on 31 screens and the absence of sideways scrolling on 21 phone screens.
   They are not a full audit; test with a screen reader before launch.
-- **Filipino:** every interface string is translated (2,316 of 2,316), for students, teachers and school
-  administrators. Strings added later fall back to English until they are added to `lang/fil.php`; run
+- **Filipino:** every interface string is translated (2,340 of 2,340), for students, teachers and school
+  administrators. That includes text written by scripts (save status, card counters, companion progress), which
+  the server translates and hands to the page in `data-i18n` attributes, so the JavaScript holds no English.
+  Strings added later fall back to English until they are added to `lang/fil.php`; run
   `bin\sibol.php lang:missing` to list them. Have a Filipino teacher review the wording before launch.
 
 ## Known limitations

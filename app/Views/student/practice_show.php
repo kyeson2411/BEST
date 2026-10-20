@@ -76,7 +76,8 @@ $sourceLine = static function (?array $ref): string {
     </div>
   </form>
 <?php else: ?>
-  <form method="post" action="<?= e(url('/student/learning/' . (int) $set['id'] . '/results')) ?>" data-flashcards style="max-width: 720px">
+  <form method="post" action="<?= e(url('/student/learning/' . (int) $set['id'] . '/results')) ?>" data-flashcards style="max-width: 720px"
+        data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::flashcards()) ?>">
     <?= csrf_field() ?>
     <p class="meta" data-card-progress><?= e(t('Card :n of :total', ['n' => 1, 'total' => count($items)])) ?></p>
     <?php foreach ($items as $i => $card): ?>

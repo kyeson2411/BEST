@@ -19,7 +19,7 @@ foreach ($conversations as $c) {
 $modeIcons = ['explain' => 'lightbulb', 'socratic' => 'list-ordered', 'practice' => 'list-checks', 'flashcards' => 'layers', 'summarize' => 'file-text', 'study_plan' => 'calendar-plus', 'vocabulary' => 'languages', 'ask_materials' => 'quote',
     'lesson_ideas' => 'notebook-pen', 'explain_for_class' => 'school', 'examples' => 'list-ordered', 'differentiate' => 'shuffle', 'feedback_helper' => 'message-circle'];
 ?>
-<div class="companion">
+<div class="companion" data-companion data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::companion()) ?>">
   <aside class="companion__sessions" id="sessions" aria-label="<?= e(t('Your conversations')) ?>">
     <div class="companion__sessions-head">
       <div class="cluster cluster--between" style="margin-bottom: 12px">

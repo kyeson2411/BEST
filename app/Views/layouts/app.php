@@ -7,6 +7,7 @@ use Sibol\Core\Config;
 use Sibol\Core\Session;
 use Sibol\Core\Translator;
 use Sibol\Services\Navigation;
+use Sibol\Services\ScriptStrings;
 
 $user = auth_user();
 $items = $user ? Navigation::items($user) : [];
@@ -39,7 +40,7 @@ $bottomItems = array_slice($bottomItems, 0, 4);
   <link rel="stylesheet" href="<?= e(asset('vendor/katex/katex.min.css')) ?>">
   <?php endif; ?>
 </head>
-<body class="<?= e(trim(($page_class ?? '') . ($isDemoOrg || $aiDemo ? ' has-demo-band' : ''))) ?>" data-role="<?= e($user['role'] ?? '') ?>">
+<body class="<?= e(trim(($page_class ?? '') . ($isDemoOrg || $aiDemo ? ' has-demo-band' : ''))) ?>" data-role="<?= e($user['role'] ?? '') ?>" data-i18n="<?= json_attr(ScriptStrings::common()) ?>">
 <a class="skip-link" href="#main"><?= e(t('Skip to content')) ?></a>
 <div class="shell">
   <aside class="spine" id="spine" aria-label="<?= e(t('Main navigation')) ?>">

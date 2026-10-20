@@ -10,6 +10,34 @@
   function $(sel, root) { return (root || doc).querySelector(sel); }
   function $all(sel, root) { return Array.prototype.slice.call((root || doc).querySelectorAll(sel)); }
 
+  /* Interface text ---------------------------------------------------------------
+     Scripts carry no English of their own. The server translates their text (Services/ScriptStrings)
+     and passes it in data-i18n attributes: the layout's on <body>, a page script's on its root element.
+     A [singular, plural] pair is chosen by params.count, as tp() does on the server. */
+  function readStrings(el) {
+    var raw = el && el.getAttribute('data-i18n');
+    if (!raw) return {};
+    try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+  }
+  function has(map, key) { return Object.prototype.hasOwnProperty.call(map, key); }
+  function translator(own, fallback) {
+    return function (key, params) {
+      var text = has(own, key) ? own[key] : (fallback && has(fallback, key) ? fallback[key] : key);
+      if (Array.isArray(text)) text = params && params.count === 1 ? text[0] : text[1];
+      text = String(text);
+      if (params) {
+        // Longest names first so :count does not clobber :count_total.
+        Object.keys(params).sort(function (a, b) { return b.length - a.length; }).forEach(function (name) {
+          text = text.split(':' + name).join(String(params[name]));
+        });
+      }
+      return text;
+    };
+  }
+  var common = readStrings(doc.body);
+  var S = translator(common);
+  window.Sibol.strings = function (el) { return translator(readStrings(el), common); };
+
   /* Toasts -------------------------------------------------------------------- */
   function dismissToast(toast) {
     if (!toast || toast.classList.contains('is-leaving')) return;
@@ -40,7 +68,7 @@
     btn.type = 'button';
     btn.className = 'toast__close';
     btn.setAttribute('data-dismiss', '');
-    btn.setAttribute('aria-label', 'Dismiss message');
+    btn.setAttribute('aria-label', S('dismiss'));
     btn.textContent = '×';
     toast.appendChild(text);
     toast.appendChild(btn);
@@ -55,11 +83,11 @@
       if (window.confirm(opts.text || opts.title)) onConfirm();
       return;
     }
-    $('#confirm-title', dialog).textContent = opts.title || 'Are you sure?';
+    $('#confirm-title', dialog).textContent = opts.title || S('confirm_title');
     $('#confirm-text', dialog).textContent = opts.text || '';
     var ok = $('[data-confirm-ok]', dialog);
-    ok.textContent = opts.action || 'Confirm';
-    ok.className = 'btn ' + (opts.tone === 'danger' ? 'btn--danger' : 'btn--primary');
+    ok.textContent = opts.action || S('confirm_action');
+    ok.className = opts.tone === 'danger' ? 'btn btn--danger' : 'btn btn--primary';
     dialog.returnValue = '';
     dialog.showModal();
     $('[data-confirm-cancel]', dialog).focus();
@@ -111,7 +139,7 @@
     if (form.hasAttribute('data-no-busy') || form.method.toLowerCase() === 'get') return;
     var btn = submitter || $('button[type="submit"], button:not([type])', form);
     if (!btn || btn.classList.contains('is-busy')) return;
-    var label = btn.getAttribute('data-busy') || 'Saving…';
+    var label = btn.getAttribute('data-busy') || S('busy');
     setTimeout(function () {
       btn.classList.add('is-busy');
       btn.setAttribute('aria-disabled', 'true');
@@ -158,11 +186,18 @@
     if (!panel || panel.__loaded) return;
     panel.__loaded = true;
     fetch(panel.getAttribute('data-panel-src'), { headers: { 'X-Requested-With': 'fetch-html' }, credentials: 'same-origin' })
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.text(); })
       .then(function (html) { panel.innerHTML = html; })
       .catch(function () {
         var list = $('.notif-panel__list', panel);
-        if (list) { list.removeAttribute('aria-busy'); list.innerHTML = '<p class="notif">Notifications could not load. Open the full list instead.</p>'; }
+        if (list) {
+          list.removeAttribute('aria-busy');
+          var note = doc.createElement('p');
+          note.className = 'notif';
+          note.textContent = S('notifications_failed');
+          list.innerHTML = '';
+          list.appendChild(note);
+        }
         panel.__loaded = false;
       });
   }
@@ -223,7 +258,7 @@
       var target = $(btn.getAttribute('data-copy'));
       if (!target) return;
       var value = target.value !== undefined ? target.value : target.textContent;
-      var done = function () { window.Sibol.toast(btn.getAttribute('data-copied') || 'Copied'); };
+      var done = function () { window.Sibol.toast(btn.getAttribute('data-copied') || S('copied')); };
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(value.trim()).then(done, function () { target.select && target.select(); });
       } else if (target.select) {
@@ -242,7 +277,7 @@
     el.insertAdjacentElement('afterend', out);
     var update = function () {
       var left = max - el.value.length;
-      out.textContent = left + ' characters left';
+      out.textContent = S('chars_left', { count: left });
       out.classList.toggle('is-over', left < 0);
     };
     el.addEventListener('input', update);
@@ -263,7 +298,7 @@
       el.classList.toggle('is-low', left <= 120);
       if (left <= 120 && !warned) {
         warned = true;
-        window.Sibol.toast('Two minutes left. Your answers save when you submit.', 'warning');
+        window.Sibol.toast(S('time_low'), 'warning');
       }
       if (left === 0) {
         clearInterval(timer);

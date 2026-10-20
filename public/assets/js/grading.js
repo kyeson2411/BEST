@@ -3,6 +3,7 @@
   'use strict';
   var form = document.getElementById('grade-form');
   if (!form) return;
+  var S = window.Sibol.strings(form);
   var sumEl = form.querySelector('[data-rubric-sum]');
   function recalc() {
     if (!sumEl) return;
@@ -28,7 +29,7 @@
       if (comment && target && target.value.trim() === '') target.value = comment.textContent.trim();
       recalc();
       form.dispatchEvent(new Event('input', { bubbles: true }));
-      if (window.Sibol && window.Sibol.toast) window.Sibol.toast('Suggestion copied into the form. Check it, then save.', 'info');
+      window.Sibol.toast(S('suggestion_copied'), 'info');
     });
   }
 })();

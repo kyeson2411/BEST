@@ -15,7 +15,7 @@ $flashes = session_status() === PHP_SESSION_ACTIVE ? Session::takeFlashes() : []
   <link rel="icon" href="<?= e(asset('school/favicon-32.png')) ?>" type="image/png" sizes="32x32">
   <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
 </head>
-<body>
+<body data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::common()) ?>">
 <a class="skip-link" href="#main"><?= e(t('Skip to content')) ?></a>
 <div class="bare">
   <div class="bare__inner">

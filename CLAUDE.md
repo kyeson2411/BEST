@@ -48,6 +48,9 @@ The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL m
   submit, so old input and errors land on the right form.
 - **Strings:** write English in `t('…')` / `tp('singular', 'plural', $n)` with `:placeholders`. Filipino lives in
   `lang/fil.php`; `bin/sibol.php lang:missing` lists gaps and `TranslationTest` checks placeholders.
+  Scripts carry no English: add their text to `Services/ScriptStrings.php` (plural pairs as `[t('…'), t('…')]`),
+  pass it with `data-i18n="<?= json_attr(…) ?>"` on the script's root element, and read it with
+  `var S = Sibol.strings(root); S('key', {count: n})`. `ScriptStringsTest` fails on English literals in `public/assets/js`.
 - **Database:** `Core\Db` uses native prepared statements, so a named parameter can appear only once per query
   (`:u1`, `:u2`). Use `Db::in($ids, 'x')` for IN lists (it returns the parentheses). All times are stored in UTC
   (`Db::now()`); convert with `Core\Dates` for display and input.
