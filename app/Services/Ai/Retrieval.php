@@ -57,10 +57,19 @@ final class Retrieval
         $rows = array_values(array_filter($rows, static fn ($r) => (float) $r['score'] >= $top * 0.3));
         // Full-text ranking can surface a passage that shares a single common word with a long
         // question ("stop" in "jeepney stop"); for longer questions require two distinct terms.
+        // A passage's heading counts too ("Steps for making an inference").
         $keywords = self::keywords($terms);
         $need = count($keywords) >= 4 ? 2 : 1;
-        $rows = array_values(array_filter($rows, static fn ($r) => self::coverage((string) $r['content'], $keywords) >= $need));
-        return self::number(array_slice($rows, 0, $limit));
+        $ranked = [];
+        foreach ($rows as $i => $row) {
+            $hits = self::coverage($row['section_title'] . ' ' . $row['content'], $keywords);
+            if ($hits >= $need) {
+                $ranked[] = [$hits, $i, $row];
+            }
+        }
+        // Passages with more of the question's terms come first; the full-text score breaks ties.
+        usort($ranked, static fn (array $a, array $b): int => [$b[0], $a[1]] <=> [$a[0], $b[1]]);
+        return self::number(array_slice(array_column($ranked, 2), 0, $limit));
     }
 
     /** Distinct content words of a question (English and Filipino function words removed). @return list<string> */
@@ -74,8 +83,21 @@ final class Retrieval
             'explain', 'give', 'show', 'describe', 'help', 'need', 'want', 'know', 'mean', 'means', 'simple', 'simply', 'terms', 'words', 'example',
             'examples', 'easy', 'thing', 'things', 'something', 'kind', 'way', 'ways', 'again', 'really', 'much', 'many', 'between', 'will', 'been',
             'being', 'each', 'other', 'only', 'same', 'such', 'more', 'most', 'own', 'too', 'out', 'over', 'under', 'one', 'two',
+            // What the person wants done rather than what it is about ("Write three Punnett square practice items").
+            'write', 'make', 'create', 'plan', 'practice', 'item', 'items', 'question', 'questions', 'answer', 'answers', 'quiz', 'lesson',
+            'lessons', 'activity', 'activities', 'minute', 'minutes', 'three', 'four', 'five', 'flashcard', 'flashcards', 'summary', 'summarise',
+            'summarize', 'notes', 'class', 'student', 'students', 'grade', 'gumawa', 'gawa', 'isulat', 'sumulat', 'magsulat', 'paraan',
+            'pagpapaliwanag', 'isa', 'dalawa', 'dalawang', 'tatlo', 'tatlong',
             'ang', 'mga', 'ano', 'bakit', 'paano', 'kung', 'para', 'ito', 'iyan', 'yan', 'siya', 'sila', 'kami', 'tayo', 'ako', 'ikaw', 'din', 'rin',
             'lang', 'naman', 'may', 'wala', 'hindi', 'isang', 'nang', 'kay', 'nito', 'niya', 'nila', 'natin', 'namin', 'po', 'ba',
+            // Filipino particles, question words and request verbs, so a Filipino question about English notes
+            // is judged by its subject terms ("Ano ang ginagawa ng diaphragm kapag humihinga tayo?").
+            'nga', 'pala', 'kasi', 'dahil', 'kapag', 'pag', 'noong', 'nung', 'saan', 'sino', 'kailan', 'alin', 'ilan', 'gaano', 'mayroon', 'meron',
+            'yung', 'iyong', 'iyon', 'yon', 'doon', 'dito', 'diyan', 'ngayon', 'lamang', 'lahat', 'bawat', 'iba', 'ibang', 'kayo', 'ninyo', 'inyo',
+            'akin', 'atin', 'amin', 'kanila', 'kanya', 'pero', 'kaya', 'tapos', 'saka', 'upang', 'tungkol', 'gaya', 'tulad', 'katulad', 'parang',
+            'sana', 'talaga', 'siguro', 'baka', 'muna', 'pang', 'pong', 'opo', 'huwag', 'wag', 'mas', 'pinaka', 'gusto', 'kailangan', 'alam',
+            'ipaliwanag', 'paliwanag', 'pakipaliwanag', 'sabihin', 'ibig', 'kahulugan', 'halimbawa', 'magbigay', 'ibigay', 'bigyan', 'tulungan',
+            'tulong', 'gawin', 'ginagawa', 'filipino', 'tagalog', 'english', 'ingles',
         ]);
         preg_match_all('/[\p{L}\p{N}]{3,}/u', mb_strtolower($query), $m);
         $out = [];
@@ -84,11 +106,12 @@ final class Retrieval
                 $out[$word] = true;
             }
         }
-        return array_keys($out);
+        // Numeric words ("150") become integer array keys; keep every keyword a string.
+        return array_map('strval', array_keys($out));
     }
 
     /** How many of the keywords appear in the passage (prefix match, so "chambers" finds "chamber"). */
-    private static function coverage(string $content, array $keywords): int
+    public static function coverage(string $content, array $keywords): int
     {
         $content = mb_strtolower($content);
         $found = 0;

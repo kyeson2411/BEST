@@ -17,7 +17,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 75 PHP tests, 56 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 89 PHP tests, 58 browser tests, all passing |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
 
@@ -40,7 +40,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Extensions, extra quiz time and excused work per student | Done | `Services/Overrides.php`, set on the submissions page; own dates drive the dashboard, calendar, reminders, nav count, timers and late rules; excused work not counted or missing; "after the due date" answers wait for the latest extension (PHPUnit `OverridesTest`, browser `extensions.spec`) |
 | Quizzes: attempts, time limit, autosave, auto-marking | Done | browser quiz flow; `GradingTest` |
 | Quiz attempts that survive bad connections | Done | `quiz.js`: save after each change and on hide, unsent answers in `sessionStorage` (cleared on save, submit, sign-out), offline notice, resend on reconnect; receipt lists saved answers; teacher reopens with minutes (migration 008). PHPUnit `QuizAttemptsTest`; browser `quiz-offline.spec` in Playwright's offline mode |
-| Companion modes: explain, step-by-step, practice quiz, flashcards, summary, study plan, vocabulary EN/FIL, ask class materials | Done (demo mode) | live-model behaviour untested |
+| Companion modes: explain, step-by-step, practice quiz, flashcards, summary, study plan, vocabulary EN/FIL, ask class materials | Done (demo mode) | live-model behaviour untested; `ai:eval` checks it once a key is added |
 | Streaming, stop, regenerate | Done (demo mode) | |
 | Citations to the exact source passage | Done | `Citations::resolve`; `CitationsTest`; browser test checks source tags |
 | Private conversations, delete/archive, retention | Done | `PrivacyAndUsageTest` |
@@ -53,9 +53,10 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 |---|---|---|
 | Provider abstraction, server-side only | Done | `Services/Ai/AiProvider.php` + Demo, Anthropic, OpenAI-compatible adapters |
 | Demo provider: labelled, extractive, real citations, no fabrication | Done | tested end to end |
-| Claude adapter (streaming, effort, refusals, server-side fallback, retries) | Done (untested) | no API key was available |
+| Claude adapter (streaming, effort, refusals, server-side fallback, retries) | Done (untested) | no API key was available; `ai:eval` is the test to run with one |
+| AI check before going live | Done (demo mode) | `bin/sibol.php ai:eval`: 30 fixed student and teacher prompts on the demo school through the real companion turn; checks citations against the supplied passages (markers, quotations, pages, scope), saying so when the materials do not cover a question, no graded work, Filipino when asked, refusal (simulated) and limit handling, teacher drafts grounded in materials; pass/fail table with tokens and estimated cost; deletes each case's conversation and usage, policies changed in memory only, run audit-logged with counts. All 30 pass in demo mode (PHPUnit `AiEvalTest`, checks in `AiCheckTest`); a live run waits for the API key |
 | OpenAI-compatible adapter | Done (untested) | |
-| Permission-filtered retrieval before prompt construction | Done | `Retrieval::search`; PHPUnit checks other sections, drafts, scheduled materials, other teachers |
+| Permission-filtered retrieval before prompt construction | Done | `Retrieval::search`; PHPUnit checks other sections, drafts, scheduled materials, other teachers; Filipino questions over English notes, headings counted and ranked, numbers in questions (`AccessAndRetrievalTest`) |
 | Prompt-injection defences for material text | Done | `Prompts::sourceBlock`; `ChunkerAndPromptTest` |
 | Daily limits, burst limit, monthly token budget, usage accounting | Done | `Usage.php`; limit refusals are counted; `PrivacyAndUsageTest` |
 | Embedding (semantic) search | Not done | MySQL full-text search only |
@@ -97,7 +98,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Design direction ("field notes meets a learning studio"), Lucide icons, no fake analytics | Done | `docs/design-system.md`; usage and insight numbers come from real records only |
 | Layouts at 1440, 1024 and 390 px | Done | screenshots; phone test on 20 screens |
 | WCAG 2.2 AA structure and contrast | Partial | automated structural checks on 31 screens and contrast maths; no manual screen-reader test |
-| Filipino interface | Done (needs review) | all 2,340 strings translated; drafted with AI, not yet reviewed by a Filipino teacher |
+| Filipino interface | Done (needs review) | all 2,433 strings translated; companion answers follow the session and question language, in demo mode too; drafted with AI, not yet reviewed by a Filipino teacher |
 | Text written by scripts is translated | Done | `Services/ScriptStrings.php` via `data-i18n`; `ScriptStringsTest` fails on English literals in `public/assets/js`; browser `script-text.spec` checks Filipino flashcard and companion text |
 | Email delivery, SSO, MFA | Not done | |
 | Virus scanning of uploads | Not done | |

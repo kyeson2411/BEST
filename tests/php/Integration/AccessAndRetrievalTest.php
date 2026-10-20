@@ -94,6 +94,32 @@ final class AccessAndRetrievalTest extends IntegrationTestCase
     {
         self::assertSame(['photosynthesis'], Retrieval::keywords('Can you explain photosynthesis in simple terms?'));
         self::assertSame(['mahalaga', 'alveoli'], Retrieval::keywords('Bakit mahalaga ang alveoli?'));
+        // Request words ("write", "practice items", "gumawa ng tatlong paraan") are not the subject.
+        self::assertSame(['punnett', 'square'], Retrieval::keywords('Write three Punnett square practice items with answers.'));
+        self::assertSame(['punnett', 'square'], Retrieval::keywords('Gumawa ng tatlong paraan ng pagpapaliwanag ng Punnett square para sa Grade 9.'));
+        // Numbers stay strings (array keys would turn them into integers).
+        self::assertSame(['150', 'mara', 'jeepney', 'stop'], Retrieval::keywords('Make it 150 words about Mara at the jeepney stop'));
+    }
+
+    public function testQuestionsWithNumbersHeadingsOrFilipinoFindTheNotes(): void
+    {
+        $andrea = $this->person('andrea.cruz');
+        Auth::actingAs($andrea);
+        $science = $this->classId(self::NARRA_SCI);
+
+        // A question with a three-digit number used to fail with a type error.
+        $found = Retrieval::search($andrea, 'Write my reading response about Mara at the jeepney stop. Make it 150 words.');
+        self::assertNotEmpty($found);
+        self::assertStringContainsString('Mara', $found[0]['content']);
+
+        // A Filipino question about English notes is judged by its subject terms.
+        $found = Retrieval::search($andrea, 'Ano ang ginagawa ng diaphragm kapag humihinga tayo?', $science);
+        self::assertNotEmpty($found);
+        self::assertStringContainsString('diaphragm', $found[0]['content']);
+
+        // A passage's heading counts towards the match, and passages with more of the question's terms rank first.
+        $found = Retrieval::search($andrea, 'What steps should I follow to make an inference?', $this->classId('English 9 – Narra'));
+        self::assertSame('Steps for making an inference', $found[0]['section_title'] ?? null);
     }
 
     public function testTeacherRetrievalCoversOwnScheduledMaterialsOnly(): void

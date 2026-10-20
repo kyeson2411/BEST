@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sibol\Services\Ai;
 
 use Sibol\Core\Dates;
+use Sibol\Core\Translator;
 
 /**
  * Demo-mode answers: honest, deterministic, and built only from retrieved passages
@@ -21,6 +22,18 @@ final class DemoResponder
 
     public static function respond(array $user, array $conversation, string $question, array $sources, array $upcoming = []): string
     {
+        // The reply follows the session language and the message, as a connected model is told to.
+        $locale = Translator::locale();
+        Translator::setLocale(Language::answerLanguage((string) ($conversation['language'] ?? 'en'), $question));
+        try {
+            return self::compose($user, $conversation, $question, $sources, $upcoming);
+        } finally {
+            Translator::setLocale($locale);
+        }
+    }
+
+    private static function compose(array $user, array $conversation, string $question, array $sources, array $upcoming): string
+    {
         $mode = (string) $conversation['mode'];
         $label = '**' . t('Demo mode') . ':** ' . t('no AI model is connected, so this reply is assembled from your class materials, not written by an AI.');
 
@@ -29,6 +42,12 @@ final class DemoResponder
         }
         if (!$sources) {
             return $label . "\n\n" . t('None of the released class materials matched “:q”. Try different key words, choose a class or a specific material when you start a session, or ask your teacher.', ['q' => \Sibol\Core\Markdown::plain($question, 80)]);
+        }
+        // Passages that share only some of the question's key words are offered as the closest
+        // match, never as an answer the materials give.
+        $partial = $mode !== 'summarize' && self::partialMatch($question, $sources);
+        if ($partial && in_array($mode, ['practice', 'flashcards', 'socratic'], true)) {
+            $label .= "\n\n" . t('Your class materials may not cover this directly. What follows is built from the closest passages.');
         }
 
         switch ($mode) {
@@ -73,7 +92,7 @@ final class DemoResponder
         }
 
         // explain, vocabulary, ask_materials, teacher modes: the best matching passages.
-        $lines = [$label, '', t('The passages that best match your question:'), ''];
+        $lines = [$label, '', $partial ? t('Your class materials may not cover this directly. These are the closest passages:') : t('The passages that best match your question:'), ''];
         foreach (array_slice($sources, 0, 3) as $s) {
             $where = Retrieval::location($s);
             $lines[] = '- “' . Citations::excerpt((string) $s['content'], $question) . '” *' . $s['title'] . ($where !== '' ? ', ' . $where : '') . '* [' . $s['n'] . ']';
@@ -83,6 +102,17 @@ final class DemoResponder
             ? t('With an AI provider connected, Sibol would draft from these passages for you to review.')
             : t('Next step: read the passages, then explain the idea in your own words. Ask your teacher if something is still unclear.');
         return implode("\n", $lines);
+    }
+
+    /** True when the passages together contain fewer than half of the question's key words. */
+    private static function partialMatch(string $question, array $sources): bool
+    {
+        $keywords = Retrieval::keywords(Retrieval::cleanQuery($question));
+        if (count($keywords) < 2) {
+            return false;
+        }
+        $text = implode("\n", array_map(static fn ($s) => $s['section_title'] . ' ' . $s['content'], $sources));
+        return Retrieval::coverage($text, $keywords) * 2 < count($keywords);
     }
 
     /**

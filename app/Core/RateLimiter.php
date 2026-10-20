@@ -41,6 +41,24 @@ final class RateLimiter
         Db::exec('DELETE FROM rate_limits WHERE bucket = :b AND subject_hash = :s', ['b' => $bucket, 's' => hash('sha256', $subject)]);
     }
 
+    /** The subject's stored windows, so they can be put back exactly with restore(). @return list<array<string,mixed>> */
+    public static function windows(string $bucket, string $subject): array
+    {
+        return Db::all('SELECT window_start, hits FROM rate_limits WHERE bucket = :b AND subject_hash = :s', ['b' => $bucket, 's' => hash('sha256', $subject)]);
+    }
+
+    /** @param list<array<string,mixed>> $windows as returned by windows() */
+    public static function restore(string $bucket, string $subject, array $windows): void
+    {
+        self::clear($bucket, $subject);
+        foreach ($windows as $window) {
+            Db::exec(
+                'INSERT INTO rate_limits (bucket, subject_hash, window_start, hits) VALUES (:b, :s, :w, :h)',
+                ['b' => $bucket, 's' => hash('sha256', $subject), 'w' => (string) $window['window_start'], 'h' => (int) $window['hits']]
+            );
+        }
+    }
+
     private static function window(int $seconds): string
     {
         $start = intdiv(time(), $seconds) * $seconds;

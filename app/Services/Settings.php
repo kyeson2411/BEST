@@ -147,6 +147,28 @@ final class Settings
         unset(self::$cache[$orgId]);
     }
 
+    /**
+     * Changes a value for this process only, so tests and the AI check can try a limit
+     * without touching the school's stored policy. Settings::flush() undoes it.
+     * @param mixed $value
+     */
+    public static function override(int $orgId, string $key, $value): void
+    {
+        $settings = self::all($orgId);
+        $segments = explode('.', $key);
+        $last = array_pop($segments);
+        $node = &$settings;
+        foreach ($segments as $segment) {
+            if (!isset($node[$segment]) || !is_array($node[$segment])) {
+                $node[$segment] = [];
+            }
+            $node = &$node[$segment];
+        }
+        $node[$last] = $value;
+        unset($node);
+        self::$cache[$orgId] = $settings;
+    }
+
     public static function flush(): void
     {
         self::$cache = [];

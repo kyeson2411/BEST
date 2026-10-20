@@ -19,6 +19,8 @@ declare(strict_types=1);
  *   school:create      Create a real school and its first administrator (prints a one-time link)
  *   user:link EMAIL    Print a new invitation or password-reset link for an account
  *   check              Show configuration problems (database, AI provider, folders)
+ *   ai:eval            Run the AI check: 30 fixed prompts on the demo school, with a pass/fail table
+ *                      and token cost (--demo forces demo mode, --case=A01,B02 runs some, --show prints answers)
  */
 
 define('BASE_PATH', dirname(__DIR__));
@@ -132,6 +134,52 @@ try {
         case 'check':
             foreach (Sibol\Services\SystemCheck::run() as $row) {
                 $out(sprintf('[%s] %s: %s', $row['ok'] ? ' ok ' : 'warn', $row['label'], $row['detail']));
+            }
+            break;
+
+        case 'ai:eval':
+            // php bin/sibol.php ai:eval [--demo] [--case=A01,B02] [--show]
+            $flags = array_slice($argv, 2);
+            $only = [];
+            foreach ($flags as $flag) {
+                if (str_starts_with($flag, '--case=')) {
+                    $only = array_values(array_filter(array_map(static fn ($id) => strtoupper(trim($id)), explode(',', substr($flag, 7)))));
+                } elseif (!in_array($flag, ['--demo', '--show'], true)) {
+                    throw new RuntimeException('Usage: ai:eval [--demo] [--case=A01,B02] [--show]');
+                }
+            }
+            $demo = in_array('--demo', $flags, true);
+            $show = in_array('--show', $flags, true);
+            $out('AI check on the demo school with ' . ($demo ? 'demo mode (no AI model)' : Sibol\Services\Ai\Providers::label()) . '.');
+            $out('Each case\'s conversation and usage are deleted when it finishes; answers are shown only with --show.');
+            $out('');
+            $line = static fn (string $id, string $result, string $tokens, string $cost, string $time, string $title): string
+                => sprintf('%-4s %-6s %19s %9s %7s  %s', $id, $result, $tokens, $cost, $time, $title);
+            $out($line('ID', 'Result', 'Tokens in / out', 'Cost US$', 'Time', 'Case'));
+            $summary = (new Sibol\Services\Ai\Evaluation\Runner($demo ? new Sibol\Services\Ai\DemoProvider() : null))->run($only, static function (array $r) use ($out, $line, $show): void {
+                $out($line($r['id'], $r['passed'] ? 'pass' : 'FAIL', number_format($r['input']) . ' / ' . number_format($r['output']), sprintf('%.4f', $r['cost']), sprintf('%.1fs', $r['seconds']), $r['title']));
+                foreach ($r['failures'] as $failure) {
+                    $out('     - ' . $failure);
+                }
+                if ($show && $r['answer'] !== '') {
+                    foreach (explode("\n", str_replace("\r", '', $r['answer'])) as $answerLine) {
+                        $out('     | ' . $answerLine);
+                    }
+                }
+            });
+            $out('');
+            foreach (Sibol\Services\Ai\Evaluation\Cases::GROUPS as $group => $label) {
+                $rows = array_filter($summary['results'], static fn ($r) => $r['group'] === $group);
+                if ($rows) {
+                    $out(sprintf('%-46s %d/%d', $label, count(array_filter($rows, static fn ($r) => $r['passed'])), count($rows)));
+                }
+            }
+            $out('');
+            $out(sprintf('%d of %d passed.', $summary['passed'], count($summary['results'])) . ' ' . ($summary['demo']
+                ? 'Demo mode sends nothing to an AI provider, so there is no token cost.'
+                : sprintf('%s input and %s output tokens, about US$%.4f at list prices (%s).', number_format($summary['input']), number_format($summary['output']), $summary['cost'], $summary['model'])));
+            if ($summary['failed'] > 0) {
+                exit(1);
             }
             break;
 

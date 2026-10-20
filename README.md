@@ -198,8 +198,8 @@ AI_MODEL=claude-opus-5-5
   fallback model instead of returning nothing. If your account is not enabled for that beta, Sibol notices
   the error and continues without it. A declined answer is shown as declined and never half-displayed.
 - **The live Claude path has not been exercised in this build** because no API key was available. It was
-  written against the documented API and its error handling is covered by code review only; test it with a
-  key before students use it.
+  written against the documented API and its error handling is covered by code review only. Run the AI check
+  (below) with the key before students use it.
 
 **Other providers (`AI_PROVIDER=openai_compatible`).** Any service with an OpenAI-style
 `/chat/completions` endpoint (including local servers such as Ollama or LM Studio). Set `AI_BASE_URL`,
@@ -213,6 +213,39 @@ Check your provider's data-retention terms and your school's agreement before en
 Administrators see totals in **AI usage** and set per-day limits and a monthly token budget in **Policies**.
 The built-in price table in `app/Services/Ai/Usage.php` is an estimate; set `AI_PRICE_*` to your contract
 prices. Your provider's invoice is the authority.
+
+### Checking the AI before going live
+
+`bin\sibol.php ai:eval` sends 30 fixed student and teacher prompts about the demo school's materials through the
+real companion (limits, permission-filtered retrieval, prompt, provider, citation checks, storage) and prints a
+pass/fail table with each case's tokens and estimated cost. It checks that:
+
+- citations point only to passages that were supplied, cited passages are about the question, and quoted words
+  and page numbers come from those passages; no passage comes from outside the person's classes;
+- when the materials do not cover a question, the answer says so first, including when a passage only looks
+  related and when the reading belongs to another section;
+- asked to write a lab report, a reading response or a submission, or for quiz answers, the companion helps
+  instead of doing the work;
+- Filipino sessions, questions written in Filipino and requests for Filipino are answered in Filipino;
+- a provider refusal shows the safe message and drops the partial text (simulated, because a refusal cannot be
+  triggered safely on purpose), and the daily limit, the per-minute limit and the school's AI switch stop a
+  request before it reaches the provider;
+- teacher tools ground their drafts in the class materials.
+
+It runs on the fictional demo school, so use a local copy (after `db:reset`) with the same `AI_*` settings as the
+server. Each case's conversation, messages and usage are deleted when it finishes, policies are changed only in
+memory, and the run is audit-logged with counts and token totals. It exits with status 1 if a case fails.
+
+```bat
+C:\xampp\php\php.exe bin\sibol.php ai:eval                         :: the provider in .env
+C:\xampp\php\php.exe bin\sibol.php ai:eval --demo                  :: demo mode, whatever .env says
+C:\xampp\php\php.exe bin\sibol.php ai:eval --case=B02,D04 --show   :: some cases, with their answers
+```
+
+In demo mode all 30 cases pass at no cost. With a model, 26 cases make one request each (the refusal and limit
+cases never reach the provider); the cost of a run has not been measured yet, so read it from the table. The
+checks are patterns, not judgement: read a live run's answers with `--show` before going live, and treat a pass
+as a floor, not a guarantee about other questions.
 
 ## Command-line tools
 
@@ -233,6 +266,7 @@ C:\xampp\php\php.exe bin\sibol.php <command>
 | `lang:missing [fil]` | Count untranslated interface strings and write stubs to `storage/cache/`. |
 | `school:create "Name" email Given Family [timezone]` | Create a real school and its first administrator; prints a one-time invitation link. |
 | `user:link email` | Print a new invitation link (not yet accepted) or password reset link (active account). |
+| `ai:eval [--demo] [--case=A01,B02] [--show]` | Run the AI check on the demo school: a pass/fail table with token cost (see [Checking the AI before going live](#checking-the-ai-before-going-live)). |
 
 ## Tests
 
@@ -249,8 +283,11 @@ against the database: class and record permissions,
 permission-filtered retrieval (other sections, drafts and scheduled materials never reach a prompt),
 a full demo companion turn, data export and erasure, daily limits and usage accounting, audit-log hygiene and
 retention purging, copying work to other sections without exposing drafts, extensions and excused work,
-reopening quiz attempts, and the notification badge's count-only background check.
-Last run: **75 tests, all passing**.
+reopening quiz attempts, the notification badge's count-only background check, retrieval of Filipino questions,
+headings and numbers, and the AI check (all 30 cases pass in demo mode and leave nothing behind; a scripted
+model that invents citations, ignores the language or writes graded work fails; one that follows the rules
+passes; its checks are unit-tested with good and bad answers).
+Last run: **89 tests, all passing**.
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -270,8 +307,9 @@ approved before publishing, a student taking it and receiving a receipt, grade r
 cited sources and answer reporting, administrator invitation and one-time links, CSV import with a preview,
 class setup, a policy switch, a data export downloaded only by its owner, the audit log, Filipino text written
 by the page scripts, copying a material, a quiz and a lesson to another section as drafts, an extension and an
-excused student, quiz attempts in offline mode, the live notification badge, phone-width layout of 21 screens
-and structural accessibility checks on 31 screens. Last run: **56 tests, all passing**.
+excused student, quiz attempts in offline mode, the live notification badge, demo answers in the session's
+language (including a question written in Filipino), phone-width layout of 21 screens and structural
+accessibility checks on 31 screens. Last run: **58 tests, all passing**.
 
 ## Project layout
 
@@ -405,11 +443,15 @@ tools/             asset scripts (fonts and icons, school images with their orig
 - The browser tests check structure (one heading level 1 per page, unique ids, names for every control and
   link, image alternatives) on 31 screens and the absence of sideways scrolling on 21 phone screens.
   They are not a full audit; test with a screen reader before launch.
-- **Filipino:** every interface string is translated (2,340 of 2,340), for students, teachers and school
+- **Filipino:** every interface string is translated (2,433 of 2,433), for students, teachers and school
   administrators. That includes text written by scripts (save status, card counters, companion progress), which
   the server translates and hands to the page in `data-i18n` attributes, so the JavaScript holds no English.
   Strings added later fall back to English until they are added to `lang/fil.php`; run
   `bin\sibol.php lang:missing` to list them. Have a Filipino teacher review the wording before launch.
+- **Companion language:** answers follow the session's language, and a question written in Filipino (or
+  asking for Filipino) is answered in Filipino, by the model and in demo mode alike. Class materials are
+  quoted as written. Filipino questions find English notes through their subject terms ("Ano ang ginagawa ng
+  diaphragm…"), since Filipino question words and request verbs are ignored when matching.
 
 ## Known limitations
 
@@ -417,6 +459,9 @@ tools/             asset scripts (fonts and icons, school images with their orig
 - Retrieval uses MySQL full-text search, not embeddings, so it matches words rather than meaning, and scanned
   PDFs without a text layer cannot be read.
 - Live AI providers were not tested in this build (no key was available); demo mode was tested end to end.
+  `ai:eval` is ready to run once a key is added.
+- Demo mode cannot judge meaning: it labels passages that share fewer than half of a question's key words as
+  "may not cover this directly" rather than deciding whether they answer it.
 - The Filipino translation covers the whole interface but was drafted with AI and has not yet been reviewed
   by a Filipino teacher.
 - The notification badge updates live (every 90 seconds while the page is visible); everything else, such as

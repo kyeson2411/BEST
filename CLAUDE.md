@@ -12,6 +12,7 @@ C:\xampp\php\php.exe vendor\bin\phpunit           :: unit + integration tests on
 npx playwright test                               :: browser tests; RESET the sibol database first
 C:\xampp\php\php.exe -l path\to\file.php          :: lint one file
 node tools/screens.mjs admin:/admin:a-home        :: screenshots at 1440/1024/390 into storage/cache/screens
+C:\xampp\php\php.exe bin\sibol.php ai:eval --demo :: AI check: 30 companion cases on the demo school (sibol database)
 ```
 
 The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL must be running.
@@ -61,7 +62,12 @@ The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL m
   SQL use `Overrides::joinSql()` / `dueSql()` / `notExcusedSql()` instead of `a.due_at`. Answers released "after
   the due date" go through `Assessments::answersReleased()`, which waits for the latest extension.
 - **Settings and policies:** school-level values come from `Services\Settings` (defaults merged with stored JSON).
-  Add a default there before reading a new key.
+  Add a default there before reading a new key. `Settings::override()` changes a value in memory only, for
+  tests and the AI check; `Settings::flush()` undoes it.
+- **AI behaviour:** after changing prompts, retrieval, citations or the demo responder, run `ai:eval --demo`; a
+  new behaviour rule gets a case in `Services/Ai/Evaluation/Cases.php`. Its checks are patterns
+  (`Evaluation/Checks.php`, unit-tested with good and bad answers). Demo replies follow the session and question
+  language through `Ai\Language::answerLanguage()`, the same rule the model is given.
 - **Icons:** Lucide via the sprite `public/assets/icons/sprite.svg`. To add an icon, add its name in
   `tools/vendor-assets.mjs` and run `npm run assets`.
 - **UI:** follow `docs/design-system.md` tokens and components; no new colours, shadows or fonts without

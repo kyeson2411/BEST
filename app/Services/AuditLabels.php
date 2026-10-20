@@ -125,6 +125,7 @@ final class AuditLabels
             case 'ai.excerpt_shared': return t('Shared a companion excerpt with a teacher');
             case 'ai.report_viewed': return t('Opened a reported answer');
             case 'ai.report_resolved': return t('Closed a report about a companion answer');
+            case 'ai.eval_run': return t('Ran the AI check: :passed of :cases cases passed', ['passed' => $n('passed'), 'cases' => $n('cases')]);
         }
         return ucfirst(str_replace(['.', '_'], ' ', (string) $row['action']));
     }
