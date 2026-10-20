@@ -234,7 +234,7 @@ prices. Your provider's invoice is the authority.
 
 ### Checking the AI before going live
 
-`bin\sibol.php ai:eval` sends 30 fixed student and teacher prompts about the demo school's materials through the
+`bin\sibol.php ai:eval` sends 31 fixed student and teacher prompts about the demo school's materials through the
 real companion (limits, permission-filtered retrieval, prompt, provider, citation checks, storage) and prints a
 pass/fail table with each case's tokens and estimated cost. It checks that:
 
@@ -244,7 +244,8 @@ pass/fail table with each case's tokens and estimated cost. It checks that:
   related and when the reading belongs to another section;
 - asked to write a lab report, a reading response or a submission, or for quiz answers, the companion helps
   instead of doing the work;
-- Filipino sessions, questions written in Filipino and requests for Filipino are answered in Filipino;
+- Filipino sessions, questions written in Filipino (also one with no English word in it) and requests for Filipino
+  are answered in Filipino;
 - a provider refusal shows the safe message and drops the partial text (simulated, because a refusal cannot be
   triggered safely on purpose), and the daily limit, the per-minute limit and the school's AI switch stop a
   request before it reaches the provider;
@@ -260,10 +261,34 @@ C:\xampp\php\php.exe bin\sibol.php ai:eval --demo                  :: demo mode,
 C:\xampp\php\php.exe bin\sibol.php ai:eval --case=B02,D04 --show   :: some cases, with their answers
 ```
 
-In demo mode all 30 cases pass at no cost. With a model, 26 cases make one request each (the refusal and limit
+In demo mode all 31 cases pass at no cost. With a model, 27 cases make one request each (the refusal and limit
 cases never reach the provider); the cost of a run has not been measured yet, so read it from the table. The
 checks are patterns, not judgement: read a live run's answers with `--show` before going live, and treat a pass
 as a floor, not a guarantee about other questions.
+
+### Measuring retrieval in Filipino and Taglish
+
+`bin\sibol.php ai:retrieval` asks 27 fixed questions about the demo school's materials as a student (8 in English,
+8 in Filipino, 8 in Taglish, and 3 that the materials do not cover) and shows whether each finds the passage it
+should. It uses passage search only: nothing is sent to an AI provider.
+
+| Questions | Before item 18 | Now |
+|---|---|---|
+| English | 7 of 8 | 8 of 8 (7 ranked first) |
+| Filipino | 2 of 8 | 8 of 8 (6 ranked first) |
+| Taglish | 7 of 8 | 8 of 8 (6 ranked first) |
+| Not in the materials (nothing should come back) | 3 of 3 | 3 of 3 |
+
+Two changes made the difference. A passage's heading is now part of the full-text index, so "What are the common
+mistakes?" finds the passage headed **Common mistakes** although neither word is in its text. And a bilingual list
+of school words (`app/Services/Ai/Synonyms.php`) lets a Filipino word also look for its English equivalent and back
+("Ilan ang silid ng puso?" also looks for *chambers* and *heart*), both in the search and when Sibol counts how
+much of a question a passage covers. The permission filter is still part of the same SQL query. One English
+question moved from third to fourth place among the passages returned; it is still used. Demo answers no longer
+quote a heading line on its own (a PDF page often starts with its headings): they quote the first real sentence.
+
+The list is short and covers the subjects of the demo school (the body, heredity, quadratic equations, reading):
+add your own subject words to it, then run `ai:retrieval` and `ai:eval --demo` again.
 
 ## Email (optional)
 
@@ -353,6 +378,7 @@ C:\xampp\php\php.exe bin\sibol.php <command>
 | `mail:test ADDRESS` | Send a test email with the `MAIL_` settings (see [Email](#email-optional)). |
 | `mail:digest` | Send the daily notification summaries people turned on; run once a day. |
 | `ai:eval [--demo] [--case=A01,B02] [--show]` | Run the AI check on the demo school: a pass/fail table with token cost (see [Checking the AI before going live](#checking-the-ai-before-going-live)). |
+| `ai:retrieval` | Measure passage search on the demo school: 27 questions in English, Filipino and Taglish, and whether each finds the passage it should (see [Measuring retrieval](#measuring-retrieval-in-filipino-and-taglish)). |
 
 ## Tests
 
@@ -370,7 +396,7 @@ permission-filtered retrieval (other sections, drafts and scheduled materials ne
 a full demo companion turn, data export and erasure, daily limits and usage accounting, audit-log hygiene and
 retention purging, copying work to other sections without exposing drafts, extensions and excused work,
 reopening quiz attempts, the notification badge's count-only background check, retrieval of Filipino questions,
-headings and numbers, the AI check (all 30 cases pass in demo mode and leave nothing behind; a scripted
+headings and numbers, the AI check (all 31 cases pass in demo mode and leave nothing behind; a scripted
 model that invents citations, ignores the language or writes graded work fails; one that follows the rules
 passes; its checks are unit-tested with good and bad answers), usernames made from names, sign-in slip codes and
 who may print them, sections and advisers, the QR encoder (published Reed-Solomon examples, format and
@@ -413,7 +439,7 @@ still asking for its code), and learning competencies (the import's check of eve
 never deleting, an archived code coming back, the school's own column names and semicolons, a class offered only
 its subject's and grade's list, a lesson keeping only offered tags, results by competency matching the topics they
 were tagged from, and copies keeping their tags).
-Last run: **195 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
+Last run: **202 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -940,7 +966,9 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   an independent decoder and check it against values published in the QR standard, but nobody has scanned a
   printed slip with a phone yet: do that once on the school's printer before handing slips out.
 - Retrieval uses MySQL full-text search, not embeddings, so it matches words rather than meaning, and scanned
-  PDFs without a text layer cannot be read.
+  PDFs without a text layer cannot be read. Filipino and Taglish questions find English notes through a short list
+  of school words; a word that is not on it, or a word form it does not list, is not matched (measured with
+  `ai:retrieval` on the demo school only).
 - Live AI providers were not tested in this build (no key was available); demo mode was tested end to end.
   `ai:eval` is ready to run once a key is added.
 - Demo mode cannot judge meaning: it labels passages that share fewer than half of a question's key words as

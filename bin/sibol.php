@@ -26,8 +26,10 @@ declare(strict_types=1);
  *   check              Show configuration problems (database, AI provider, email, folders)
  *   mail:test ADDRESS  Send a test email with the MAIL_ settings in .env
  *   mail:digest        Send the daily notification summaries people turned on (run once a day)
- *   ai:eval            Run the AI check: 30 fixed prompts on the demo school, with a pass/fail table
+ *   ai:eval            Run the AI check: fixed prompts on the demo school, with a pass/fail table
  *                      and token cost (--demo forces demo mode, --case=A01,B02 runs some, --show prints answers)
+ *   ai:retrieval       Measure passage search on the demo school: questions in English, Filipino and Taglish,
+ *                      and whether each finds the passage it should (no AI provider is used)
  */
 
 define('BASE_PATH', dirname(__DIR__));
@@ -268,6 +270,23 @@ try {
                 : sprintf('%s input and %s output tokens, about US$%.4f at list prices (%s).', number_format($summary['input']), number_format($summary['output']), $summary['cost'], $summary['model'])));
             if ($summary['failed'] > 0) {
                 exit(1);
+            }
+            break;
+
+        case 'ai:retrieval':
+            // php bin/sibol.php ai:retrieval  (on the demo school; Retrieval::search() only, nothing is sent anywhere)
+            $results = Sibol\Services\Ai\Evaluation\RetrievalSet::run();
+            $line = static fn (string $id, string $lang, string $result, string $question): string => sprintf('%-4s %-9s %-14s %s', $id, $lang, $result, $question);
+            $out($line('ID', 'Language', 'Result', 'Question'));
+            foreach ($results as $r) {
+                $result = $r['lang'] === 'none'
+                    ? ($r['passed'] ? 'none found' : 'FOUND ' . $r['returned'])
+                    : ($r['rank'] !== null ? 'found, #' . $r['rank'] : 'MISSED');
+                $out($line($r['id'], $r['lang'], $result, $r['question']));
+            }
+            $out('');
+            foreach (Sibol\Services\Ai\Evaluation\RetrievalSet::summary($results) as $lang => $s) {
+                $out(sprintf('%-22s %2d of %2d as expected, %2d first', Sibol\Services\Ai\Evaluation\RetrievalSet::LANGUAGES[$lang], $s['found'], $s['cases'], $s['first']));
             }
             break;
 

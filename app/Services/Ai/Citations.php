@@ -67,9 +67,13 @@ final class Citations
         return implode(' ', $out);
     }
 
-    /** The passage sentence that best overlaps the citing text, as a short quotation. */
+    /**
+     * The passage sentence that best overlaps the citing text, as a short quotation. Heading lines (a PDF page often
+     * starts with them: "Patterns beyond simple dominance") are not sentences and are never quoted.
+     */
     public static function excerpt(string $passage, string $citing): string
     {
+        $passage = self::withoutHeadings($passage);
         $sentences = array_values(array_filter(array_map('trim', preg_split('/(?<=[.!?])\s+|\n+/u', $passage) ?: []), static fn ($s) => mb_strlen($s) > 20));
         if (!$sentences) {
             return self::trimTo($passage, 240);
@@ -85,6 +89,34 @@ final class Citations
             }
         }
         return self::trimTo($best, 240);
+    }
+
+    /**
+     * The text without its heading lines: short lines (ten words at most) that start with a capital letter or a
+     * digit, end without sentence punctuation, and are followed by a line that starts with a capital letter, as a
+     * heading is followed by its first sentence. List items and wrapped sentences stay.
+     */
+    public static function withoutHeadings(string $text): string
+    {
+        $lines = preg_split('/\n/u', str_replace("\r", '', $text)) ?: [];
+        $keep = [];
+        foreach ($lines as $i => $line) {
+            $trimmed = trim($line);
+            $next = '';
+            for ($j = $i + 1; $j < count($lines) && $next === ''; $j++) {
+                $next = trim($lines[$j]);
+            }
+            $heading = $trimmed !== ''
+                && (str_starts_with($trimmed, '#')
+                    || (preg_match('/^[\p{Lu}\d]/u', $trimmed) && !preg_match('/^\d+[.)]\s/u', $trimmed)
+                        && !preg_match('/[.!?:;,"”\')\]]$/u', $trimmed)
+                        && count(preg_split('/\s+/u', $trimmed) ?: []) <= 10
+                        && preg_match('/^[\p{Lu}"“]/u', $next)));
+            if (!$heading) {
+                $keep[] = $line;
+            }
+        }
+        return implode("\n", $keep);
     }
 
     /** @return list<string> */

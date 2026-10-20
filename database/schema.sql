@@ -1160,3 +1160,9 @@ CREATE TABLE lesson_competencies (
 
 INSERT INTO schema_migrations (version, applied_at) VALUES ('018_competencies.sql', UTC_TIMESTAMP());
 
+-- ---------------------------------------------------------------- 019_heading_search.sql
+-- Phase 3, item 18: a passage is also found by its heading ("Common mistakes"), not only by its text.
+ALTER TABLE material_chunks DROP INDEX ft_chunks_content, ADD FULLTEXT KEY ft_chunks_text (section_title, content);
+
+INSERT INTO schema_migrations (version, applied_at) VALUES ('019_heading_search.sql', UTC_TIMESTAMP());
+

@@ -12,7 +12,8 @@ C:\xampp\php\php.exe vendor\bin\phpunit           :: unit + integration tests on
 npx playwright test                               :: browser tests; RESET the sibol database first
 C:\xampp\php\php.exe -l path\to\file.php          :: lint one file
 node tools/screens.mjs admin:/admin:a-home        :: screenshots at 1440/1024/390 into storage/cache/screens
-C:\xampp\php\php.exe bin\sibol.php ai:eval --demo :: AI check: 30 companion cases on the demo school (sibol database)
+C:\xampp\php\php.exe bin\sibol.php ai:eval --demo :: AI check: 31 companion cases on the demo school (sibol database)
+C:\xampp\php\php.exe bin\sibol.php ai:retrieval   :: passage search: 27 English, Filipino and Taglish questions (demo school)
 C:\xampp\php\php.exe bin\sibol.php db:reset --size=pilot :: pilot-size school (1,200 students, 60 teachers) for timing
 node tools/timings.mjs teacher:/teacher/gradebook/1      :: median server time per page (aim: under 1 s)
 node tools/page-weight.mjs student:/student              :: bytes per page on "Slow 4G" (aim: under 500 KB)
@@ -81,7 +82,9 @@ The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL m
 - **AI behaviour:** after changing prompts, retrieval, citations or the demo responder, run `ai:eval --demo`; a
   new behaviour rule gets a case in `Services/Ai/Evaluation/Cases.php`. Its checks are patterns
   (`Evaluation/Checks.php`, unit-tested with good and bad answers). Demo replies follow the session and question
-  language through `Ai\Language::answerLanguage()`, the same rule the model is given.
+  language through `Ai\Language::answerLanguage()`, the same rule the model is given. After changing retrieval or
+  the bilingual word list (`Ai\Synonyms`), run `ai:retrieval` too: every case must stay as expected
+  (`AccessAndRetrievalTest` checks it).
 - **Icons:** Lucide via the sprite `public/assets/icons/sprite.svg`. To add an icon, add its name in
   `tools/vendor-assets.mjs` and run `npm run assets`.
 - **UI:** follow `docs/design-system.md` tokens and components; no new colours, shadows or fonts without

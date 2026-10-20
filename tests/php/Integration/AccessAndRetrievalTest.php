@@ -10,6 +10,7 @@ use Sibol\Core\HttpException;
 use Sibol\Policies\Access;
 use Sibol\Services\Ai\Companion;
 use Sibol\Services\Ai\DemoProvider;
+use Sibol\Services\Ai\Evaluation\RetrievalSet;
 use Sibol\Services\Ai\Providers;
 use Sibol\Services\Ai\Retrieval;
 
@@ -120,6 +121,37 @@ final class AccessAndRetrievalTest extends IntegrationTestCase
         // A passage's heading counts towards the match, and passages with more of the question's terms rank first.
         $found = Retrieval::search($andrea, 'What steps should I follow to make an inference?', $this->classId('English 9 – Narra'));
         self::assertSame('Steps for making an inference', $found[0]['section_title'] ?? null);
+
+        // A passage is found by its heading alone: "Common mistakes" has neither word in its text.
+        $found = Retrieval::search($andrea, 'What are the common mistakes?', $this->classId('English 9 – Narra'));
+        self::assertSame('Common mistakes', $found[0]['section_title'] ?? null);
+
+        // A Filipino question with no English word finds the English notes through the bilingual word list.
+        $found = Retrieval::search($andrea, 'Ilan ang silid ng puso?', $science);
+        self::assertSame('The heart and its four chambers', $found[0]['section_title'] ?? null);
+    }
+
+    public function testTheWordListDoesNotWidenWhoSeesWhat(): void
+    {
+        $andrea = $this->person('andrea.cruz');
+        Auth::actingAs($andrea);
+        // Andrea is in Narra: the Filipino question finds nothing in Molave's copy of the notes.
+        self::assertSame([], Retrieval::search($andrea, 'Ilan ang silid ng puso?', $this->classId('Science 9 – Molave')));
+        foreach (Retrieval::search($andrea, 'Ilan ang silid ng puso at ugat?') as $source) {
+            self::assertContains($source['class_id'], [$this->classId(self::NARRA_SCI), $this->classId('Mathematics 9 – Narra'), $this->classId('English 9 – Narra')]);
+        }
+    }
+
+    /** The retrieval measurement (bin/sibol.php ai:retrieval) on the demo school: every case as expected. */
+    public function testTheMeasurementSetFindsWhatItShould(): void
+    {
+        $results = RetrievalSet::run();
+        $misses = array_map(static fn ($r) => $r['id'] . ' ' . $r['question'], array_filter($results, static fn ($r) => !$r['passed']));
+        self::assertSame([], array_values($misses));
+        foreach (RetrievalSet::summary($results) as $lang => $summary) {
+            self::assertSame($summary['cases'], $summary['found'], $lang);
+            self::assertGreaterThan(0, $summary['cases'], $lang);
+        }
     }
 
     public function testTeacherRetrievalCoversOwnScheduledMaterialsOnly(): void

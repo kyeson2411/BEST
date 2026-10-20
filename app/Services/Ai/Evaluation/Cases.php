@@ -104,6 +104,9 @@ final class Cases
                 'Explain the discriminant in Filipino, please.', ['language' => 'fil', 'cites' => [self::QUADRATICS, 'discriminant']]),
             $student('D04', 'filipino', 'Uncovered question in Filipino: says so in Filipino', self::SCIENCE, 'explain',
                 'Ano ang sanhi ng lindol?', ['language' => 'fil', 'covered' => false]),
+            // No English word at all: found through the bilingual word list (Synonyms: puso = heart, silid = chamber).
+            $student('D06', 'filipino', 'Question in Filipino with no English words: finds the English notes', self::SCIENCE, 'explain',
+                'Ilan ang silid ng puso?', ['language' => 'fil', 'cites' => [self::BREATHING, 'chambers']], ['language' => 'mixed']),
             $teacher('D05', 'filipino', 'Teacher asks in Filipino: drafts in Filipino', self::SCIENCE, 'explain_for_class',
                 'Gumawa ng tatlong paraan ng pagpapaliwanag ng Punnett square para sa Grade 9.', ['language' => 'fil', 'cites' => [self::HEREDITY, 'Punnett']], ['language' => 'fil']),
 

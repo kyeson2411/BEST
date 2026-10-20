@@ -28,9 +28,11 @@ final class Retrieval
         if ($classIds === [] || $terms === '') {
             return [];
         }
+        $keywords = self::keywords($terms);
         [$in, $params] = Db::in($classIds, 'cls');
-        $params['q1'] = $terms;
-        $params['q2'] = $terms;
+        // A Filipino or Taglish word also looks for its English equivalents, and the other way round (Synonyms).
+        $params['q1'] = self::expandedQuery($terms, $keywords);
+        $params['q2'] = $params['q1'];
         $materialSql = '';
         if ($materialId !== null) {
             $materialSql = ' AND c.material_id = :mid';
@@ -39,12 +41,12 @@ final class Retrieval
         $rows = Db::all(
             'SELECT c.id AS chunk_id, c.material_id, c.material_version_id AS version_id, c.class_id, c.page_from, c.page_to,
                     c.section_title, c.content, m.title, mv.extension,
-                    MATCH(c.content) AGAINST (:q1 IN NATURAL LANGUAGE MODE) AS score
+                    MATCH(c.section_title, c.content) AGAINST (:q1 IN NATURAL LANGUAGE MODE) AS score
              FROM material_chunks c
              JOIN learning_materials m ON m.id = c.material_id AND m.current_version_id = c.material_version_id
              JOIN material_versions mv ON mv.id = c.material_version_id AND mv.processing_status = \'ready\'
              WHERE c.class_id IN ' . $in . ' AND m.ai_enabled = 1 AND ' . self::visibilitySql($user) . $materialSql . '
-               AND MATCH(c.content) AGAINST (:q2 IN NATURAL LANGUAGE MODE) > 0
+               AND MATCH(c.section_title, c.content) AGAINST (:q2 IN NATURAL LANGUAGE MODE) > 0
              ORDER BY score DESC
              LIMIT ' . (int) max(1, min(12, $limit * 2)),
             $params
@@ -58,7 +60,6 @@ final class Retrieval
         // Full-text ranking can surface a passage that shares a single common word with a long
         // question ("stop" in "jeepney stop"); for longer questions require two distinct terms.
         // A passage's heading counts too ("Steps for making an inference").
-        $keywords = self::keywords($terms);
         $need = count($keywords) >= 4 ? 2 : 1;
         $ranked = [];
         foreach ($rows as $i => $row) {
@@ -110,18 +111,44 @@ final class Retrieval
         return array_map('strval', array_keys($out));
     }
 
-    /** How many of the keywords appear in the passage (prefix match, so "chambers" finds "chamber"). */
+    /**
+     * How many of the keywords appear in the passage, each by itself or a word in its Synonyms group ("puso" counts
+     * when the passage says "heart"). Prefix match, so "chambers" finds "chamber".
+     */
     public static function coverage(string $content, array $keywords): int
     {
         $content = mb_strtolower($content);
         $found = 0;
-        foreach ($keywords as $word) {
-            $stem = mb_strlen($word) >= 6 ? mb_substr($word, 0, 5) : $word;
-            if (preg_match('/(?<![\p{L}\p{N}])' . preg_quote($stem, '/') . '/u', $content)) {
-                $found++;
+        foreach (Synonyms::expand($keywords) as $words) {
+            foreach ($words as $word) {
+                $stem = mb_strlen($word) >= 6 ? mb_substr($word, 0, 5) : $word;
+                if (preg_match('/(?<![\p{L}\p{N}])' . preg_quote($stem, '/') . '/u', $content)) {
+                    $found++;
+                    break;
+                }
             }
         }
         return $found;
+    }
+
+    /**
+     * The question with the other words its keywords stand for (Synonyms), for the full-text search and for
+     * choosing the sentence to quote from a passage.
+     *
+     * @param list<string>|null $keywords the question's keywords when already known
+     */
+    public static function expandedQuery(string $query, ?array $keywords = null): string
+    {
+        $keywords = $keywords ?? self::keywords(self::cleanQuery($query));
+        $extra = [];
+        foreach (Synonyms::expand($keywords) as $keyword => $words) {
+            foreach ($words as $word) {
+                if ($word !== (string) $keyword) {
+                    $extra[$word] = true;
+                }
+            }
+        }
+        return trim($query . ' ' . implode(' ', array_keys($extra)));
     }
 
     /**

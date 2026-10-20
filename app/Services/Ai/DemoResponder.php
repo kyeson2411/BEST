@@ -86,16 +86,18 @@ final class DemoResponder
 
             case 'socratic':
                 $best = $sources[0];
-                $quote = Citations::excerpt((string) $best['content'], $question);
+                $quote = Citations::excerpt((string) $best['content'], Retrieval::expandedQuery($question));
                 return $label . "\n\n" . t('Start with this passage:') . "\n\n> " . $quote . ' [' . $best['n'] . "]\n\n"
                     . t('Question for you: in your own words, what does this passage tell you about your question? Write your answer, then compare it with the passage.');
         }
 
         // explain, vocabulary, ask_materials, teacher modes: the best matching passages.
         $lines = [$label, '', $partial ? t('Your class materials may not cover this directly. These are the closest passages:') : t('The passages that best match your question:'), ''];
+        // A question in Filipino or Taglish chooses its quotation by the English words it stands for too.
+        $citing = Retrieval::expandedQuery($question);
         foreach (array_slice($sources, 0, 3) as $s) {
             $where = Retrieval::location($s);
-            $lines[] = '- “' . Citations::excerpt((string) $s['content'], $question) . '” *' . $s['title'] . ($where !== '' ? ', ' . $where : '') . '* [' . $s['n'] . ']';
+            $lines[] = '- “' . Citations::excerpt((string) $s['content'], $citing) . '” *' . $s['title'] . ($where !== '' ? ', ' . $where : '') . '* [' . $s['n'] . ']';
         }
         $lines[] = '';
         $lines[] = $user['role'] === 'teacher'
@@ -208,10 +210,10 @@ final class DemoResponder
         return implode("\n", $lines) . "\n\n```plan\n" . implode("\n", array_unique($plan)) . "\n```";
     }
 
-    /** @return list<string> */
+    /** @return list<string> sentences, without heading lines (Citations::withoutHeadings) */
     public static function sentences(string $text): array
     {
-        $text = (string) preg_replace('/\s+/u', ' ', $text);
+        $text = (string) preg_replace('/\s+/u', ' ', Citations::withoutHeadings($text));
         $parts = preg_split('/(?<=[.!?])\s+(?=[\p{Lu}\d"“(])/u', trim($text)) ?: [];
         return array_values(array_filter(array_map('trim', $parts), static fn ($s) => $s !== '' && !str_starts_with($s, '#')));
     }

@@ -15,7 +15,7 @@ final class Language
     private const FILIPINO = ['ang', 'ng', 'mga', 'sa', 'na', 'ay', 'ito', 'iyan', 'iyon', 'yan', 'yon', 'para', 'kung', 'hindi', 'ano',
         'bakit', 'paano', 'po', 'ba', 'ka', 'ko', 'mo', 'siya', 'sila', 'tayo', 'kami', 'kayo', 'natin', 'namin', 'ninyo', 'nila', 'niya',
         'nito', 'niyan', 'naman', 'lang', 'lamang', 'rin', 'din', 'isang', 'nang', 'kapag', 'pag', 'dahil', 'upang', 'pero', 'ngunit',
-        'subalit', 'kaya', 'saan', 'sino', 'kailan', 'alin', 'mayroon', 'meron', 'dito', 'doon', 'diyan', 'iyong', 'yung', 'lahat',
+        'subalit', 'kaya', 'saan', 'sino', 'kailan', 'alin', 'ilan', 'ilang', 'gaano', 'mayroon', 'meron', 'dito', 'doon', 'diyan', 'iyong', 'yung', 'lahat',
         'bawat', 'ibang', 'tungkol', 'gaya', 'tulad', 'habang', 'muna', 'nga', 'pala', 'kasi', 'ating', 'aming', 'kanilang', 'kaniyang',
         'kanyang', 'inyong', 'iyo', 'ikaw', 'ako', 'akin', 'atin', 'amin', 'nasa', 'mula', 'hanggang', 'bilang', 'sapagkat', 'kahit',
         'maging', 'pagkatapos', 'ni', 'si', 'sina', 'kay', 'kina', 'wala', 'walang', 'saka', 'tapos', 'mong', 'kong', 'nating', 'nilang',

@@ -48,4 +48,27 @@ final class CitationsTest extends TestCase
         $passage = 'Arteries carry blood away from the heart. Veins carry blood back to the heart and have valves. Capillaries are the smallest vessels.';
         self::assertSame('Veins carry blood back to the heart and have valves.', Citations::excerpt($passage, 'Which vessels have valves to stop backflow?'));
     }
+
+    /** A PDF page often starts with its headings; they match a question well but say nothing on their own. */
+    public function testHeadingLinesAreNeverQuoted(): void
+    {
+        $page = "Heredity: inheritance and variation\nPatterns beyond simple dominance\nNot every trait follows simple dominance. In incomplete dominance, the heterozygous offspring shows a phenotype in between.";
+        self::assertSame('Not every trait follows simple dominance.', Citations::excerpt($page, 'What are the patterns beyond simple dominance?'));
+        self::assertSame(
+            'Not every trait follows simple dominance. In incomplete dominance, the heterozygous offspring shows a phenotype in between.',
+            Citations::withoutHeadings($page)
+        );
+        self::assertSame('Arteries carry blood away from the heart.', Citations::withoutHeadings("# Blood vessels\nArteries carry blood away from the heart."), 'a markdown heading line goes too');
+    }
+
+    public function testListItemsAndWrappedSentencesStay(): void
+    {
+        $list = "- Gene, allele, chromosome\n- Dominant and recessive\n1. Trace the path of oxygen\n2. Explain the thin walls";
+        self::assertSame($list, Citations::withoutHeadings($list));
+        // A sentence broken across lines goes on in lower case: it is not a heading.
+        $wrapped = "Traits are characteristics that are passed from\nparents to their offspring, such as the colour of a flower.\nGenes carry the instructions.";
+        self::assertSame($wrapped, Citations::withoutHeadings($wrapped));
+        // A short line ending like a sentence or a question is kept.
+        self::assertSame("Inference or prediction?\nA prediction is a kind of inference.", Citations::withoutHeadings("Inference or prediction?\nA prediction is a kind of inference."));
+    }
 }
