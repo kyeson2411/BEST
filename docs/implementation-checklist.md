@@ -8,7 +8,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Requirement | Status | Where / evidence |
 |---|---|---|
 | PHP framework-light MVC under XAMPP, no Node at runtime | Done | `public/index.php`, `app/Core`, `app/Controllers` |
-| MySQL/MariaDB through PDO prepared statements | Done | `app/Core/Db.php`; 40 tables in `database/migrations` |
+| MySQL/MariaDB through PDO prepared statements | Done | `app/Core/Db.php`; 41 tables in `database/migrations` |
 | Migrations, combined phpMyAdmin schema, deterministic demo seed | Done | `bin/sibol.php migrate`, `schema:build`, `db:seed`; `Services/DemoSeeder.php` |
 | Sessions, password hashing, session regeneration, idle timeout | Done | `Core/Auth.php`, `Core/Session.php`; sign-in/out browser tests |
 | Live notification badge | Done | `GET /notifications/count` returns the count only; `app.js` polls every 90 s while the tab is visible and updates the badge and its accessible name; the poll (`X-Sibol-Poll`) does not refresh the idle timer. PHPUnit `NotificationBadgeTest`, browser `notification-badge.spec` |
@@ -17,7 +17,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 122 PHP tests, 71 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 129 PHP tests, 74 browser tests, all passing |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
 
@@ -93,6 +93,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Privacy requests: export, correction, erasure, decline | Done | export downloadable only by the requester (browser test); erasure in `PrivacyAndUsageTest` |
 | Reported answers without conversation access | Done | browser test confirms the question is not shown |
 | Audit log with filters | Done | |
+| Pilot feedback and a weekly pilot report | Done | Migration 012 `site_feedback`. "Send feedback" for students and teachers (kind, short text, the page's path only; `Services/SiteFeedback.php`); administrators set a status and reply once, as a notification (`Admin\FeedbackController`, `Access::schoolFeedback`, 404 outside the school). Weekly report per Monday-to-Sunday week (`Services/PilotReport.php`): active people, publishing, on-time/late/missing for online work by each student's own due date, companion and practice counts, feedback by kind; page and CSV; numbers from fewer than 5 people hidden; no rankings or lists of people. Audit-logged without text; in the export; erased with the account. PHPUnit `PilotFeedbackTest` (a test school checked number by number); browser `pilot-feedback.spec` |
 
 ## Quality
 

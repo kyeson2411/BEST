@@ -298,8 +298,11 @@ released scores in the gradebook, absent and excused students, make-up dates, on
 printed copies without answers or unapproved AI drafts), the privacy notice and rules (who must accept, versions
 and editions, asking everyone again, audit entries without text) and the AI switch per student (the school's
 starting value, a guardian's yes or no, only the section's adviser or an administrator may change it, refusals
-before anything reaches a provider, reteaching topics without that student, and the data export).
-Last run: **122 tests, all passing**.
+before anything reaches a provider, reteaching topics without that student, and the data export), and pilot
+feedback and the weekly report (only the page's path is kept, a reply is sent once as a notification, audit
+entries without text, feedback stays inside its school, weeks from Monday in the school's time zone, and a test
+school whose counts, rates and hidden small groups are checked number by number, in the page data and the CSV).
+Last run: **129 tests, all passing**.
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -327,9 +330,10 @@ absent and excused students, held then released, seen by the student), the blank
 for other teachers, a new student accepting the privacy notice and the rules before any other page (and again
 after the administrator asks everyone, without interrupting work already under way), an adviser recording a
 guardian's no so the companion and practice disappear for that student (403, other pages unaffected, 404 for a
-teacher who is not the adviser), phone-width layout of 25 screens and structural accessibility checks on 40
-screens.
-Last run: **71 tests, all passing**.
+teacher who is not the adviser), a student sending feedback from a class page and reading the administrator's
+reply, a teacher's feedback without its page, the weekly pilot report as a page and CSV (no names), phone-width
+layout of 29 screens and structural accessibility checks on 44 screens.
+Last run: **74 tests, all passing**.
 
 ## Project layout
 
@@ -494,6 +498,24 @@ tools/             asset scripts (fonts and icons, school images with their orig
   not offered for AI grading suggestions, and their answers are left out of the topic summaries behind reteaching
   ideas. Changes are audit-logged, and the student's data export lists their acceptances, their AI setting and
   the guardian's answers.
+- **Feedback and the weekly pilot report.** Students and teachers use **Send feedback** in their menu to tell the
+  school that something is not working or is confusing, or to share an idea: a kind, a short text and the page
+  they came from. The page is kept as a path only, never its query string, what was on it or a conversation, and
+  never for addresses that carry one-time codes. Administrators see each message with the sender's name under
+  **Feedback and pilot report** and give it a status (new, looking into it, fixed, won't fix). They can reply once
+  with a short note, which reaches the sender as a notification; it is not a chat. The **Weekly pilot report** shows each week from
+  Monday to Sunday in the school's time zone:
+  - active students and teachers;
+  - materials and assignments published;
+  - on-time, late and missing rates for online work due that week (each student's own due date; excused and paper
+    work left out);
+  - companion questions and practice sets (counts only);
+  - feedback by kind.
+
+  It is available as a page and as CSV. Any number that comes from fewer than 5 people is hidden, and there are
+  no rankings or lists of people, so in the small demo school many cells say "hidden". Sending, replying and
+  downloading are audit-logged without text. A person's feedback is in their data export and is deleted when
+  they are erased.
 - Under the Philippine Data Privacy Act of 2012, the school is the personal information controller. Appoint a
   Data Protection Officer, enter their contact in **Policies**, and review the privacy notice at `/privacy`
   before enrolling real students.

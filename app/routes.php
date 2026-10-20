@@ -10,6 +10,7 @@
 use Sibol\Controllers\Admin;
 use Sibol\Controllers\AuthController;
 use Sibol\Controllers\CompanionController;
+use Sibol\Controllers\FeedbackController;
 use Sibol\Controllers\FileController;
 use Sibol\Controllers\NoticeController;
 use Sibol\Controllers\NotificationController;
@@ -113,6 +114,12 @@ $router->group('', ['auth', 'notices'], static function ($r): void {
     $r->get('/submission-files/{id}', [FileController::class, 'submissionFile']);
 
     // The learning companion serves students and teachers with role-specific modes.
+    // Feedback about Sibol from students and teachers to the school's administrators (not a chat).
+    $r->group('/feedback', ['role:student,teacher'], static function ($f): void {
+        $f->get('', [FeedbackController::class, 'create']);
+        $f->post('', [FeedbackController::class, 'store']);
+    });
+
     $r->group('/companion', ['role:student,teacher', 'ai-student'], static function ($c): void {
         $c->get('', [CompanionController::class, 'index']);
         $c->get('/new', [CompanionController::class, 'create']);
@@ -303,6 +310,11 @@ $router->group('/admin', ['role:admin', 'notices'], static function ($r): void {
     $r->post('/sections/{id}/delete', [Admin\StructureController::class, 'deleteSection']);
 
     $r->get('/usage', [Admin\UsageController::class, 'index']);
+    $r->get('/feedback', [Admin\FeedbackController::class, 'index']);
+    $r->get('/feedback/{id}', [Admin\FeedbackController::class, 'show']);
+    $r->post('/feedback/{id}', [Admin\FeedbackController::class, 'update']);
+    $r->get('/pilot', [Admin\PilotController::class, 'index']);
+    $r->get('/pilot/export', [Admin\PilotController::class, 'export']);
     $r->get('/policies', [Admin\SettingsController::class, 'policies']);
     $r->post('/policies', [Admin\SettingsController::class, 'savePolicies']);
     $r->post('/policies/notices', [Admin\SettingsController::class, 'renewNotices']);

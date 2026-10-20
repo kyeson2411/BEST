@@ -400,6 +400,9 @@
     b.addEventListener('click', function () { window.print(); });
   });
 
+  /* Wide tables over time open at their newest end (the right) on narrow screens. */
+  $all('[data-scroll-end]').forEach(function (el) { el.scrollLeft = el.scrollWidth; });
+
   /* KaTeX for maths, when the page loaded it. */
   window.Sibol.renderMath = function (root) {
     if (typeof window.renderMathInElement !== 'function') return;

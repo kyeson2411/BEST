@@ -27,6 +27,7 @@ final class Notifier
             'processing' => t('Material processing problems (teachers)'),
             'privacy' => t('Privacy request updates'),
             'class' => t('Class membership changes'),
+            'site_feedback' => t('Replies to feedback you sent about Sibol'),
         ];
     }
 

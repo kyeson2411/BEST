@@ -9,7 +9,7 @@ use Sibol\Services\AuditLabels;
 $active = static fn (string $role): int => (int) ($roles[$role]['active'] ?? 0);
 $tokens = (int) $usage['tokens'];
 $budgetPct = $budget > 0 ? percent($tokens, $budget) : null;
-$pendingTotal = $pending['invited'] + $pending['privacy'] + $pending['reports'] + count($failed);
+$pendingTotal = $pending['invited'] + $pending['privacy'] + $pending['reports'] + $pending['feedback'] + count($failed);
 ?>
 <div class="page-head">
   <div class="page-head__text">
@@ -36,11 +36,12 @@ $pendingTotal = $pending['invited'] + $pending['privacy'] + $pending['reports'] 
     <section class="section" aria-labelledby="pending-title">
       <div class="section__head"><h2 class="section__title" id="pending-title"><?= e(t('Needs attention')) ?></h2></div>
       <?php if (!$pendingTotal): ?>
-        <p class="meta"><?= e(t('Pending invitations, privacy requests, reported answers and failed uploads appear here.')) ?></p>
+        <p class="meta"><?= e(t('Pending invitations, privacy requests, reported answers, new feedback and failed uploads appear here.')) ?></p>
       <?php else: ?>
         <ul class="rows">
           <?php if ($pending['privacy']): ?><li class="row"><span class="row__lead"><?= icon('shield-check', 'icon--lg') ?></span><div class="row__main"><a class="row__title" href="<?= e(url('/admin/privacy')) ?>"><?= e(tp(':count privacy request to review', ':count privacy requests to review', $pending['privacy'])) ?></a><div class="row__meta"><span><?= e(t('Export, correction or deletion requests from your school\'s users.')) ?></span></div></div></li><?php endif; ?>
           <?php if ($pending['reports']): ?><li class="row"><span class="row__lead"><?= icon('flag', 'icon--lg') ?></span><div class="row__main"><a class="row__title" href="<?= e(url('/admin/privacy#reports')) ?>"><?= e(tp(':count reported companion answer', ':count reported companion answers', $pending['reports'])) ?></a><div class="row__meta"><span><?= e(t('Answers students or teachers flagged as wrong or unsafe.')) ?></span></div></div></li><?php endif; ?>
+          <?php if ($pending['feedback']): ?><li class="row"><span class="row__lead"><?= icon('message-square-text', 'icon--lg') ?></span><div class="row__main"><a class="row__title" href="<?= e(url('/admin/feedback')) ?>"><?= e(tp(':count new feedback message', ':count new feedback messages', $pending['feedback'])) ?></a><div class="row__meta"><span><?= e(t('Problems, confusing parts and ideas from students and teachers.')) ?></span></div></div></li><?php endif; ?>
           <?php if ($pending['invited']): ?><li class="row"><span class="row__lead"><?= icon('mail', 'icon--lg') ?></span><div class="row__main"><a class="row__title" href="<?= e(url('/admin/users', ['status' => 'invited'])) ?>"><?= e(tp(':count invitation not yet accepted', ':count invitations not yet accepted', $pending['invited'])) ?></a><div class="row__meta"><span><?= e(t('Links expire after 14 days; you can create a new one.')) ?></span></div></div></li><?php endif; ?>
           <?php foreach ($failed as $f): ?><li class="row"><span class="row__lead bad"><?= icon('triangle-alert', 'icon--lg') ?></span><div class="row__main"><span class="row__title"><?= e(t('“:title” could not be read', ['title' => $f['title']])) ?></span><div class="row__meta"><span><?= e($f['class_name']) ?></span><span><?= e(str_limit((string) $f['processing_error'], 80)) ?></span></div></div></li><?php endforeach; ?>
         </ul>
@@ -48,7 +49,7 @@ $pendingTotal = $pending['invited'] + $pending['privacy'] + $pending['reports'] 
     </section>
 
     <section class="section" aria-labelledby="comp-title">
-      <div class="section__head"><h2 class="section__title" id="comp-title"><?= e(t('Work handed in, last 30 days')) ?></h2></div>
+      <div class="section__head"><h2 class="section__title" id="comp-title"><?= e(t('Work handed in, last 30 days')) ?></h2><a class="section__link" href="<?= e(url('/admin/pilot')) ?>"><?= e(t('Weekly pilot report')) ?></a></div>
       <?php if (!$completion): ?>
         <p class="meta"><?= e(t('No work has reached its due date in the last 30 days.')) ?></p>
       <?php else: ?>

@@ -51,6 +51,7 @@ final class Navigation
                     ['label' => t('AI usage'), 'icon' => 'gauge', 'url' => '/admin/usage'],
                     ['label' => t('Policies'), 'icon' => 'sliders-horizontal', 'url' => '/admin/policies'],
                     ['label' => t('Privacy and safety'), 'short' => t('Privacy'), 'icon' => 'shield-check', 'url' => '/admin/privacy', 'count' => self::adminOpenItems((int) $user['organization_id']), 'bottom' => true],
+                    ['label' => t('Feedback and pilot report'), 'short' => t('Feedback'), 'icon' => 'message-square-text', 'url' => '/admin/feedback', 'also' => ['/admin/pilot'], 'count' => SiteFeedback::newCount((int) $user['organization_id'])],
                     ['label' => t('Audit log'), 'icon' => 'scroll-text', 'url' => '/admin/audit'],
                     ['label' => t('School settings'), 'icon' => 'settings', 'url' => '/admin/settings', 'also' => ['/admin/integrations']],
                 ];
@@ -58,13 +59,28 @@ final class Navigation
         return [];
     }
 
-    /** @return list<array{label:string,icon:string,url:string}> */
-    public static function footer(): array
+    /**
+     * Links under the main navigation. Students and teachers can send feedback about Sibol to the school;
+     * that link carries the page it was opened from ('from' => true), as a path only.
+     * @return list<array{label:string,icon:string,url:string,from?:bool}>
+     */
+    public static function footer(?array $user = null): array
     {
-        return [
+        $items = [
             ['label' => t('Account'), 'icon' => 'user', 'url' => '/settings'],
             ['label' => t('Help'), 'icon' => 'circle-help', 'url' => '/help'],
         ];
+        if ($user !== null && in_array($user['role'], ['student', 'teacher'], true)) {
+            $items[] = ['label' => t('Send feedback'), 'icon' => 'message-square-text', 'url' => '/feedback', 'from' => true];
+        }
+        return $items;
+    }
+
+    /** The URL of a footer link, with the page it is opened from when it takes one. */
+    public static function footerUrl(array $item, string $here): string
+    {
+        $from = !empty($item['from']) ? SiteFeedback::cleanPath($here) : null;
+        return url($item['url'], $from !== null ? ['from' => $from] : []);
     }
 
     public static function isActive(array $item): bool

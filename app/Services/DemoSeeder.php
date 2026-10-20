@@ -78,6 +78,7 @@ final class DemoSeeder
         Db::transaction(function (): void {
             $this->notifications();
             $this->auditTrail();
+            $this->feedback();
         });
         Auth::actingAs(null);
         Auth::refresh();
@@ -927,6 +928,33 @@ final class DemoSeeder
         $note('ramon', 'submission', 'New work to review: Heredity basics', 'Written answers need your marking.', '/teacher/assignments/' . $this->a['sci_quiz2'] . '/submissions', '-3 hours');
         $note('admin', 'privacy', 'New privacy request', 'A student asked for a copy of their data.', '/admin/privacy', '-1 days');
         $note('admin', 'privacy', 'A companion answer was reported', 'Reason: not helpful', '/admin/privacy#reports', '-2 days -50 minutes');
+    }
+
+    /** Feedback about Sibol from a few students and teachers, one in each status (fictional). */
+    private function feedback(): void
+    {
+        $items = [
+            ['andrea', 'confusing', 'I could not find the correct answers after I submitted the quiz. Are they hidden until later?', '/student/assignments/' . $this->a['sci_quiz1'], 'fixed',
+                'Yes. Your teacher releases the answers after the due date, and they then appear on the same page as your receipt.', '-12 days'],
+            ['bea', 'problem', 'The class page took a long time to open on mobile data this morning.', '/student/classes/' . $this->c['math_narra'], 'looking', null, '-3 days'],
+            ['joshua', 'idea', 'Could the flashcards show a picture from the module?', '/student/learning', 'wont_fix', 'Not during the pilot, but we have noted it for later.', '-9 days'],
+            ['ramon', 'idea', 'It would help to print the score grid as a class record sheet.', '/teacher/assignments/' . $this->a['sci_paper_test'] . '/scores', 'new', null, '-1 days'],
+            ['liza', 'confusing', 'I was not sure whether held scores count in the gradebook before I release them.', '/teacher/gradebook', 'new', null, '-6 hours'],
+        ];
+        foreach ($items as [$who, $category, $body, $path, $status, $reply, $when]) {
+            $id = Db::insert('site_feedback', [
+                'organization_id' => $this->org, 'user_id' => $this->u[$who], 'user_role' => $this->users[$who]['role'],
+                'category' => $category, 'body' => $body, 'page_path' => $path, 'status' => $status, 'reply' => $reply,
+                'replied_by' => $reply !== null ? $this->u['admin'] : null, 'replied_at' => $reply !== null ? $this->ago($when . ' +1 day') : null,
+                'created_at' => $this->ago($when), 'updated_at' => $this->ago($reply !== null ? $when . ' +1 day' : $when),
+            ]);
+            if ($reply !== null) {
+                Db::insert('notifications', [
+                    'organization_id' => $this->org, 'user_id' => $this->u[$who], 'type' => 'site_feedback', 'title' => 'Reply to your feedback',
+                    'body' => $reply, 'link' => '/feedback#feedback-' . $id, 'read_at' => $this->ago($when . ' +2 days'), 'created_at' => $this->ago($when . ' +1 day'),
+                ]);
+            }
+        }
     }
 
     private function auditTrail(): void

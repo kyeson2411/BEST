@@ -50,7 +50,7 @@ const icons = [
   'play', 'panel-right', 'sliders-horizontal', 'database', 'plug', 'file-spreadsheet', 'table', 'target',
   'book-marked', 'layout-dashboard', 'hand-helping', 'repeat', 'shuffle', 'circle-x', 'list', 'type', 'pause',
   'chevrons-up-down', 'move-up', 'move-down', 'paperclip', 'save', 'send-horizontal', 'undo-2', 'wifi-off',
-  'printer', 'scissors', 'book-user', 'clipboard-pen',
+  'printer', 'scissors', 'book-user', 'clipboard-pen', 'message-square-text', 'message-square-reply',
 ];
 const missing = [];
 let sprite = '<svg xmlns="http://www.w3.org/2000/svg" style="display:none">\n';

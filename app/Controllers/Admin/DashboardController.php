@@ -11,6 +11,7 @@ use Sibol\Core\Response;
 use Sibol\Services\Ai\Providers;
 use Sibol\Services\Privacy;
 use Sibol\Services\Settings;
+use Sibol\Services\SiteFeedback;
 use Sibol\Services\SystemCheck;
 
 /** School operations at a glance. Learning data appears only in aggregate. */
@@ -65,6 +66,7 @@ final class DashboardController extends Controller
                 'invited' => (int) Db::value("SELECT COUNT(*) FROM users WHERE organization_id = :o AND status = 'invited'", ['o' => $o]),
                 'privacy' => (int) Db::value("SELECT COUNT(*) FROM privacy_requests WHERE organization_id = :o AND status IN ('submitted','in_review')", ['o' => $o]),
                 'reports' => (int) Db::value("SELECT COUNT(*) FROM ai_reports WHERE organization_id = :o AND status = 'open'", ['o' => $o]),
+                'feedback' => SiteFeedback::newCount($o),
             ],
             'checks' => $checks,
             'audit' => Db::all(

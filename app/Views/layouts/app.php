@@ -68,9 +68,9 @@ $bottomItems = array_slice($bottomItems, 0, 4);
     </nav>
     <div class="spine__foot">
       <ul class="nav">
-        <?php foreach (Navigation::footer() as $item): $active = Navigation::isActive($item); ?>
+        <?php foreach (Navigation::footer($user) as $item): $active = Navigation::isActive($item); ?>
           <li>
-            <a class="nav-link" href="<?= e(url($item['url'])) ?>"<?= $active ? ' aria-current="page"' : '' ?> title="<?= e($item['label']) ?>">
+            <a class="nav-link" href="<?= e(Navigation::footerUrl($item, current_path())) ?>"<?= $active ? ' aria-current="page"' : '' ?> title="<?= e($item['label']) ?>">
               <?= icon($item['icon']) ?><span><?= e($item['label']) ?></span>
             </a>
           </li>
@@ -168,7 +168,7 @@ $bottomItems = array_slice($bottomItems, 0, 4);
   <?php foreach ($bottomItems as $item): $active = Navigation::isActive($item); ?>
     <a href="<?= e(url($item['url'])) ?>"<?= $active ? ' aria-current="page"' : '' ?>><?= icon($item['icon']) ?><span><?= e($item['short'] ?? $item['label']) ?></span></a>
   <?php endforeach; ?>
-  <a href="<?= e(url('/menu')) ?>" data-drawer-toggle aria-controls="spine" aria-expanded="false"><?= icon('menu') ?><span><?= e(t('More')) ?></span></a>
+  <a href="<?= e(url('/menu', ['from' => \Sibol\Services\SiteFeedback::cleanPath(current_path())])) ?>" data-drawer-toggle aria-controls="spine" aria-expanded="false"><?= icon('menu') ?><span><?= e(t('More')) ?></span></a>
 </nav>
 <?php endif; ?>
 

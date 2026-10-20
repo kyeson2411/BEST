@@ -1083,6 +1083,20 @@ input[type="file"]::file-selector-button:hover { background: var(--sage-soft); }
   .welcome__text { max-height: 360px; padding: var(--s-1) var(--s-4) var(--s-2); }
 }
 
+/* Feedback about Sibol and the weekly pilot report. --------------------------------------------- */
+.feedback-text { margin: 4px 0 0; white-space: pre-line; overflow-wrap: anywhere; }
+.feedback-reply { margin: var(--s-2) 0 0; }
+.feedback-reply__head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; font-size: 0.8125rem; font-weight: 700; color: var(--forest); }
+.pilot-report th[scope="row"] { min-width: 13em; background: var(--paper-raised); font-size: 0.875rem; font-weight: 600; color: var(--ink); white-space: normal; }
+.pilot-report th[scope="row"], .pilot-report thead th:first-child { position: sticky; left: 0; z-index: 1; box-shadow: 1px 0 0 var(--rule); }
+@media (max-width: 759px) {
+  .pilot-report th[scope="row"] { min-width: 9.5em; }
+}
+.pilot-report__group th { padding-top: var(--s-3); color: var(--forest); }
+.pilot-report__group th > span { position: sticky; left: 14px; }
+.pilot-report tbody tr.pilot-report__group:hover { background: none; }
+.pilot-report .muted { color: var(--ink-3); font-size: 0.8125rem; }
+
 /* Score grid for work done in class or on paper. ------------------------------------------------- */
 .score-grid td { vertical-align: top; }
 .score-grid .check-row { min-height: 36px; }

@@ -71,7 +71,8 @@ final class PageController extends Controller
         return $this->view('pages/menu', [
             'title' => t('Menu'),
             'items' => Navigation::items($user),
-            'footer' => Navigation::footer(),
+            'footer' => Navigation::footer($user),
+            'from' => $this->request->str('from'),
         ]);
     }
 }

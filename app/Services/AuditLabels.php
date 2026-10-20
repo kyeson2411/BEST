@@ -23,6 +23,8 @@ final class AuditLabels
             'settings' => t('Settings and policies'),
             'privacy' => t('Privacy'),
             'notices' => t('Privacy notice and rules'),
+            'feedback' => t('Feedback about Sibol'),
+            'pilot' => t('Pilot report'),
             'ai' => t('Companion and AI'),
             'access' => t('Denied access'),
         ];
@@ -137,6 +139,10 @@ final class AuditLabels
             case 'privacy.retention_purge':
                 return tp('Removed :count conversation past the retention period', 'Removed :count conversations past the retention period', $n('conversations'));
 
+            case 'feedback.sent': return t('Sent feedback about Sibol');
+            case 'feedback.updated': return !empty($meta['replied']) ? t('Replied to feedback about Sibol') : t('Changed the status of feedback about Sibol');
+            case 'pilot.report_exported': return t('Downloaded the weekly pilot report');
+
             case 'ai.conversation_deleted': return t('Deleted a companion conversation');
             case 'ai.answer_reported': return t('Reported a companion answer');
             case 'ai.excerpt_shared': return t('Shared a companion excerpt with a teacher');
@@ -172,6 +178,7 @@ final class AuditLabels
             'section' => ["SELECT id, CONCAT(COALESCE(CONCAT(grade_level, ' – '), ''), name) AS label FROM sections WHERE organization_id = :o AND id IN %s", '/admin/sections#section-'],
             'privacy_request' => ["SELECT id, CONCAT('#', id) AS label FROM privacy_requests WHERE organization_id = :o AND id IN %s", '/admin/privacy/requests/'],
             'ai_report' => ["SELECT id, CONCAT('#', id) AS label FROM ai_reports WHERE organization_id = :o AND id IN %s", '/admin/privacy/reports/'],
+            'feedback' => ["SELECT id, CONCAT('#', id) AS label FROM site_feedback WHERE organization_id = :o AND id IN %s", '/admin/feedback/'],
         ];
         $out = [];
         foreach ($ids as $type => $list) {

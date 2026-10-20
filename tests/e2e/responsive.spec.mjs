@@ -4,9 +4,9 @@ import { demoLogin, ids } from './helpers.mjs';
 // Runs in the "phone" project (390 × 844). Every main screen must fit without sideways
 // scrolling and keep the bottom navigation reachable.
 const screens = {
-  student: ['student', 'student/assignments', 'student/classes', 'companion', 'student/progress', 'student/calendar', 'student/learning'],
-  teacher: ['teacher', 'teacher/review', 'teacher/assignments', 'teacher/materials', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory'],
-  admin: ['admin', 'admin/users', 'admin/classes', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/privacy', 'admin/audit'],
+  student: ['student', 'student/assignments', 'student/classes', 'companion', 'student/progress', 'student/calendar', 'student/learning', 'feedback'],
+  teacher: ['teacher', 'teacher/review', 'teacher/assignments', 'teacher/materials', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback'],
+  admin: ['admin', 'admin/users', 'admin/classes', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot'],
 };
 
 for (const [role, paths] of Object.entries(screens)) {

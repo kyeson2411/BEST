@@ -166,6 +166,21 @@ final class Access
         return $section;
     }
 
+    /** Feedback about Sibol sent to the administrator's own school, with who sent it. @return array<string,mixed> */
+    public static function schoolFeedback(array $admin, int $id): array
+    {
+        $item = Db::one(
+            'SELECT f.*, u.given_name, u.family_name, u.preferred_name, u.username, u.grade_level, u.anonymized_at
+             FROM site_feedback f LEFT JOIN users u ON u.id = f.user_id
+             WHERE f.id = :id AND f.organization_id = :o',
+            ['id' => $id, 'o' => (int) $admin['organization_id']]
+        );
+        if (!$item) {
+            throw HttpException::notFound();
+        }
+        return $item;
+    }
+
     /**
      * A student of a section this teacher advises (enrolled in one of its active classes).
      * @return array{0:array<string,mixed>,1:array<string,mixed>} [section, student]

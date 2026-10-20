@@ -1,10 +1,12 @@
-<?php /** @var list<array> $items @var list<array> $footer */ ?>
+<?php /** @var list<array> $items @var list<array> $footer @var string $from the page the menu was opened from */
+use Sibol\Services\Navigation;
+?>
 <div class="page-head"><div class="page-head__text"><h1 class="page-title"><?= e(t('Menu')) ?></h1></div></div>
 <ul class="rows">
   <?php foreach (array_merge($items, $footer) as $item): ?>
     <li class="row">
       <span class="row__lead"><?= icon($item['icon']) ?></span>
-      <div class="row__main"><a class="row__title" href="<?= e(url($item['url'])) ?>"><?= e($item['label']) ?></a></div>
+      <div class="row__main"><a class="row__title" href="<?= e(Navigation::footerUrl($item, $from)) ?>"><?= e($item['label']) ?></a></div>
       <?php if (!empty($item['count'])): ?><span class="row__aside"><?= badge((string) (int) $item['count'], 'amber') ?></span><?php endif; ?>
     </li>
   <?php endforeach; ?>
