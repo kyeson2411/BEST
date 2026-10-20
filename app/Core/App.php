@@ -28,6 +28,8 @@ final class App
             throw new HttpException(413, t('That upload is larger than the server allows (:max MB). Choose a smaller file.', ['max' => (int) round(self::postMaxBytes() / 1048576)]));
         }
         Session::start();
+        // Background polls (notification badge) must not keep an unattended session alive.
+        Auth::passive($request->header('X-Sibol-Poll') === '1');
         $this->applyLocale($request);
         if ($request->isPost() && !Csrf::verify($request)) {
             throw new HttpException(419, t('This form expired before it was sent. Reload the page and try again.'));

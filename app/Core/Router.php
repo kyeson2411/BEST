@@ -98,7 +98,7 @@ final class Router
             if ($name === 'auth' || str_starts_with($name, 'role:')) {
                 if (!Auth::check()) {
                     if ($request->wantsJson()) {
-                        return Response::json(['error' => 'Your session has ended. Sign in again.'], 401);
+                        return Response::json(['error' => t('Your session has ended. Sign in again.')], 401);
                     }
                     Session::set('intended', $request->method === 'GET' ? $request->fullPath() : null);
                     return Response::redirect('/login', 302);

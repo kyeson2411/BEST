@@ -97,7 +97,7 @@ $bottomItems = array_slice($bottomItems, 0, 4);
         <button type="button" class="icon-btn topbar__search-toggle" data-search-toggle aria-controls="global-search" aria-expanded="false">
           <?= icon('search') ?><span class="sr-only"><?= e(t('Search')) ?></span>
         </button>
-        <details class="menu" data-menu data-notifications>
+        <details class="menu" data-menu data-notifications data-count-src="<?= e(url('/notifications/count')) ?>" data-unread="<?= (int) $unread ?>">
           <summary class="icon-btn" aria-label="<?= e($unread ? tp('Notifications, :count unread', 'Notifications, :count unread', $unread) : t('Notifications')) ?>">
             <?= icon('bell') ?>
             <?php if ($unread): ?><span class="icon-btn__dot" aria-hidden="true"><?= $unread > 99 ? '99+' : (int) $unread ?></span><?php endif; ?>

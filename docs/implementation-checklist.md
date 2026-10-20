@@ -11,12 +11,13 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | MySQL/MariaDB through PDO prepared statements | Done | `app/Core/Db.php`; 37 tables in `database/migrations` |
 | Migrations, combined phpMyAdmin schema, deterministic demo seed | Done | `bin/sibol.php migrate`, `schema:build`, `db:seed`; `Services/DemoSeeder.php` |
 | Sessions, password hashing, session regeneration, idle timeout | Done | `Core/Auth.php`, `Core/Session.php`; sign-in/out browser tests |
+| Live notification badge | Done | `GET /notifications/count` returns the count only; `app.js` polls every 90 s while the tab is visible and updates the badge and its accessible name; the poll (`X-Sibol-Poll`) does not refresh the idle timer. PHPUnit `NotificationBadgeTest`, browser `notification-badge.spec` |
 | CSRF protection and Origin check | Done | `Core/Csrf.php`; browser test posts without a token (403 "form expired") |
 | Server-side authorization on every request | Done | `app/routes.php` roles + `Policies/Access.php`; PHPUnit `AccessAndRetrievalTest`, browser `permissions.spec` |
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 72 PHP tests, 55 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 75 PHP tests, 56 browser tests, all passing |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
 

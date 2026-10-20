@@ -29,6 +29,16 @@ final class NotificationController extends Controller
         ]);
     }
 
+    /**
+     * The unread count for the bell's live badge, and nothing else. app.js polls it every 90 seconds
+     * while the tab is visible, as a background request that does not count as activity.
+     */
+    public function count(): Response
+    {
+        $user = $this->user();
+        return $this->json(['count' => (int) Db::value('SELECT COUNT(*) FROM notifications WHERE user_id = :u AND read_at IS NULL', ['u' => (int) $user['id']])]);
+    }
+
     /** HTML fragment for the bell popover. */
     public function panel(): Response
     {

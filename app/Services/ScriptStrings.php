@@ -27,6 +27,8 @@ final class ScriptStrings
             'chars_left' => [t(':count character left'), t(':count characters left')],
             'time_low' => t('Two minutes left. Your answers are saved as you go.'),
             'notifications_failed' => t('Notifications could not load. Open the full list instead.'),
+            'notifications' => t('Notifications'),
+            'notifications_unread' => [t('Notifications, :count unread'), t('Notifications, :count unread')],
         ];
     }
 

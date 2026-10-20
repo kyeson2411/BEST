@@ -248,8 +248,9 @@ source-wrapping, password rules, translations (including a check that the script
 against the database: class and record permissions,
 permission-filtered retrieval (other sections, drafts and scheduled materials never reach a prompt),
 a full demo companion turn, data export and erasure, daily limits and usage accounting, audit-log hygiene and
-retention purging, copying work to other sections without exposing drafts, extensions and excused work, and
-reopening quiz attempts. Last run: **72 tests, all passing**.
+retention purging, copying work to other sections without exposing drafts, extensions and excused work,
+reopening quiz attempts, and the notification badge's count-only background check.
+Last run: **75 tests, all passing**.
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -269,8 +270,8 @@ approved before publishing, a student taking it and receiving a receipt, grade r
 cited sources and answer reporting, administrator invitation and one-time links, CSV import with a preview,
 class setup, a policy switch, a data export downloaded only by its owner, the audit log, Filipino text written
 by the page scripts, copying a material, a quiz and a lesson to another section as drafts, an extension and an
-excused student, quiz attempts in offline mode, phone-width layout of 21 screens and structural accessibility
-checks on 31 screens. Last run: **55 tests, all passing**.
+excused student, quiz attempts in offline mode, the live notification badge, phone-width layout of 21 screens
+and structural accessibility checks on 31 screens. Last run: **56 tests, all passing**.
 
 ## Project layout
 
@@ -326,7 +327,9 @@ tools/             asset scripts (fonts and icons, school images with their orig
   which only a SHA-256 hash is stored. Links work once and expire (invitations 14 days, resets 48 hours).
 - The session ID is regenerated at sign-in and sign-out. Cookies are `HttpOnly`, `SameSite=Lax`, and `Secure`
   when configured. The signed-in user is reloaded on every request, so deactivation, role changes and
-  "sign out other devices" take effect immediately. Idle sessions end after `SESSION_IDLE_MINUTES`.
+  "sign out other devices" take effect immediately. Idle sessions end after `SESSION_IDLE_MINUTES`; the
+  notification badge's background check (count only) does not count as activity, so a page left open on a shared
+  computer still signs out.
 - Sign-in is rate-limited per address and per email; failures use the same message whether or not the email exists.
 
 **Requests**
@@ -416,5 +419,6 @@ tools/             asset scripts (fonts and icons, school images with their orig
 - Live AI providers were not tested in this build (no key was available); demo mode was tested end to end.
 - The Filipino translation covers the whole interface but was drafted with AI and has not yet been reviewed
   by a Filipino teacher.
-- Real-time features (new notifications, grading updates) refresh on page load, not live.
+- The notification badge updates live (every 90 seconds while the page is visible); everything else, such as
+  grading updates and lists, refreshes on page load.
 - The demo password and demo sign-in exist only for local evaluation; production settings disable them.

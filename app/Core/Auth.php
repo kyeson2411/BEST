@@ -14,6 +14,16 @@ final class Auth
     /** @var array<string,mixed>|null */
     private static ?array $user = null;
     private static bool $loaded = false;
+    private static bool $passive = false;
+
+    /**
+     * Marks this request as background work (the notification badge poll): it is answered as usual but
+     * does not count as activity, so an unattended session still ends after the idle limit.
+     */
+    public static function passive(bool $on = true): void
+    {
+        self::$passive = $on;
+    }
 
     /** @return array<string,mixed>|null */
     public static function user(): ?array
@@ -40,7 +50,9 @@ final class Auth
             Session::flash('info', $idle ? t('You were signed out after a period of inactivity.') : t('Your session has ended. Sign in again.'));
             return null;
         }
-        $_SESSION['last_seen'] = time();
+        if (!self::$passive) {
+            $_SESSION['last_seen'] = time();
+        }
         self::$user = $user;
         return self::$user;
     }

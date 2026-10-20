@@ -53,6 +53,7 @@ $router->group('', ['auth'], static function ($r): void {
 
     $r->get('/notifications', [NotificationController::class, 'index']);
     $r->get('/notifications/panel', [NotificationController::class, 'panel']);
+    $r->get('/notifications/count', [NotificationController::class, 'count']);
     $r->get('/notifications/{id}/open', [NotificationController::class, 'open']);
     $r->post('/notifications/read-all', [NotificationController::class, 'readAll']);
 

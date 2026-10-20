@@ -204,6 +204,52 @@
       });
   }
 
+  /* Live notification badge: the unread count is fetched every 90 seconds while the tab is visible
+     (and on returning to it). The response is the count only, and the request is marked as background
+     work so it never keeps an unattended session alive. */
+  var bell = $('details[data-notifications][data-count-src]');
+  if (bell) {
+    var bellButton = $('summary', bell);
+    var unread = parseInt(bell.getAttribute('data-unread'), 10) || 0;
+    var lastPoll = Date.now();
+    var polling = true;
+    var showUnread = function (n) {
+      var dot = $('.icon-btn__dot', bellButton);
+      if (n > 0 && !dot) {
+        dot = doc.createElement('span');
+        dot.className = 'icon-btn__dot';
+        dot.setAttribute('aria-hidden', 'true');
+        bellButton.appendChild(dot);
+      }
+      if (dot && n > 0) dot.textContent = n > 99 ? '99+' : String(n);
+      if (dot && n <= 0) dot.remove();
+      bellButton.setAttribute('aria-label', n > 0 ? S('notifications_unread', { count: n }) : S('notifications'));
+    };
+    var pollUnread = function () {
+      if (!polling || doc.visibilityState !== 'visible') return;
+      lastPoll = Date.now();
+      fetch(bell.getAttribute('data-count-src'), {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'fetch', 'X-Sibol-Poll': '1' }
+      }).then(function (r) {
+        if (!r.ok) { polling = false; throw new Error(String(r.status)); } // signed out: stop asking
+        return r.json();
+      }).then(function (j) {
+        var n = parseInt(j.count, 10) || 0;
+        if (n === unread) return;
+        unread = n;
+        showUnread(n);
+        // The popover list is out of date: load it again the next time it opens.
+        var panel = $('[data-panel-src]', bell);
+        if (panel && !bell.open) panel.__loaded = false;
+      }).catch(function () { /* offline or signed out: try again later */ });
+    };
+    setInterval(pollUnread, 90000);
+    doc.addEventListener('visibilitychange', function () {
+      if (doc.visibilityState === 'visible' && Date.now() - lastPoll >= 60000) pollUnread();
+    });
+  }
+
   /* Mobile navigation drawer --------------------------------------------------- */
   var spine = $('#spine');
   var scrim = null;
