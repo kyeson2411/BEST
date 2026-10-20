@@ -4,7 +4,7 @@ import { demoLogin, ids } from './helpers.mjs';
 // Structural accessibility checks on the main screens: one h1, a page language, unique ids,
 // a name for every form control, button and link, and alternative text for images.
 const pages = {
-  guest: ['', 'login', 'start', 'privacy', 'help', 'login?lang=fil'],
+  guest: ['', 'login', 'start', 'privacy', 'help', 'login?lang=fil', 'offline'],
   student: ['student', 'student/assignments', 'student/classes', 'companion/new', 'student/progress', 'student/progress/report', 'student/review', 'student/calendar', 'student/learning', 'settings', 'feedback'],
   teacher: ['teacher', 'teacher/review', 'teacher/comments', 'teacher/assignments/new', 'teacher/materials/new', 'teacher/lessons', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback'],
   admin: ['admin', 'admin/users', 'admin/users/new', 'admin/users/import', 'admin/classes/new', 'admin/subjects', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/settings', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot', 'admin/grading', 'admin/academic-periods'],
@@ -83,6 +83,13 @@ test('an adviser\'s progress reports pass structural accessibility checks', asyn
     await page.goto(path);
     expect(await audit(page), path).toEqual([]);
   }
+});
+
+test('a class\'s materials with their Keep offline toggles pass structural accessibility checks', async ({ page }) => {
+  await demoLogin(page, 'student');
+  await page.goto(`student/classes/${ids().classes.sciNarra}?tab=materials`);
+  await expect(page.locator('[data-offline-save]').first()).toBeVisible();
+  expect(await audit(page), 'materials tab').toEqual([]);
 });
 
 test('keyboard users can skip to the content', async ({ page }) => {

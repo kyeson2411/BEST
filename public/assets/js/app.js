@@ -377,8 +377,8 @@
     });
   });
 
-  /* Answers a quiz kept in this tab for sending later are removed on sign-out, and on the sign-in
-     pages (an idle sign-out ends there too). */
+  /* Answers a quiz kept in this tab for sending later, and materials kept on this device for reading
+     offline (offline.js), are removed on sign-out and on the sign-in pages (an idle sign-out ends there too). */
   function forgetKept() {
     try {
       for (var i = sessionStorage.length - 1; i >= 0; i--) {
@@ -386,9 +386,20 @@
         if (k && k.indexOf('sibol.') === 0) sessionStorage.removeItem(k);
       }
     } catch (e) { /* storage blocked: nothing was kept */ }
+    if (window.caches) window.caches.delete('sibol-offline-materials').catch(function () {});
   }
   $all('form[data-signout]').forEach(function (f) { f.addEventListener('submit', forgetKept); });
   if (doc.body.hasAttribute('data-signed-out')) forgetKept();
+
+  /* The installable app: a service worker keeps the stylesheet, scripts and an offline page (public/sw.js).
+     Browsers run one only over HTTPS, or on this computer (localhost). It starts after the page has loaded,
+     so it never slows the first visit. */
+  var appBase = (doc.querySelector('meta[name="app-base"]') || {}).content;
+  if (typeof appBase === 'string' && 'serviceWorker' in navigator && window.isSecureContext) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register(appBase + '/sw.js', { scope: appBase + '/' }).catch(function () {});
+    });
+  }
 
   /* Back buttons on error pages */
   $all('[data-history-back]').forEach(function (b) {

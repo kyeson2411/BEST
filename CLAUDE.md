@@ -107,6 +107,9 @@ The app is served by XAMPP at `http://localhost/BEST/public`. Apache and MySQL m
   `Notices::VERSIONS` when the wording of `partials/privacy_notice.php` or `partials/rules_of_use.php` changes.
 - Materials copied to other sections share stored files (`material_versions.stored_path`). Anything that deletes a
   material file must first check that no other version still points to it.
+- The service worker (`public/sw.js`) stores only files under `assets/`, the offline page (`/offline`, which must
+  stay free of names, messages and form tokens) and class files a student keeps for offline reading (`offline.js`).
+  Never let it store pages or other responses. `app.js` `forgetKept()` removes the kept files on sign-out.
 - `quiz.js` keeps unsent answers in `sessionStorage` (`sibol.quiz.<submission id>`); `app.js` removes every
   `sibol.*` key on sign-out (`form[data-signout]`) and on the sign-in pages (`body[data-signed-out]`). Page scripts
   that handle a submit themselves call `preventDefault()`; `app.js` then skips its confirm and busy handling.

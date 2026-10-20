@@ -21,6 +21,7 @@ final class ScriptStringsTest extends TestCase
         'companion.js' => ['companion', 'common'],
         'grading.js' => ['grading', 'common'],
         'materials.js' => ['material', 'common'],
+        'offline.js' => ['offline', 'common'],
         'practice.js' => ['flashcards', 'common'],
         'quiz.js' => ['quiz', 'common'],
     ];
@@ -52,7 +53,7 @@ final class ScriptStringsTest extends TestCase
                 }
             }
         }
-        foreach (['common', 'quiz', 'companion', 'flashcards', 'material', 'grading'] as $set) {
+        foreach (['common', 'quiz', 'companion', 'flashcards', 'material', 'grading', 'offline'] as $set) {
             foreach (array_keys(ScriptStrings::$set()) as $key) {
                 self::assertArrayHasKey($key, $used[$set] ?? [], "ScriptStrings::$set() provides '$key', but no script uses it");
             }
@@ -61,7 +62,7 @@ final class ScriptStringsTest extends TestCase
 
     public function testStringsAreTextOrPluralPairs(): void
     {
-        foreach (['common', 'quiz', 'companion', 'flashcards', 'material', 'grading'] as $set) {
+        foreach (['common', 'quiz', 'companion', 'flashcards', 'material', 'grading', 'offline'] as $set) {
             foreach (ScriptStrings::$set() as $key => $value) {
                 if (is_array($value)) {
                     self::assertCount(2, $value, "$set.$key must be a [singular, plural] pair");

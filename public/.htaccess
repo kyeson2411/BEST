@@ -17,6 +17,10 @@ Options -Indexes -MultiViews
     <FilesMatch "\.(css|js|woff2|svg|png|webp|jpg|ico|webmanifest)$">
         Header set Cache-Control "public, max-age=604800"
     </FilesMatch>
+    # The service worker is checked for a new version on every visit.
+    <Files "sw.js">
+        Header set Cache-Control "no-cache"
+    </Files>
     Header always set X-Content-Type-Options "nosniff"
 </IfModule>
 

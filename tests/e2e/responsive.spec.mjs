@@ -30,6 +30,17 @@ test('the score grid, the printable copy and the section\'s progress reports fit
   }
 });
 
+test('a class\'s materials with Keep offline, and the offline page, fit a phone', async ({ page }) => {
+  await demoLogin(page, 'student');
+  await page.goto(`student/classes/${ids().classes.sciNarra}?tab=materials`);
+  await expect(page.locator('[data-offline-save]').first()).toBeVisible();
+  for (const path of [null, 'offline']) {
+    if (path) await page.goto(path);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(overflow, `${path || 'materials tab'} scrolls sideways by ${overflow}px`).toBeLessThanOrEqual(0);
+  }
+});
+
 test('the sign-in page fits a phone with the seal pinned to the photo', async ({ page }) => {
   await page.goto('');
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

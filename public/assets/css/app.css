@@ -496,6 +496,17 @@ legend { padding: 0; margin-bottom: var(--s-2); font-weight: 700; font-size: var
 .skeleton--title { height: 22px; width: 40%; }
 .error-page { padding: var(--s-7) 0; max-width: 58ch; }
 .error-page__code { font-family: var(--font-display); font-size: 4rem; font-weight: 700; color: var(--sage); line-height: 1; margin-bottom: var(--s-3); }
+
+/* Offline reading: the offline page the service worker shows, and the Keep offline toggle on class files. */
+.offline { padding: var(--s-7) 0; max-width: 58ch; }
+.offline__mark { color: var(--ink-3); margin: 0 0 var(--s-3); }
+.offline__note { margin: var(--s-3) 0 0; }
+.offline__kept { margin-top: var(--s-7); }
+.offline-hint { display: flex; align-items: center; gap: var(--s-2); margin: 0 0 var(--s-4); }
+.offline-toggle .offline-toggle__on, .offline-toggle[aria-pressed="true"] .offline-toggle__off { display: none; }
+.offline-toggle[aria-pressed="true"] .offline-toggle__on { display: inline-block; }
+.offline-toggle[aria-pressed="true"] { background: var(--sage-soft); border-color: var(--sage-line); }
+.offline-toggle[aria-busy="true"] { cursor: progress; opacity: 0.6; }
 .debug { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.8125rem; background: var(--paper-sunken); padding: var(--s-4); border-radius: var(--radius-panel); overflow-x: auto; }
 
 /* Menus, popovers, dialogs, toasts --------------------------------------------------- */

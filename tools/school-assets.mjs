@@ -4,7 +4,9 @@
 // Run after replacing either file:  node tools/school-assets.mjs
 //
 // Output (public/assets/school/): campus-{800,1280,2000}.webp plus campus-1280.jpg, the seal with a
-// transparent background as seal-{384,192}.webp and seal-{192,96,48}.png, favicon-32.png and apple-touch-icon.png. Re-encoding also drops any camera or
+// transparent background as seal-{384,192}.webp and seal-{192,96,48}.png, favicon-32.png and apple-touch-icon.png,
+// and the installed app's icons app-icon-{192,512}.png and app-icon-maskable-{192,512}.png (the seal inside the
+// central circle that phones keep when they crop icons). Re-encoding also drops any camera or
 // location metadata from the originals. Uses the installed Microsoft Edge (or SIBOL_BROWSER=chromium).
 import { chromium } from '@playwright/test';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -134,7 +136,7 @@ const seal = await page.evaluate(async (dataUrl) => {
   crop.height = size;
   crop.getContext('2d').drawImage(canvas, Math.round(cx - size / 2), Math.round(cy - size / 2), size, size, 0, 0, size, size);
 
-  const scaled = (s, background) => {
+  const scaled = (s, background, padding = 0.08) => {
     const c = document.createElement('canvas');
     c.width = s;
     c.height = s;
@@ -143,7 +145,7 @@ const seal = await page.evaluate(async (dataUrl) => {
     if (background) {
       g.fillStyle = background;
       g.fillRect(0, 0, s, s);
-      const pad = Math.round(s * 0.08);
+      const pad = Math.round(s * padding);
       g.drawImage(crop, pad, pad, s - pad * 2, s - pad * 2);
     } else {
       // Step down in halves for a cleaner small image.
@@ -165,6 +167,9 @@ const seal = await page.evaluate(async (dataUrl) => {
     box: { cx, cy, r, size },
     s384: scaled(384), s192: scaled(192), s96: scaled(96), s48: scaled(48), s32: scaled(32),
     touch: scaled(180, '#F6F5EE'),
+    // Maskable icons keep only a central circle 80% wide; 14% padding keeps the round seal inside it.
+    app192: scaled(192, '#F6F5EE'), app512: scaled(512, '#F6F5EE'),
+    maskable192: scaled(192, '#F6F5EE', 0.14), maskable512: scaled(512, '#F6F5EE', 0.14),
   };
 }, asDataUrl('seal.jpg'));
 
@@ -176,4 +181,8 @@ save('seal-96.png', seal.s96.png);
 save('seal-48.png', seal.s48.png);
 save('favicon-32.png', seal.s32.png);
 save('apple-touch-icon.png', seal.touch.png);
+save('app-icon-192.png', seal.app192.png);
+save('app-icon-512.png', seal.app512.png);
+save('app-icon-maskable-192.png', seal.maskable192.png);
+save('app-icon-maskable-512.png', seal.maskable512.png);
 await browser.close();

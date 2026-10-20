@@ -177,8 +177,10 @@ node tools/school-assets.mjs
 ```
 
 It writes the web sizes to `public/assets/school/` (WebP with a JPEG or PNG fallback), cuts the seal out of its
-white background, and drops any camera or location data from the files. An administrator can also upload a
-different logo in **School settings**, which replaces the seal inside the app.
+white background, and drops any camera or location data from the files. It also makes the icons used when Sibol
+is installed as an app (`app-icon-192.png`, `app-icon-512.png`, and `app-icon-maskable-192.png` and
+`app-icon-maskable-512.png` with extra room for phones that crop icons into a circle). An administrator can also upload a different logo in
+**School settings**, which replaces the seal inside the app.
 
 Only publish photographs of students that the school has consent to use for its website.
 
@@ -359,7 +361,7 @@ and email (off without `MAIL_HOST` and never showing the password; invitation an
 person's language and not without an address; the daily summary with unread titles only, never bodies, at most once
 in 20 hours and only what is new since the last one), and the Daily Lesson Log (every lesson section in exactly one
 row, the rows Sibol has nothing for left blank, and labels in the lesson's language with the page's language put back).
-Last run: **153 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
+Last run: **157 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -399,9 +401,11 @@ a class before its quiz, a missed practice set joining the queue, and a 403 for 
 and a 404 for another teacher), a teacher nudging a student who missed two tasks (listed by name, reminded once a
 day, the reminder in the student's notifications, a 403 for students), email switched off (links still copied, no
 promise of an email, no password shown, no daily summary offered), a lesson printed as a Daily Lesson Log (and a
-404 for a teacher of another class), phone-width layout of 37 screens and structural accessibility checks on 54
-screens.
-Last run: **93 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
+404 for a teacher of another class), installing Sibol as an app and reading a kept class file offline (other
+pages, a quiz and files not kept show the offline page in the person's language; the offline page carries no
+name, message or form token; signing out removes the kept file), phone-width layout of 39 screens and structural
+accessibility checks on 56 screens.
+Last run: **99 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
 
 ## Versions and performance
 
@@ -525,7 +529,10 @@ tools/             asset scripts (fonts and icons, school images with their orig
    (Apache `mod_deflate`; `public/.htaccess` already asks for it when the module is loaded).
 2. In `.env` (or real environment variables): `APP_ENV=production`, `APP_DEMO_LOGIN=false`, the real `APP_URL`,
    `SESSION_SECURE_COOKIE=true`.
-3. Serve over **HTTPS** only.
+3. Serve over **HTTPS** only. Browsers run Sibol's service worker (installing it as an app, the offline page and
+   files kept for offline reading) only over HTTPS or on the same computer (`localhost`). `public/.htaccess`
+   sends `public/sw.js` with `Cache-Control: no-cache`; on another web server, do the same, so a new version
+   reaches phones on their next visit.
 4. Create a dedicated database user instead of `root`:
    ```sql
    CREATE USER 'sibol'@'localhost' IDENTIFIED BY 'a-long-random-password';
@@ -710,6 +717,15 @@ tools/             asset scripts (fonts and icons, school images with their orig
   saved, on submit and on sign-out. Submitting while offline waits for the connection. If time runs out offline,
   the receipt lists which answers reached the server, and the teacher can reopen the attempt with a few minutes
   that start when the student opens it again.
+- **Installing Sibol and reading offline.** Browsers can install Sibol as an app (`/manifest.webmanifest`, icons
+  from the seal). A service worker (`public/sw.js`) keeps the stylesheet, scripts, fonts and images and an
+  offline page, which is the same for everyone: it holds no names, messages or form token, and lists the files
+  kept on that device from the device itself. It follows the language of the pages the person sees (each page
+  says its language in `Content-Language`). Pages, answers and quizzes are never stored, so they always need a
+  connection. On a class's Materials tab a student can choose **Keep offline** for a file: a copy goes into the
+  browser's cache for that site, is refreshed whenever the file is opened online, and opens without a
+  connection. Every kept file is removed on sign-out and whenever a sign-in page opens (an idle sign-out ends
+  there too). A kept copy is the file the student could already download; it is not sent anywhere else.
 - People can ask for a copy of their data, a correction or deletion from their account settings.
   Administrators prepare exports (downloadable only by the requester, for 14 days) or erase personal data
   (the account is anonymised; school records are kept unless the administrator chooses to delete them too).
@@ -800,4 +816,8 @@ tools/             asset scripts (fonts and icons, school images with their orig
   every line.
 - The notification badge updates live (every 90 seconds while the page is visible); everything else, such as
   grading updates and lists, refreshes on page load.
+- Offline reading covers the class files a student chooses to keep; lessons, other pages, quizzes and the
+  companion need a connection. Installing and offline reading were tested in Microsoft Edge (Chromium) on a
+  computer, not yet on a phone. Safari on iPhone may delete a site's stored files after seven days of browsing
+  without a visit, unless Sibol was added to the Home Screen.
 - The demo password and demo sign-in exist only for local evaluation; production settings disable them.

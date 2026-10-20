@@ -111,6 +111,7 @@ final class ClassController extends Controller
             'announcements' => $announcements,
             'work' => $work,
             'aiEnabled' => AiAccess::allowed($user),
+            'scripts' => $tab === 'materials' ? ['offline.js'] : [],
         ]);
     }
 

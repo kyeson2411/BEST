@@ -102,4 +102,15 @@ final class ScriptStrings
             'bank_empty' => t('Write a comment first, or select the words to save.'),
         ];
     }
+
+    /** offline.js: keeping class files on this device for reading without a connection. */
+    public static function offline(): array
+    {
+        return [
+            'kept' => t('“:title” is kept on this device. It opens without a connection until you sign out.'),
+            'released' => t('“:title” is no longer kept on this device.'),
+            'keep_failed' => t('The file could not be kept on this device. Check the connection and the free space, then try again.'),
+            'release_failed' => t('The file could not be removed from this device. Try again.'),
+        ];
+    }
 }

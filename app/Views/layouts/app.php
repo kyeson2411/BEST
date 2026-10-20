@@ -32,6 +32,8 @@ $bottomItems = array_slice($bottomItems, 0, 4);
   <title><?= e(($title ?? 'Sibol') . ' – ' . Config::get('app.name', 'Sibol')) ?></title>
   <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
   <meta name="app-base" content="<?= e(base_path_url()) ?>">
+  <meta name="theme-color" content="#1E3D31">
+  <link rel="manifest" href="<?= e(url('/manifest.webmanifest')) ?>" crossorigin="use-credentials">
   <link rel="icon" href="<?= e(asset('school/favicon-32.png')) ?>" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="<?= e(asset('school/apple-touch-icon.png')) ?>">
   <link rel="preload" href="<?= e(url('/assets/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>

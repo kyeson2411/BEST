@@ -182,8 +182,10 @@ final class App
                 $response->headers[$name] = $value;
             }
         }
-        if (!isset($response->headers['Cache-Control']) && str_starts_with($response->headers['Content-Type'] ?? '', 'text/html')) {
-            $response->headers['Cache-Control'] = 'no-store';
+        if (str_starts_with($response->headers['Content-Type'] ?? '', 'text/html')) {
+            $response->headers['Cache-Control'] ??= 'no-store';
+            // The page's language: the service worker keeps its offline page in the same one (public/sw.js).
+            $response->headers['Content-Language'] ??= Translator::locale() === 'fil' ? 'fil' : 'en';
         }
     }
 

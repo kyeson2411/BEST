@@ -51,6 +51,11 @@ $materialRow = static function (array $m) use ($aiEnabled, $class): string {
         <?php if (!(int) $m['seen']): ?><?= badge(t('New'), 'leaf') ?><?php endif; ?>
         <?php if ($m['kind'] === 'file'): ?>
           <a class="btn btn--secondary btn--sm" href="<?= e(url('/materials/' . (int) $m['id'] . '/file', ['download' => 1])) ?>"><?= icon('download', 'icon--sm') ?><span class="sr-only"><?= e(t('Download :title', ['title' => $m['title']])) ?></span></a>
+          <?php /* Shown by offline.js where the browser can keep files for offline reading. */ ?>
+          <button type="button" class="btn btn--secondary btn--sm offline-toggle" aria-pressed="false" hidden aria-label="<?= e(t('Keep offline') . ': ' . $m['title']) ?>"
+                  data-offline-save="<?= e(url('/materials/' . (int) $m['id'] . '/file')) ?>" data-offline-title="<?= e($m['title']) ?>">
+            <?= icon('wifi-off', 'icon--sm offline-toggle__off') ?><?= icon('check', 'icon--sm offline-toggle__on') ?><?= e(t('Keep offline')) ?>
+          </button>
         <?php endif; ?>
         <?php if ($aiEnabled && (int) $m['ai_enabled'] && $m['processing_status'] === 'ready'): ?>
           <a class="btn btn--quiet btn--sm" href="<?= e(url('/companion/new', ['mode' => 'ask_materials', 'class_id' => (int) $class['id'], 'material_id' => (int) $m['id']])) ?>"><?= e(t('Ask about it')) ?></a>
@@ -170,6 +175,8 @@ $materialRow = static function (array $m) use ($aiEnabled, $class): string {
   <?php if (!$materials && !$lessons): ?>
     <?= partial('empty', ['title' => t('No materials yet'), 'body' => t('When your teacher shares notes, files or links, they will appear here, organised by module.')]) ?>
   <?php else: ?>
+    <div data-offline data-offline-class="<?= e($class['name']) ?>" data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::offline()) ?>">
+    <p class="meta offline-hint" data-offline-hint hidden><?= icon('wifi-off', 'icon--sm') ?> <?= e(t('Files you keep offline open on this device without a connection, until you sign out.')) ?></p>
     <?php
     $groups = [];
     foreach ($modules as $mod) {
@@ -197,6 +204,7 @@ $materialRow = static function (array $m) use ($aiEnabled, $class): string {
         </ul>
       </section>
     <?php endforeach; ?>
+    </div>
   <?php endif; ?>
 
 <?php elseif ($tab === 'work'): ?>

@@ -20,7 +20,8 @@ try {
     const [who, path] = target.split(':');
     if (who !== role) {
       if (context) await context.close();
-      context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: false, hasTouch: true });
+      // Without the service worker, which would answer from its own cache: this measures what the network carries.
+      context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: false, hasTouch: true, serviceWorkers: 'block' });
       const login = await context.newPage();
       await login.goto(base + '/login');
       await login.getByRole('button', { name: labels[who], exact: true }).click();

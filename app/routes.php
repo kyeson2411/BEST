@@ -72,6 +72,9 @@ $router->post('/start', [AuthController::class, 'start']);
 $router->get('/privacy', [PageController::class, 'privacy']);
 $router->get('/rules', [PageController::class, 'rules']);
 $router->get('/help', [PageController::class, 'help']);
+// The installable app: its manifest, and the page the service worker (public/sw.js) shows without a connection.
+$router->get('/manifest.webmanifest', [PageController::class, 'manifest']);
+$router->get('/offline', [PageController::class, 'offline']);
 
 // Reading and accepting the privacy notice and the rules (the "notices" guard sends people here).
 $router->get('/welcome', [NoticeController::class, 'show'], ['auth']);

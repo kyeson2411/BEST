@@ -17,9 +17,10 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Uploads outside the web root, served through access checks | Done | `Core/Uploads.php`, `FileController`; browser test for draft/scheduled files (404) |
 | Security headers and CSP without inline scripts | Done | `App::securityHeaders`; no inline handlers in views |
 | Real school bootstrap without demo data | Done | `bin/sibol.php school:create`, `user:link` (run against the test database) |
-| PHPUnit and Playwright suites | Done | 130 PHP tests, 75 browser tests, all passing |
+| PHPUnit and Playwright suites | Done | 157 PHP tests, 99 browser tests, all passing on PHP 8.0 + MariaDB 10.4 and PHP 8.3 + MariaDB 10.11 |
 | README, `.env.example`, `CLAUDE.md`, design system | Done | repository root and `docs/` |
 | School identity: seal as logo and favicon, campus photo on the sign-in page at the site root | Done | `layouts/auth.php`, `partials/seal.php`, `tools/school-assets.mjs`; browser checks for the landing page on desktop and phone |
+| Installable app and offline reading | Done | `/manifest.webmanifest` (school name, app icons cut from the seal by `tools/school-assets.mjs`, one maskable); `public/sw.js` keeps the stylesheet, scripts, fonts and images and an offline page with no personal content (no names, messages or form token), refreshed when a page arrives in another language (`Content-Language`); pages and quizzes are never stored. Students choose **Keep offline** for class files (`offline.js`): copies in the browser's cache, refreshed when opened online, removed on sign-out and on the sign-in pages. HTTPS needed (or localhost). PHPUnit `InstallableAppTest`; browser `offline.spec` in Playwright's offline mode. Tested in Edge only |
 
 ## Roles and onboarding
 

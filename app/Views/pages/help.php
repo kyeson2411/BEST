@@ -48,6 +48,15 @@
     <p><?= e(t('An AI provider is connected, so the companion writes new answers. They are still checked against your class materials when you ask about them.')) ?></p>
   <?php endif; ?>
 
+  <h2 id="offline"><?= e(t('Installing Sibol and reading offline')) ?></h2>
+  <ul>
+    <li><?= e(t('On a phone or computer, choose Install app or Add to Home screen in the browser\'s menu. Sibol then opens like an app, with the school\'s seal as its icon.')) ?></li>
+    <?php if ($role === 'student' || $role === null): ?>
+      <li><?= e(t('On a class\'s Materials tab, choose Keep offline beside a file to read it on that device without a connection. Kept files are removed when you sign out.')) ?></li>
+    <?php endif; ?>
+    <li><?= e(t('Other pages, quizzes and the companion need a connection. Without one, Sibol says so and lists the files kept on that device.')) ?></li>
+  </ul>
+
   <h2><?= e(t('Keyboard and accessibility')) ?></h2>
   <ul>
     <li><?= e(t('Every action works with a keyboard. Use Tab to move, Enter to activate, and Escape to close menus and dialogs.')) ?></li>

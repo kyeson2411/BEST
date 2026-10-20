@@ -14,7 +14,8 @@ const median = (list) => [...list].sort((a, b) => a - b)[Math.floor(list.length 
 
 const browser = await chromium.launch({ channel: 'msedge' });
 try {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  // Without the service worker, so the times are the server's and the network's alone.
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' });
   const page = await context.newPage();
   let role = null;
   console.log('page'.padEnd(52) + 'server ms'.padStart(10) + 'load ms'.padStart(10));
