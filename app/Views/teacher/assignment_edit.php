@@ -142,7 +142,7 @@ $base = '/teacher/assignments/' . (int) $a['id'];
       <div class="section__head"><h2 class="section__title" id="s-title"><?= e(t('Settings')) ?></h2></div>
       <form method="post" action="<?= e(url($base)) ?>" data-unsaved-warning>
         <?= csrf_field() ?>
-        <?= partial('assignment_settings', ['assignment' => $a, 'kind' => $kind, 'classes' => $classes, 'selectedClass' => $selectedClass, 'modules' => $modules, 'categories' => $categories]) ?>
+        <?= partial('assignment_settings', ['assignment' => $a, 'kind' => $kind, 'classes' => $classes, 'selectedClass' => $selectedClass, 'modules' => $modules, 'categories' => $categories, 'gradingPeriods' => $gradingPeriods ?? []]) ?>
         <?php if ($allMaterials): ?>
           <fieldset>
             <legend><?= e(t('Resources shown with this work')) ?></legend>

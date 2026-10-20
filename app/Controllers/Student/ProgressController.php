@@ -27,7 +27,11 @@ final class ProgressController extends Controller
         $books = [];
         foreach ($classes as $class) {
             $book = Grades::classBook((int) $class['id'], (int) $user['organization_id'], true, $uid);
-            $books[] = ['class' => $class, 'assignments' => $book['assignments'], 'cells' => $book['cells'][$uid] ?? [], 'overall' => $book['overall'][$uid] ?? null, 'grading' => $book['grading']];
+            $books[] = [
+                'class' => $class, 'assignments' => $book['assignments'], 'cells' => $book['cells'][$uid] ?? [], 'overall' => $book['overall'][$uid] ?? null,
+                'grading' => $book['grading'], 'periods' => $book['periods'], 'by_period' => $book['by_period'][$uid] ?? [], 'final' => $book['final'][$uid] ?? null,
+                'transmuted' => $book['transmuted'],
+            ];
         }
 
         // Work due so far by the student's own dates; excused work is not counted.

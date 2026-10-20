@@ -21,6 +21,7 @@ final class AuditLabels
             'assignment' => t('Assignments'),
             'submission' => t('Submissions and grading'),
             'settings' => t('Settings and policies'),
+            'grading_period' => t('Grading periods'),
             'privacy' => t('Privacy'),
             'notices' => t('Privacy notice and rules'),
             'feedback' => t('Feedback about Sibol'),
@@ -129,6 +130,13 @@ final class AuditLabels
             case 'settings.policies_updated': return t('Changed school policies');
             case 'settings.school_updated': return t('Changed school details');
             case 'settings.grading_updated': return t('Changed the grading setup');
+            case 'settings.grading_groups_updated': return t('Changed the weights for subject groups');
+            case 'settings.transmutation_updated':
+                return !empty($meta['enabled']) ? t('Switched the transmutation table on') : (!empty($meta['confirmed']) ? t('Saved a checked transmutation table, switched off') : t('Changed the transmutation table'));
+            case 'grading_period.created': return t('Added a grading period');
+            case 'grading_period.updated': return t('Changed the dates of a grading period');
+            case 'grading_period.deleted': return t('Removed a grading period');
+            case 'grading_period.split': return tp('Split a school year into :count grading period', 'Split a school year into :count grading periods', $n('count'));
             case 'settings.logo_updated': return t('Changed the school logo');
 
             case 'privacy.request_submitted': return t('Submitted a privacy request');

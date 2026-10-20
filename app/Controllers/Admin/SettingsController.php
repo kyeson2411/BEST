@@ -16,7 +16,7 @@ use Sibol\Services\Notices;
 use Sibol\Services\Settings;
 use Sibol\Services\SystemCheck;
 
-/** School policies (AI, features, class codes, privacy, notifications), school details and grading setup. */
+/** School policies (AI, features, class codes, privacy, notifications) and school details. Grading has its own page. */
 final class SettingsController extends Controller
 {
     public function policies(): Response
@@ -156,9 +156,6 @@ final class SettingsController extends Controller
             'title' => t('School settings'),
             'org' => Db::one('SELECT * FROM organizations WHERE id = :o', ['o' => $o]),
             'grades' => (array) Settings::get($o, 'grade_levels', []),
-            'grading' => (array) Settings::get($o, 'grading', []),
-            'presets' => Settings::gradingPresets(),
-            'used' => array_map('strval', Db::column("SELECT DISTINCT category FROM assignments WHERE organization_id = :o AND category IS NOT NULL AND category <> ''", ['o' => $o])),
         ]);
     }
 
@@ -188,80 +185,6 @@ final class SettingsController extends Controller
         Settings::set($o, 'grade_levels', $grades, (int) $admin['id']);
         Audit::log('settings.school_updated');
         $this->flash('success', t('School details saved.'));
-        return $this->redirect($back);
-    }
-
-    public function saveGrading(): Response
-    {
-        $admin = $this->user();
-        $o = (int) $admin['organization_id'];
-        $back = '/admin/settings#grading';
-        $presets = Settings::gradingPresets();
-        $preset = $this->request->str('preset');
-        if ($preset !== '') {
-            if (!isset($presets[$preset])) {
-                $this->fail('preset', t('Choose one of the starting points.'), $back);
-            }
-            Settings::set($o, 'grading', $presets[$preset]['value'], (int) $admin['id']);
-            Audit::log('settings.grading_updated', null, null, ['preset' => $preset]);
-            $this->flash('success', t('Starting point loaded. Review the weights and labels so they match your school\'s policy, then save.'));
-            return $this->redirect($back);
-        }
-        $data = $this->validate([
-            'model' => 'required|in:points,weighted',
-            'passing_percent' => 'required|numeric|min:0|max:100',
-        ], ['model' => t('Grading model'), 'passing_percent' => t('Passing percentage')], $back);
-
-        $categories = [];
-        $keys = $this->request->arr('cat_key');
-        $labels = $this->request->arr('cat_label');
-        $weights = $this->request->arr('cat_weight');
-        foreach ($labels as $i => $label) {
-            $label = mb_substr(trim((string) $label), 0, 60);
-            $weight = trim((string) ($weights[$i] ?? ''));
-            if ($label === '' && $weight === '') {
-                continue;
-            }
-            if ($label === '' || !is_numeric($weight) || (float) $weight < 0 || (float) $weight > 100) {
-                $this->fail('categories', t('Each category needs a name and a weight between 0 and 100.'), $back);
-            }
-            $key = preg_replace('/[^a-z0-9_]/', '', (string) ($keys[$i] ?? '')) ?: trim((string) preg_replace('/[^a-z0-9]+/', '_', mb_strtolower($label)), '_');
-            if ($key === '' || isset($categories[$key])) {
-                $key = 'cat' . (count($categories) + 1);
-            }
-            $categories[$key] = ['key' => $key, 'label' => $label, 'weight' => round((float) $weight, 2)];
-        }
-        if ($data['model'] === 'weighted') {
-            if (!$categories) {
-                $this->fail('categories', t('Weighted grading needs at least one category.'), $back);
-            }
-            $sum = array_sum(array_column($categories, 'weight'));
-            if (abs($sum - 100) > 0.01) {
-                $this->fail('categories', t('Category weights add up to :sum%. They must add up to 100%.', ['sum' => fmt_number($sum, 2)]), $back);
-            }
-        }
-        $descriptors = [];
-        $mins = $this->request->arr('desc_min');
-        foreach ($this->request->arr('desc_label') as $i => $label) {
-            $label = mb_substr(trim((string) $label), 0, 60);
-            $min = trim((string) ($mins[$i] ?? ''));
-            if ($label === '' && $min === '') {
-                continue;
-            }
-            if ($label === '' || !is_numeric($min) || (float) $min < 0 || (float) $min > 100) {
-                $this->fail('descriptors', t('Each descriptor needs a label and a lowest percentage between 0 and 100.'), $back);
-            }
-            $descriptors[] = ['min' => (float) $min, 'label' => $label];
-        }
-        usort($descriptors, static fn ($a, $b) => $b['min'] <=> $a['min']);
-        Settings::set($o, 'grading', [
-            'model' => $data['model'],
-            'categories' => array_values($categories),
-            'passing_percent' => $data['passing_percent'],
-            'descriptors' => $descriptors,
-        ], (int) $admin['id']);
-        Audit::log('settings.grading_updated', null, null, ['model' => $data['model']]);
-        $this->flash('success', t('Grading setup saved. Gradebooks use it right away.'));
         return $this->redirect($back);
     }
 

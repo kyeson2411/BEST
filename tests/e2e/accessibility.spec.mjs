@@ -7,7 +7,7 @@ const pages = {
   guest: ['', 'login', 'start', 'privacy', 'help', 'login?lang=fil'],
   student: ['student', 'student/assignments', 'student/classes', 'companion/new', 'student/progress', 'student/calendar', 'student/learning', 'settings', 'feedback'],
   teacher: ['teacher', 'teacher/review', 'teacher/assignments/new', 'teacher/materials/new', 'teacher/lessons', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback'],
-  admin: ['admin', 'admin/users', 'admin/users/new', 'admin/users/import', 'admin/classes/new', 'admin/subjects', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/settings', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot'],
+  admin: ['admin', 'admin/users', 'admin/users/new', 'admin/users/import', 'admin/classes/new', 'admin/subjects', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/settings', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot', 'admin/grading', 'admin/academic-periods'],
 };
 
 async function audit(page) {

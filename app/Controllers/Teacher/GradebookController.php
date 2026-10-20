@@ -10,6 +10,7 @@ use Sibol\Core\Response;
 use Sibol\Policies\Access;
 use Sibol\Repositories\TeacherRepo;
 use Sibol\Services\Grades;
+use Sibol\Services\GradingPeriods;
 
 final class GradebookController extends Controller
 {
@@ -34,11 +35,21 @@ final class GradebookController extends Controller
         $user = $this->user();
         $class = Access::teacherClass($user, $id);
         $book = Grades::classBook($id, (int) $user['organization_id']);
+        // With grading periods: one period's work and grade, the final grades, or all work as before.
+        $view = 'all';
+        if ($book['periods']) {
+            $asked = $this->request->str('period');
+            $ids = array_map(static fn (array $p): string => (string) $p['id'], $book['periods']);
+            $view = in_array($asked, array_merge($ids, ['final', 'all']), true)
+                ? $asked
+                : (string) GradingPeriods::current($book['periods'], GradingPeriods::zone((int) $user['organization_id']));
+        }
         return $this->view('teacher/gradebook', [
             'title' => t('Gradebook: :class', ['class' => $class['name']]),
             'crumbs' => [[t('Gradebook'), '/teacher/gradebook'], [$class['name'], null]],
             'class' => $class,
             'book' => $book,
+            'show' => $view,
             'classes' => TeacherRepo::classes($user),
         ]);
     }
@@ -54,18 +65,43 @@ final class GradebookController extends Controller
         foreach ($book['assignments'] as $a) {
             $header[] = $a['title'] . ' (/' . fmt_number($a['points_possible'], 2) . ')';
         }
-        $header[] = t('Overall %');
+        if ($book['periods']) {
+            // Per grading period: the initial grade and, when the school's table is on, the transmuted grade.
+            foreach ($book['periods'] as $p) {
+                $header[] = t(':period initial grade', ['period' => $p['name']]);
+                if ($book['transmuted']) {
+                    $header[] = t(':period grade', ['period' => $p['name']]);
+                }
+            }
+            $header[] = t('Final grade');
+        } else {
+            $header[] = t('Overall %');
+        }
         $header[] = t('Descriptor');
         fputcsv($out, array_map([$this, 'cell'], $header));
         foreach ($book['students'] as $s) {
+            $sid = (int) $s['id'];
             $row = [$s['family_name'], $s['given_name'], (string) $s['username'], (string) $s['email']];
             foreach ($book['assignments'] as $a) {
-                $cell = $book['cells'][(int) $s['id']][(int) $a['id']] ?? null;
+                $cell = $book['cells'][$sid][(int) $a['id']] ?? null;
                 $row[] = $cell === null ? '' : ($cell['state'] === 'graded' ? fmt_number($cell['score'], 2) : (['missing' => t('missing'), 'absent' => t('absent'), 'pending' => t('to grade'), 'excused' => t('excused')][$cell['state']] ?? ''));
             }
-            $overall = $book['overall'][(int) $s['id']] ?? null;
-            $row[] = $overall && $overall['percent'] !== null ? (string) $overall['percent'] : '';
-            $row[] = $overall['descriptor'] ?? '';
+            if ($book['periods']) {
+                foreach ($book['periods'] as $p) {
+                    $g = $book['by_period'][$sid][(int) $p['id']] ?? null;
+                    $row[] = $g && $g['initial'] !== null ? number_format((float) $g['initial'], 2, '.', '') : '';
+                    if ($book['transmuted']) {
+                        $row[] = $g && $g['grade'] !== null ? fmt_number($g['grade'], 0) : '';
+                    }
+                }
+                $final = $book['final'][$sid] ?? null;
+                $row[] = $final && $final['grade'] !== null ? (string) $final['grade'] : '';
+                $row[] = $final['descriptor'] ?? '';
+            } else {
+                $overall = $book['overall'][$sid] ?? null;
+                $row[] = $overall && $overall['percent'] !== null ? (string) $overall['percent'] : '';
+                $row[] = $overall['descriptor'] ?? '';
+            }
             fputcsv($out, array_map([$this, 'cell'], $row));
         }
         rewind($out);

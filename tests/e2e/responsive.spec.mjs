@@ -6,7 +6,7 @@ import { demoLogin, ids } from './helpers.mjs';
 const screens = {
   student: ['student', 'student/assignments', 'student/classes', 'companion', 'student/progress', 'student/calendar', 'student/learning', 'feedback'],
   teacher: ['teacher', 'teacher/review', 'teacher/assignments', 'teacher/materials', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback'],
-  admin: ['admin', 'admin/users', 'admin/classes', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot'],
+  admin: ['admin', 'admin/users', 'admin/classes', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot', 'admin/grading', 'admin/academic-periods'],
 };
 
 for (const [role, paths] of Object.entries(screens)) {

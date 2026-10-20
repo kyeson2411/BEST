@@ -1,5 +1,5 @@
 <?php
-/** @var array|null $assignment @var string $kind @var list<array> $classes @var int|null $selectedClass @var list<array> $modules @var array $categories */
+/** @var array|null $assignment @var string $kind @var list<array> $classes @var int|null $selectedClass @var list<array> $modules @var array $categories @var list<array> $gradingPeriods */
 $a = $assignment ?? [];
 $isQuiz = $kind === 'quiz';
 // Work done in class or on paper: no online submission, opening time, late rule or answer release.
@@ -26,6 +26,14 @@ $val = static fn (string $k, $default = '') => $a[$k] ?? $default;
   <?= field('textarea', 'instructions', t('Instructions for students'), ['value' => (string) $val('instructions'), 'rows' => 7, 'wrap_class' => 'span-2', 'hint' => t('Simple formatting works: **bold**, lists, and maths like $x^2$.'), 'attrs' => ['maxlength' => 20000]]) ?>
   <?= field('text', 'objectives', t('Learning objectives'), ['value' => (string) $val('objectives'), 'wrap_class' => 'span-2', 'optional_label' => true, 'attrs' => ['maxlength' => 2000]]) ?>
   <?= field('select', 'category', t('Grading category'), ['options' => $categories, 'value' => (string) $val('category'), 'hint' => count($categories) > 1 ? t('Set by your school\'s grading policy.') : t('Your school uses points only.')]) ?>
+  <?php if (!empty($gradingPeriods)):
+      $years = count(array_unique(array_column($gradingPeriods, 'academic_period_id')));
+      $periodOptions = ['' => t('By due date')];
+      foreach ($gradingPeriods as $gp) {
+          $periodOptions[(string) $gp['id']] = ($years > 1 ? $gp['year_name'] . ': ' : '') . $gp['name'] . ' (' . fmt_date($gp['starts_on'] . ' 12:00:00', 'date_short') . ' – ' . fmt_date($gp['ends_on'] . ' 12:00:00', 'date_short') . ')';
+      } ?>
+    <?= field('select', 'grading_period_id', t('Grading period'), ['options' => $periodOptions, 'value' => (string) $val('grading_period_id'), 'hint' => t('Work counts in the grading period its due date falls in. Choose one only to count it in another.')]) ?>
+  <?php endif; ?>
   <?php if (!$isQuiz): ?>
     <?= field('number', 'points_possible', t('Points'), ['value' => (string) ($val('points_possible', '') === '' ? '10' : fmt_number($val('points_possible'), 2)), 'attrs' => ['min' => 0, 'max' => 1000, 'step' => '0.5'],
         'hint' => $isPaper ? t('The highest possible score. Questions or a rubric, if you add them, set this automatically.') : t('A rubric, if you add one, sets this automatically.')]) ?>

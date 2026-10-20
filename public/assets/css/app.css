@@ -459,7 +459,7 @@ legend { padding: 0; margin-bottom: var(--s-2); font-weight: 700; font-size: var
 .result-count { color: var(--ink-3); font-size: 0.875rem; margin: 0 0 var(--s-2); }
 
 /* Tables ------------------------------------------------------------------------- */
-.table-frame { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius-panel); background: var(--paper-raised); }
+.table-frame { position: relative; overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius-panel); background: var(--paper-raised); }
 .table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
 .table caption { text-align: left; padding: 12px 14px; font-weight: 700; caption-side: top; }
 .table th {
@@ -1015,7 +1015,9 @@ input[type="file"]::file-selector-button:hover { background: var(--sage-soft); }
 .check-row input { width: 18px; height: 18px; accent-color: var(--forest); flex-shrink: 0; }
 .table--compact th, .table--compact td { padding: 6px 8px; }
 .table--compact .input { min-height: 36px; padding: 6px 10px; }
+.table--compact .select { padding-right: 34px; background-position: right 10px center; }
 .input--num { width: 6.5em; text-align: right; font-variant-numeric: tabular-nums; }
+.input--name { min-width: 10rem; }
 .logo-preview { width: 96px; height: 96px; display: grid; place-items: center; border: 1px dashed var(--rule-strong); border-radius: 12px; background: var(--paper-raised); overflow: hidden; }
 .logo-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .quote-block { margin: 0 0 var(--s-3); padding: var(--s-3) var(--s-4); border-left: 3px solid var(--sage); background: var(--paper-raised); border-radius: 0 var(--radius-control) var(--radius-control) 0; }
@@ -1082,6 +1084,25 @@ input[type="file"]::file-selector-button:hover { background: var(--sage-soft); }
 @media (max-width: 759px) {
   .welcome__text { max-height: 360px; padding: var(--s-1) var(--s-4) var(--s-2); }
 }
+
+/* Grading setup: grading periods inside a school year, and starting points. ---------------------------- */
+.row--wrap { flex-wrap: wrap; align-items: flex-start; }
+.grading-periods { flex: 1 0 100%; padding: var(--s-3) var(--s-4); background: var(--paper-sunken); border-radius: var(--radius-control); }
+.grading-periods__title { margin: 0 0 var(--s-2); font-size: 0.875rem; font-weight: 700; color: var(--ink-2); }
+.grading-periods__list, .grading-periods > .cluster { margin: 0 0 var(--s-2); padding: 0; list-style: none; }
+.grading-periods__list > li { padding: 4px 0; border-bottom: 1px solid var(--rule); }
+.grading-periods__list > li:last-child { border-bottom: 0; }
+.grading-periods__form { margin: var(--s-2) 0 var(--s-3); }
+.preset-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--s-3); }
+.preset-list .panel + .panel { margin-top: 0; }
+.preset { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-2); }
+.preset .meta { margin: 0; }
+.preset__title { margin: 0; font-size: 1rem; font-weight: 700; }
+.period-grades { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); margin: var(--s-2) 0 0; }
+.period-grades dt { font-size: 0.8125rem; color: var(--ink-3); }
+.period-grades dd { margin: 0; font-weight: 700; }
+.period-grades__final { padding-left: var(--s-4); border-left: 2px solid var(--sage-line); }
+.preset .btn { margin-top: auto; }
 
 /* Feedback about Sibol and the weekly pilot report. --------------------------------------------- */
 .feedback-text { margin: 4px 0 0; white-space: pre-line; overflow-wrap: anywhere; }

@@ -76,7 +76,8 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Student preview, publish snapshots, locked questions after attempts | Done | |
 | Review queue, rubric grading, AI grading suggestions (advice only), release | Done | browser test releases a grade |
 | Gradebook with school grading model; CSV export with audit and formula-injection protection | Done | |
-| Scores for work done in class or on paper; printed blank copies and answer keys | Done | Migration 010: assignment kind `paper`, submissions `source`, overrides `absent`. Score grid per assignment (`Services/PaperScores.php`): score, absent, excused, held or released; paper scores count in the gradebook, CSV and progress like online work and respect make-up dates and excused work; never "missing" unless marked absent; audit-logged with counts. Print view of any assignment or quiz, blank or with the key (`Assessments::printable`). PHPUnit `PaperScoresTest`; browser `paper-scores.spec`. Grading periods (item 7) not built yet |
+| Grading periods, weights by subject group, transmutation; DepEd 2015 and 2026 templates | Done | Migration 014: `grading_periods` (inside academic periods), `assignments.grading_period_id`, `subjects.grading_group`. Work counts in the period of its class due date in the school's time zone (`GradingPeriods::effective`) unless the teacher picks one; period grades from that period's work only, final grade = average so far. Transmutation (`Services/Transmutation.php`) applies only when the table is valid, checked line by line and switched on; changing it needs a new check. Gradebook tabs per period, Final grades, All work; CSV adds each period's initial and transmuted grade and the final grade; student progress shows period grades. 2026 weights are from news reports and its table is typed in by the school. PHPUnit `GradingPeriodsTest`; browser `grading-periods.spec` |
+| Scores for work done in class or on paper; printed blank copies and answer keys | Done | Migration 010: assignment kind `paper`, submissions `source`, overrides `absent`. Score grid per assignment (`Services/PaperScores.php`): score, absent, excused, held or released; paper scores count in the gradebook, CSV and progress like online work and respect make-up dates and excused work; never "missing" unless marked absent; audit-logged with counts. Print view of any assignment or quiz, blank or with the key (`Assessments::printable`). PHPUnit `PaperScoresTest`; browser `paper-scores.spec` |
 | Insights with sample sizes and small-group caution | Done | |
 
 ## Administrators
@@ -85,10 +86,10 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 |---|---|---|
 | Overview with pending actions, configuration warnings, aggregate completion | Done | small groups hidden |
 | People: invite, edit, role change rules, deactivate/reactivate, links | Done | cannot deactivate self or the last administrator |
-| Classes, members, archive; subjects; academic periods | Done | |
+| Classes, members, archive; subjects; academic periods and their grading periods | Done | grading periods split a school year into quarters or terms (at most 6, inside the year, no overlaps) |
 | Policies: AI on/off, modes, limits, budget, features, class codes, retention, contacts, notifications, who accepts the notice and rules, whether a student's AI starts on | Done | browser tests switch a feature off and on, and ask everyone to accept the notice again |
 | AI usage by day, feature and role with cost estimate | Done | |
-| School details, grade levels, logo, grading model and templates | Done | |
+| School details, grade levels, logo, grading model and templates | Done | grading has its own page, `/admin/grading` |
 | Integrations and system checks (no secrets shown) | Done | |
 | Privacy requests: export, correction, erasure, decline | Done | export downloadable only by the requester (browser test); erasure in `PrivacyAndUsageTest` |
 | Reported answers without conversation access | Done | browser test confirms the question is not shown |

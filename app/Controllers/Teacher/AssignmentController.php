@@ -85,6 +85,7 @@ final class AssignmentController extends Controller
             'selectedClass' => $this->request->int('class_id'),
             'modules' => $this->modules(array_map(static fn ($c) => (int) $c['id'], $classes)),
             'categories' => Grades::categoryOptions((int) $user['organization_id']),
+            'gradingPeriods' => $this->gradingPeriods(array_map(static fn ($c) => (int) $c['id'], $classes)),
             'locked' => false,
         ]);
     }
@@ -167,6 +168,7 @@ final class AssignmentController extends Controller
             'selectedClass' => (int) $a['class_id'],
             'modules' => $this->modules([(int) $a['class_id']]),
             'categories' => Grades::categoryOptions((int) $user['organization_id']),
+            'gradingPeriods' => $this->gradingPeriods([(int) $a['class_id']]),
             'questions' => Assessments::questions($id),
             'rubric' => json_decode((string) ($a['rubric'] ?? ''), true) ?: [],
             'locked' => Assessments::hasAttempts($id),
@@ -552,6 +554,7 @@ final class AssignmentController extends Controller
             'instructions' => 'nullable|string|max:20000',
             'objectives' => 'nullable|string|max:2000',
             'category' => 'nullable|string|max:60',
+            'grading_period_id' => 'nullable|int',
             'opens_at' => 'nullable|datetime',
             'due_at' => 'nullable|datetime',
             'late_policy' => 'required|in:not_accepted,accepted,penalty',
@@ -587,6 +590,11 @@ final class AssignmentController extends Controller
         if ($moduleId !== null && !(int) Db::value('SELECT COUNT(*) FROM modules WHERE id = :m AND class_id = :c', ['m' => $moduleId, 'c' => $classId])) {
             $moduleId = null;
         }
+        // A grading period chosen by hand must belong to the class's school year; otherwise the due date decides.
+        $periodId = $data['grading_period_id'] ? (int) $data['grading_period_id'] : null;
+        if ($periodId !== null && !(int) Db::value('SELECT COUNT(*) FROM grading_periods g JOIN classes c ON c.academic_period_id = g.academic_period_id WHERE g.id = :g AND c.id = :c', ['g' => $periodId, 'c' => $classId])) {
+            $periodId = null;
+        }
         $isQuiz = $data['kind'] === 'quiz';
         // Work done in class has no online submission, opening time, late rule or answers to show.
         $online = $data['kind'] !== 'paper';
@@ -596,6 +604,7 @@ final class AssignmentController extends Controller
             'instructions' => $data['instructions'],
             'objectives' => $data['objectives'],
             'category' => $data['category'] ?: null,
+            'grading_period_id' => $periodId,
             'opens_at' => $online ? $data['opens_at_utc'] : null,
             'due_at' => $data['due_at_utc'],
             'late_policy' => $online ? $data['late_policy'] : 'accepted',
@@ -665,5 +674,21 @@ final class AssignmentController extends Controller
         }
         [$in, $p] = Db::in($classIds, 'c');
         return Db::all("SELECT id, title, class_id FROM modules WHERE class_id IN $in ORDER BY position", $p);
+    }
+
+    /** Grading periods of these classes' school years, with the school year's name. @return list<array> */
+    private function gradingPeriods(array $classIds): array
+    {
+        if (!$classIds) {
+            return [];
+        }
+        [$in, $p] = Db::in($classIds, 'c');
+        return Db::all(
+            "SELECT DISTINCT g.id, g.name, g.starts_on, g.ends_on, g.academic_period_id, ap.name AS year_name
+             FROM grading_periods g JOIN academic_periods ap ON ap.id = g.academic_period_id
+             JOIN classes c ON c.academic_period_id = g.academic_period_id
+             WHERE c.id IN $in ORDER BY g.starts_on",
+            $p
+        );
     }
 }

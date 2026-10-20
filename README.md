@@ -303,8 +303,11 @@ before anything reaches a provider, reteaching topics without that student, and 
 feedback and the weekly report (only the page's path is kept, a reply is sent once as a notification, audit
 entries without text, feedback stays inside its school, weeks from Monday in the school's time zone, and a test
 school whose counts, rates and hidden small groups are checked number by number, in the page data and the CSV;
-the pilot-size school loads only into an empty database).
-Last run: **130 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
+the pilot-size school loads only into an empty database), and grading periods (the 2015 table's 41 rows, reading
+a pasted table and refusing a broken one, which period work counts in, overlapping or out-of-year dates,
+splitting a year, and a test school whose period, final and transmuted grades are checked number by number,
+with the table on and off, with subject-group weights, and without periods).
+Last run: **136 tests, all passing** (on PHP 8.0 and 8.3, with MariaDB 10.4 and 10.11).
 
 **Browser tests (Playwright)** drive the real app through Apache. **They reset the local `sibol` database
 first** (`db:reset`), so do not run them against data you want to keep. They refuse to run unless
@@ -334,9 +337,11 @@ after the administrator asks everyone, without interrupting work already under w
 guardian's no so the companion and practice disappear for that student (403, other pages unaffected, 404 for a
 teacher who is not the adviser), a student sending feedback from a class page and reading the administrator's
 reply, a teacher's feedback without its page, the weekly pilot report as a page and CSV (no names), maths typeset
-with KaTeX that is downloaded only when a page shows maths, phone-width layout of 29 screens and structural
-accessibility checks on 44 screens.
-Last run: **75 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
+with KaTeX that is downloaded only when a page shows maths, an administrator loading the DepEd 2015 template
+(the table is refused until it is checked, then switched on, and the page still fits a phone), a teacher's
+quarter and final grades, CSV columns and work placed in another quarter, a student's quarter grades,
+phone-width layout of 31 screens and structural accessibility checks on 46 screens.
+Last run: **78 tests, all passing** (on PHP 8.0 with MariaDB 10.4, and PHP 8.3 with MariaDB 10.11).
 
 ## Versions and performance
 
@@ -556,6 +561,34 @@ tools/             asset scripts (fonts and icons, school images with their orig
   online work on a printed copy (their online submissions are never overwritten). Saving is audit-logged with
   counts only. Any assignment or quiz prints as a blank copy (no answers; AI drafts not yet approved are left
   out) or as the teacher's copy with the answer key, which only the class's teachers can open.
+- **Grading periods, weights by subject group and transmutation.** Sibol does not decide a school's grading
+  policy; an administrator sets it up under **School settings → Grading** (`/admin/grading`):
+  - **Grading periods** are quarters or terms inside a school year (**Subjects and terms → Academic periods**:
+    split a year into four quarters or three terms, then move the dates to the school calendar; at most 6, inside
+    the year, without overlaps). Work counts in the period its due date falls in, in the school's time zone,
+    unless its teacher picks another period in the assignment's settings. Each period's grade uses only that
+    period's work, and the final grade is the average of the period grades so far. Classes in a year without
+    grading periods keep one overall grade.
+  - **Weights by subject group:** each group of subjects can weigh the categories differently; a subject without
+    a group uses the default weights.
+  - **Transmutation table:** pasted as two columns (or the order's ranges) and shown back as Sibol reads it. It
+    stays off until someone ticks that they checked every line against the official order and switches it on,
+    and any change to the table needs that tick again. When it is on, each period's initial grade (two
+    decimals) is transmuted, and the final grade is their average as a whole number.
+  - **Templates** load either DepEd order as a starting point, which replaces the categories, groups, table and
+    descriptors and can split the current school year. **DepEd Order No. 8, s. 2015:** four quarters; written
+    work, performance tasks and quarterly assessment at 30/50/20 (languages, Araling Panlipunan, EsP), 40/40/20
+    (mathematics and science) and 20/60/20 (MAPEH, EPP/TLE); its transmutation table, switched off.
+    **DepEd Order No. 015, s. 2026:** three terms; written or oral works, performance tasks and examinations at
+    20/50/30, and 20/60/20 for EPP/TLE and MAPEH, as news reports gave them when the order came out; no table
+    and no descriptors, which the school types in from the order. Check every number against the order
+    before teachers rely on it.
+
+  Teachers see a tab per grading period (each student's initial grade and period grade), **Final grades** and
+  **All work**, with a warning that lists work due outside every period. The CSV export adds each period's
+  initial grade, its transmuted grade when the table is on, and the final grade. Students see each period's
+  grade and the final grade so far under **Progress**. Changes to periods, groups, templates and the table are
+  audit-logged with counts and switches only.
 - **Quizzes on weak connections.** Answers are sent about a second after each change and when the page is hidden.
   Until the server confirms them they are also kept in the browser's `sessionStorage` for that tab only (never
   in cookies or long-term storage), restored after a reload and sent again on reconnect; they are removed once
@@ -615,9 +648,9 @@ tools/             asset scripts (fonts and icons, school images with their orig
   labelled controls, error messages tied to their fields, status shown with words and icons, never colour alone,
   reduced-motion support, charts with table views, and layouts that work at 390 px.
 - The browser tests check structure (one heading level 1 per page, unique ids, names for every control and
-  link, image alternatives) on 40 screens and the absence of sideways scrolling on 25 phone screens.
+  link, image alternatives) on 46 screens and the absence of sideways scrolling on 31 phone screens.
   They are not a full audit; test with a screen reader before launch.
-- **Filipino:** every interface string is translated (2,634 of 2,634), for students, teachers and school
+- **Filipino:** every interface string is translated (2,950 of 2,950), for students, teachers and school
   administrators. That includes text written by scripts (save status, card counters, companion progress), which
   the server translates and hands to the page in `data-i18n` attributes, so the JavaScript holds no English.
   Strings added later fall back to English until they are added to `lang/fil.php`; run
@@ -642,6 +675,11 @@ tools/             asset scripts (fonts and icons, school images with their orig
   "may not cover this directly" rather than deciding whether they answer it.
 - The Filipino translation covers the whole interface but was drafted with AI and has not yet been reviewed
   by a Filipino teacher.
+- The DepEd grading templates were typed in by hand. The published copy of DepEd Order No. 8, s. 2015 is a
+  scan, so its weights and table were checked against other published copies of the order rather than read
+  from the file. The 2026 weights come from news reports of DepEd Order No. 015, s. 2026, not the order itself.
+  A loaded template's weights apply at once, so check them first; its table stays off until someone confirms
+  every line.
 - The notification badge updates live (every 90 seconds while the page is visible); everything else, such as
   grading updates and lists, refreshes on page load.
 - The demo password and demo sign-in exist only for local evaluation; production settings disable them.

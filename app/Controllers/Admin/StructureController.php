@@ -9,6 +9,7 @@ use Sibol\Core\Audit;
 use Sibol\Core\Db;
 use Sibol\Core\HttpException;
 use Sibol\Core\Response;
+use Sibol\Services\GradingPeriods;
 use Sibol\Services\Notifier;
 use Sibol\Services\Sections;
 
@@ -73,6 +74,9 @@ final class StructureController extends Controller
                 ['o' => $o]
             ),
             'editing' => $this->request->int('edit'),
+            'gradingPeriods' => GradingPeriods::forOrganization($o),
+            'gpEditing' => $this->request->int('gp'),
+            'gpAdding' => $this->request->int('gpnew'),
         ]);
     }
 
@@ -178,7 +182,110 @@ final class StructureController extends Controller
         return $this->redirect('/admin/sections');
     }
 
+    // ------------------------------------------------------------------ grading periods (quarters or terms)
+
+    public function storeGradingPeriod(int $id): Response
+    {
+        $o = $this->orgId();
+        $year = $this->year($id, $o);
+        $back = '/admin/academic-periods?gpnew=' . $id . '#year-' . $id;
+        $data = $this->validate($this->gradingPeriodRules(), $this->gradingPeriodLabels(), $back);
+        $others = GradingPeriods::forAcademicPeriod($id);
+        if (count($others) >= GradingPeriods::MAX) {
+            $this->fail('gp_name', t('A school year can have at most :n grading periods.', ['n' => GradingPeriods::MAX]), $back);
+        }
+        $problems = GradingPeriods::problems($year, (string) $data['gp_starts_on'], (string) $data['gp_ends_on'], $others);
+        if ($problems) {
+            $this->fail('gp_starts_on', $problems[0], $back);
+        }
+        $gid = Db::insert('grading_periods', [
+            'organization_id' => $o, 'academic_period_id' => $id, 'name' => $data['gp_name'], 'position' => count($others) + 1,
+            'starts_on' => $data['gp_starts_on'], 'ends_on' => $data['gp_ends_on'], 'created_at' => Db::now(), 'updated_at' => Db::now(),
+        ]);
+        Audit::log('grading_period.created', 'period', $id, ['grading_period' => $gid]);
+        $this->flash('success', t('Grading period added.'));
+        return $this->redirect('/admin/academic-periods#year-' . $id);
+    }
+
+    public function updateGradingPeriod(int $id): Response
+    {
+        $o = $this->orgId();
+        $gp = $this->gradingPeriod($id, $o);
+        $yearId = (int) $gp['academic_period_id'];
+        $back = '/admin/academic-periods?gp=' . $id . '#year-' . $yearId;
+        $data = $this->validate($this->gradingPeriodRules(), $this->gradingPeriodLabels(), $back);
+        $others = array_values(array_filter(GradingPeriods::forAcademicPeriod($yearId), static fn (array $g): bool => (int) $g['id'] !== $id));
+        $problems = GradingPeriods::problems($this->year($yearId, $o), (string) $data['gp_starts_on'], (string) $data['gp_ends_on'], $others);
+        if ($problems) {
+            $this->fail('gp_starts_on', $problems[0], $back);
+        }
+        Db::update('grading_periods', ['name' => $data['gp_name'], 'starts_on' => $data['gp_starts_on'], 'ends_on' => $data['gp_ends_on'], 'updated_at' => Db::now()], ['id' => $id]);
+        Audit::log('grading_period.updated', 'period', $yearId, ['grading_period' => $id]);
+        $this->flash('success', t('Grading period saved. Work moves to the period its due date now falls in.'));
+        return $this->redirect('/admin/academic-periods#year-' . $yearId);
+    }
+
+    public function deleteGradingPeriod(int $id): Response
+    {
+        $o = $this->orgId();
+        $gp = $this->gradingPeriod($id, $o);
+        Db::delete('grading_periods', ['id' => $id]);
+        Audit::log('grading_period.deleted', 'period', (int) $gp['academic_period_id'], ['grading_period' => $id]);
+        $this->flash('success', t('Grading period removed. Work a teacher had placed in it now counts by its due date.'));
+        return $this->redirect('/admin/academic-periods#year-' . (int) $gp['academic_period_id']);
+    }
+
+    /** Splits a school year into four quarters or three terms of about equal length, to adjust afterwards. */
+    public function splitGradingPeriods(int $id): Response
+    {
+        $o = $this->orgId();
+        $year = $this->year($id, $o);
+        $count = (int) $this->request->int('count');
+        $back = $this->request->str('back') === 'grading' ? '/admin/grading#periods' : '/admin/academic-periods#year-' . $id;
+        if (!in_array($count, [3, 4], true)) {
+            throw HttpException::notFound();
+        }
+        $made = GradingPeriods::split($year, $count, $count === 3 ? t('Term') : t('Quarter'));
+        if ($made) {
+            Audit::log('grading_period.split', 'period', $id, ['count' => $made]);
+            $this->flash('success', tp('Made :count grading period of about equal length. Adjust the dates to the school calendar.', 'Made :count grading periods of about equal length. Adjust the dates to the school calendar.', $made));
+        } else {
+            $this->flash('error', t('This school year already has grading periods, or is too short to split.'));
+        }
+        return $this->redirect($back);
+    }
+
     // ------------------------------------------------------------------------------------------
+
+    /** @return array<string,mixed> */
+    private function year(int $id, int $o): array
+    {
+        $year = Db::one('SELECT * FROM academic_periods WHERE id = :id AND organization_id = :o', ['id' => $id, 'o' => $o]);
+        if (!$year) {
+            throw HttpException::notFound();
+        }
+        return $year;
+    }
+
+    /** @return array<string,mixed> */
+    private function gradingPeriod(int $id, int $o): array
+    {
+        $gp = Db::one('SELECT * FROM grading_periods WHERE id = :id AND organization_id = :o', ['id' => $id, 'o' => $o]);
+        if (!$gp) {
+            throw HttpException::notFound();
+        }
+        return $gp;
+    }
+
+    private function gradingPeriodRules(): array
+    {
+        return ['gp_name' => 'required|string|max:60', 'gp_starts_on' => 'required|date', 'gp_ends_on' => 'required|date'];
+    }
+
+    private function gradingPeriodLabels(): array
+    {
+        return ['gp_name' => t('Name'), 'gp_starts_on' => t('Start date'), 'gp_ends_on' => t('End date')];
+    }
 
     private function subjectRules(): array
     {

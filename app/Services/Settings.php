@@ -29,6 +29,10 @@ final class Settings
                 // 'points': percentage of all points earned. 'weighted': category weights below.
                 'model' => 'points',
                 'categories' => [],
+                // Subject groups with their own category weights: [{key, label, weights: {category key: weight}}].
+                'groups' => [],
+                // Used only when switched on and confirmed: rows [{min, grade}], highest first (Transmutation).
+                'transmutation' => ['enabled' => false, 'confirmed' => false, 'rows' => []],
                 'passing_percent' => 75,
                 'descriptors' => [],
             ],
@@ -81,15 +85,29 @@ final class Settings
     }
 
     /** Optional starting points an administrator can load and then edit. */
+    /**
+     * Starting points an administrator can load and then check against the school's policy. The two DepEd
+     * ones follow the orders as published: DO 8 s. 2015 with its transmutation table (off until confirmed),
+     * and DO 015 s. 2026 without one, because the school types its table in from the official order.
+     */
     public static function gradingPresets(): array
     {
+        $descriptors = [
+            ['min' => 90, 'label' => 'Outstanding'],
+            ['min' => 85, 'label' => 'Very satisfactory'],
+            ['min' => 80, 'label' => 'Satisfactory'],
+            ['min' => 75, 'label' => 'Fairly satisfactory'],
+            ['min' => 0, 'label' => 'Did not meet expectations'],
+        ];
+        $off = ['enabled' => false, 'confirmed' => false, 'rows' => []];
+        $weights = static fn (float $w, float $p, float $e): array => ['written' => $w, 'performance' => $p, 'periodic' => $e];
         return [
             'points' => [
-                'label' => 'Points only',
-                'value' => ['model' => 'points', 'categories' => [], 'passing_percent' => 75, 'descriptors' => []],
+                'label' => t('Points only'),
+                'value' => ['model' => 'points', 'categories' => [], 'groups' => [], 'transmutation' => $off, 'passing_percent' => 75, 'descriptors' => []],
             ],
             'k12' => [
-                'label' => 'K to 12 style categories (edit weights per your policy)',
+                'label' => t('K to 12 style categories (edit weights per your policy)'),
                 'value' => [
                     'model' => 'weighted',
                     'categories' => [
@@ -97,14 +115,49 @@ final class Settings
                         ['key' => 'performance', 'label' => 'Performance tasks', 'weight' => 40],
                         ['key' => 'periodic', 'label' => 'Periodic assessment', 'weight' => 20],
                     ],
+                    'groups' => [],
+                    'transmutation' => $off,
                     'passing_percent' => 75,
-                    'descriptors' => [
-                        ['min' => 90, 'label' => 'Outstanding'],
-                        ['min' => 85, 'label' => 'Very satisfactory'],
-                        ['min' => 80, 'label' => 'Satisfactory'],
-                        ['min' => 75, 'label' => 'Fairly satisfactory'],
-                        ['min' => 0, 'label' => 'Did not meet expectations'],
+                    'descriptors' => $descriptors,
+                ],
+            ],
+            'deped2015' => [
+                'label' => t('DepEd Order No. 8, s. 2015: four quarters'),
+                'periods' => 4,
+                'value' => [
+                    'model' => 'weighted',
+                    'categories' => [
+                        ['key' => 'written', 'label' => 'Written work', 'weight' => 30],
+                        ['key' => 'performance', 'label' => 'Performance tasks', 'weight' => 50],
+                        ['key' => 'periodic', 'label' => 'Quarterly assessment', 'weight' => 20],
                     ],
+                    'groups' => [
+                        ['key' => 'languages', 'label' => 'Languages, Araling Panlipunan, EsP', 'weights' => $weights(30, 50, 20)],
+                        ['key' => 'math_science', 'label' => 'Mathematics and Science', 'weights' => $weights(40, 40, 20)],
+                        ['key' => 'mapeh_tle', 'label' => 'MAPEH and EPP/TLE', 'weights' => $weights(20, 60, 20)],
+                    ],
+                    'transmutation' => ['enabled' => false, 'confirmed' => false, 'rows' => Transmutation::deped2015()],
+                    'passing_percent' => 75,
+                    'descriptors' => $descriptors,
+                ],
+            ],
+            'deped2026' => [
+                'label' => t('DepEd Order No. 015, s. 2026: three terms'),
+                'periods' => 3,
+                'value' => [
+                    'model' => 'weighted',
+                    'categories' => [
+                        ['key' => 'written', 'label' => 'Written/oral works', 'weight' => 20],
+                        ['key' => 'performance', 'label' => 'Performance tasks', 'weight' => 50],
+                        ['key' => 'periodic', 'label' => 'Examinations', 'weight' => 30],
+                    ],
+                    'groups' => [
+                        ['key' => 'core', 'label' => 'English, Filipino, Mathematics, Science, AP, GMRC/Values', 'weights' => $weights(20, 50, 30)],
+                        ['key' => 'mapeh_tle', 'label' => 'EPP/TLE and MAPEH', 'weights' => $weights(20, 60, 20)],
+                    ],
+                    'transmutation' => $off,
+                    'passing_percent' => 75,
+                    'descriptors' => [],
                 ],
             ],
         ];

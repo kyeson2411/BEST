@@ -305,6 +305,15 @@ $router->group('/admin', ['role:admin', 'notices'], static function ($r): void {
     $r->get('/academic-periods', [Admin\StructureController::class, 'periods']);
     $r->post('/academic-periods', [Admin\StructureController::class, 'storePeriod']);
     $r->post('/academic-periods/{id}', [Admin\StructureController::class, 'updatePeriod']);
+    $r->post('/academic-periods/{id}/grading-periods', [Admin\StructureController::class, 'storeGradingPeriod']);
+    $r->post('/academic-periods/{id}/grading-periods/split', [Admin\StructureController::class, 'splitGradingPeriods']);
+    $r->post('/grading-periods/{id}', [Admin\StructureController::class, 'updateGradingPeriod']);
+    $r->post('/grading-periods/{id}/delete', [Admin\StructureController::class, 'deleteGradingPeriod']);
+    $r->get('/grading', [Admin\GradingController::class, 'index']);
+    $r->post('/grading', [Admin\GradingController::class, 'save']);
+    $r->post('/grading/preset', [Admin\GradingController::class, 'preset']);
+    $r->post('/grading/groups', [Admin\GradingController::class, 'groups']);
+    $r->post('/grading/transmutation', [Admin\GradingController::class, 'transmutation']);
     $r->get('/sections', [Admin\StructureController::class, 'sections']);
     $r->post('/sections/{id}', [Admin\StructureController::class, 'updateSection']);
     $r->post('/sections/{id}/delete', [Admin\StructureController::class, 'deleteSection']);
@@ -320,7 +329,6 @@ $router->group('/admin', ['role:admin', 'notices'], static function ($r): void {
     $r->post('/policies/notices', [Admin\SettingsController::class, 'renewNotices']);
     $r->get('/settings', [Admin\SettingsController::class, 'school']);
     $r->post('/settings', [Admin\SettingsController::class, 'saveSchool']);
-    $r->post('/settings/grading', [Admin\SettingsController::class, 'saveGrading']);
     $r->post('/settings/logo', [Admin\SettingsController::class, 'saveLogo']);
     $r->get('/integrations', [Admin\SettingsController::class, 'integrations']);
 

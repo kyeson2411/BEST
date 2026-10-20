@@ -129,6 +129,8 @@ final class SectionCopies
                 'organization_id' => (int) $source['organization_id'],
                 'class_id' => (int) $target['id'],
                 'module_id' => self::module($source['module_id'], (int) $target['id']),
+                // A grading period chosen by hand carries over when the section is in the same school year.
+                'grading_period_id' => self::gradingPeriod($source['grading_period_id'] ?? null, (int) $target['id']),
                 'status' => 'draft',
                 'created_by' => (int) $user['id'],
                 'copied_from_id' => (int) $source['id'],
@@ -299,6 +301,17 @@ final class SectionCopies
     }
 
     /** The module with the same title in the target class, or none. */
+    private static function gradingPeriod($periodId, int $classId): ?int
+    {
+        if (!$periodId) {
+            return null;
+        }
+        return (int) Db::value(
+            'SELECT g.id FROM grading_periods g JOIN classes c ON c.academic_period_id = g.academic_period_id WHERE g.id = :g AND c.id = :c',
+            ['g' => (int) $periodId, 'c' => $classId]
+        ) ?: null;
+    }
+
     private static function module($sourceModuleId, int $classId): ?int
     {
         if (!$sourceModuleId) {

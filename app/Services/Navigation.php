@@ -53,7 +53,7 @@ final class Navigation
                     ['label' => t('Privacy and safety'), 'short' => t('Privacy'), 'icon' => 'shield-check', 'url' => '/admin/privacy', 'count' => self::adminOpenItems((int) $user['organization_id']), 'bottom' => true],
                     ['label' => t('Feedback and pilot report'), 'short' => t('Feedback'), 'icon' => 'message-square-text', 'url' => '/admin/feedback', 'also' => ['/admin/pilot'], 'count' => SiteFeedback::newCount((int) $user['organization_id'])],
                     ['label' => t('Audit log'), 'icon' => 'scroll-text', 'url' => '/admin/audit'],
-                    ['label' => t('School settings'), 'icon' => 'settings', 'url' => '/admin/settings', 'also' => ['/admin/integrations']],
+                    ['label' => t('School settings'), 'icon' => 'settings', 'url' => '/admin/settings', 'also' => ['/admin/integrations', '/admin/grading']],
                 ];
         }
         return [];

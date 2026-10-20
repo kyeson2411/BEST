@@ -60,14 +60,25 @@ $avg = $released ? array_sum(array_map(static fn ($r) => (float) $r['score'] / (
             <h3 style="margin:0; font-size:1.0625rem"><a href="<?= e(url('/student/classes/' . (int) $b['class']['id'])) ?>"><?= e($b['class']['name']) ?></a></h3>
             <span class="cluster">
               <?php if ($o && $o['percent'] !== null): ?>
-                <strong class="num" style="font-size:1.125rem"><?= e(fmt_number($o['percent'], 1)) ?>%</strong>
-                <?php if ($o['descriptor'] && $o['counted'] >= 3): ?><?= badge(t(':descriptor so far', ['descriptor' => $o['descriptor']]), 'neutral') ?><?php endif; ?>
+                <?php if (!$b['periods']): // With grading periods, the period and final grades below are the grades. ?>
+                  <strong class="num" style="font-size:1.125rem"><?= e(fmt_number($o['percent'], 1)) ?>%</strong>
+                  <?php if ($o['descriptor'] && $o['counted'] >= 3): ?><?= badge(t(':descriptor so far', ['descriptor' => $o['descriptor']]), 'neutral') ?><?php endif; ?>
+                <?php endif; ?>
               <?php else: ?>
                 <span class="meta"><?= e(t('No released results yet')) ?></span>
               <?php endif; ?>
               <?php if ($o && $o['missing'] > 0): ?><?= badge(tp(':count missing', ':count missing', (int) $o['missing']), 'coral') ?><?php endif; ?>
             </span>
           </div>
+          <?php if ($b['periods']): $f = $b['final']; ?>
+            <dl class="period-grades">
+              <?php foreach ($b['periods'] as $p): $g = $b['by_period'][(int) $p['id']] ?? null; ?>
+                <div><dt><?= e($p['name']) ?></dt><dd class="num"><?= $g && $g['grade'] !== null ? e($b['transmuted'] ? fmt_number($g['grade'], 0) : fmt_number($g['grade'], 1) . '%') : '—' ?></dd></div>
+              <?php endforeach; ?>
+              <div class="period-grades__final"><dt><?= e($f && $f['grade'] !== null && !$f['complete'] ? t('Final grade so far') : t('Final grade')) ?></dt>
+                <dd class="num"><?= $f && $f['grade'] !== null ? e($b['transmuted'] ? fmt_number($f['grade'], 0) : fmt_number($f['grade'], 1) . '%') : '—' ?><?php if ($f && $f['complete'] && $f['descriptor']): ?> <span class="meta"><?= e($f['descriptor']) ?></span><?php endif; ?></dd></div>
+            </dl>
+          <?php endif; ?>
           <?php if ($o && $o['by_category']): ?>
             <ul class="rows" style="margin-top:6px">
               <?php foreach ($o['by_category'] as $cat): ?>
@@ -79,9 +90,12 @@ $avg = $released ? array_sum(array_map(static fn ($r) => (float) $r['score'] / (
             </ul>
           <?php endif; ?>
           <?php if ($o && $o['percent'] !== null): ?>
-            <p class="meta" style="margin:6px 0 0"><?= e(($b['grading']['model'] ?? 'points') === 'weighted'
+            <p class="meta" style="margin:6px 0 0"><?php if ($b['periods']): ?><?= e(t('Each grading period\'s grade uses only the released work from that period.')) ?>
+                <?= $b['transmuted'] ? e(t('Your school turns it into the grade shown with its transmutation table.')) : '' ?>
+                <?= $o['by_category'] ? e(t('The bars cover your released work from the whole year.')) : '' ?>
+              <?php else: ?><?= e(($b['grading']['model'] ?? 'points') === 'weighted'
                 ? tp('Calculated with your school\'s category weights from :count released result. Categories with no released results are left out.', 'Calculated with your school\'s category weights from :count released results. Categories with no released results are left out.', (int) $o['counted'])
-                : tp('Points earned divided by points possible across :count released result.', 'Points earned divided by points possible across :count released results.', (int) $o['counted'])) ?>
+                : tp('Points earned divided by points possible across :count released result.', 'Points earned divided by points possible across :count released results.', (int) $o['counted'])) ?><?php endif; ?>
               <?php if ($o['counted'] < 3): ?><?= e(t('With so few results this can change a lot.')) ?><?php endif; ?></p>
           <?php endif; ?>
         </article>
