@@ -81,6 +81,24 @@
     if (typeof dialog.showModal === 'function') dialog.showModal();
   }
 
+  /* The Flashcards card opens Practice for the class and material chosen on the "new session" screen. */
+  var cardsLink = $('[data-practice-link]');
+  if (cardsLink) {
+    var classPick = doc.getElementById('f-class_id');
+    var materialPick = $('[data-material-select]');
+    var firstClass = new URL(cardsLink.href).searchParams.get('class_id') || '';
+    var syncCards = function () {
+      var url = new URL(cardsLink.href);
+      var classId = (classPick && classPick.value) || firstClass;
+      var materialId = materialPick ? materialPick.value : '';
+      if (classId) url.searchParams.set('class_id', classId); else url.searchParams.delete('class_id');
+      if (materialId) url.searchParams.set('material_id', materialId); else url.searchParams.delete('material_id');
+      cardsLink.href = url.toString();
+    };
+    [classPick, materialPick].forEach(function (s) { if (s) s.addEventListener('change', syncCards); });
+    syncCards();
+  }
+
   if (!form || !exchanges) return;
 
   var input = $('textarea', form);

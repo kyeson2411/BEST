@@ -34,18 +34,26 @@ final class CompanionController extends Controller
         if (!$modes) {
             throw HttpException::forbidden(t('AI tools are turned off at your school.'));
         }
-        $mode = in_array($this->request->str('mode'), $modes, true) ? $this->request->str('mode') : $modes[0];
+        $classId = $this->request->int('class_id');
+        $materialId = $this->request->int('material_id');
         $topic = mb_substr($this->request->str('topic'), 0, 160);
+        // Flashcards are made in Practice, not in a chat, so an old link to a flashcards chat opens Practice.
+        $chatModes = array_values(array_diff($modes, ['flashcards']));
+        if (!$chatModes || ($this->request->str('mode') === 'flashcards' && in_array('flashcards', $modes, true))) {
+            return $this->redirect($this->practiceCards($user, $classId, $materialId, $topic));
+        }
+        $mode = in_array($this->request->str('mode'), $chatModes, true) ? $this->request->str('mode') : $chatModes[0];
         return $this->view('companion/index', $this->shared($user) + [
             'title' => t('Companion'),
             'page_class' => 'page--flush',
             'active' => null,
             'messages' => [],
             'modes' => $modes,
+            'practiceCards' => in_array('flashcards', $modes, true) ? $this->practiceCards($user, $classId, $materialId, $topic) : null,
             'defaults' => [
                 'mode' => $mode,
-                'class_id' => $this->request->int('class_id'),
-                'material_id' => $this->request->int('material_id'),
+                'class_id' => $classId,
+                'material_id' => $materialId,
                 'question' => $topic !== '' ? ($user['role'] === 'teacher' ? t('Help me prepare: :topic', ['topic' => $topic]) : t('Help me understand: :topic', ['topic' => $topic])) : '',
             ],
             'scripts' => ['companion.js'],
@@ -76,6 +84,10 @@ final class CompanionController extends Controller
             if (!in_array($classId, $allowed, true)) {
                 $this->fail('class_id', t('Choose one of your classes.'), '/companion/new');
             }
+        }
+        if ($data['mode'] === 'flashcards') {
+            // Real cards that flip and come back in Review live in Practice. What the student typed stays out of the address.
+            return $this->redirect($this->practiceCards($user, $classId, $materialId));
         }
         if (in_array($data['mode'], ['summarize'], true) && $materialId === null) {
             $this->fail('material_id', t('Choose the material you want summarised.'), '/companion/new');
@@ -114,12 +126,16 @@ final class CompanionController extends Controller
         if ($pendingText !== '') {
             Session::set('companion_pending', null);
         }
+        $modes = $this->modes($user);
         return $this->view('companion/index', $this->shared($user) + [
             'title' => $conversation['title'],
             'page_class' => 'page--flush',
             'active' => $conversation,
             'messages' => Companion::loadMessages($id),
-            'modes' => $this->modes($user),
+            'modes' => $modes,
+            'practiceCards' => in_array('flashcards', $modes, true)
+                ? $this->practiceCards($user, self::optionalId($conversation['class_id']), self::optionalId($conversation['material_id']))
+                : null,
             'pending' => $pendingText,
             'katex' => true,
             'scripts' => ['companion.js'],
@@ -219,11 +235,15 @@ final class CompanionController extends Controller
     public function changeMode(int $id): Response
     {
         $user = $this->user();
-        $this->conversation($user, $id);
+        $conversation = $this->conversation($user, $id);
         $modes = $this->modes($user);
         $mode = $this->request->str('mode');
         if (!in_array($mode, $modes, true)) {
             $this->fail('mode', t('Choose one of the available modes.'), '/companion/' . $id);
+        }
+        if ($mode === 'flashcards') {
+            // The chat keeps its kind of help; flashcards open in Practice for the same class.
+            return $this->redirect($this->practiceCards($user, self::optionalId($conversation['class_id']), self::optionalId($conversation['material_id'])));
         }
         Db::update('ai_conversations', ['mode' => $mode, 'updated_at' => Db::now()], ['id' => $id]);
         $this->flash('success', t('Mode changed to :mode.', ['mode' => Settings::modeLabel($mode)]));
@@ -314,6 +334,29 @@ final class CompanionController extends Controller
     }
 
     // ---------------------------------------------------------------- helpers
+
+    /**
+     * Practice with flashcards first, for this class or material; without one, the class the student practised
+     * last. Practice checks the ids again and ignores any that are not the student's own.
+     */
+    private function practiceCards(array $user, ?int $classId, ?int $materialId, string $topic = ''): string
+    {
+        if ($classId === null && $materialId === null) {
+            $last = Db::value(
+                'SELECT class_id FROM practice_sets WHERE user_id = :u AND class_id IS NOT NULL ORDER BY created_at DESC, id DESC LIMIT 1',
+                ['u' => (int) $user['id']]
+            );
+            $classId = $last ? (int) $last : null;
+        }
+        $query = array_filter(['kind' => 'flashcards', 'class_id' => $classId, 'material_id' => $materialId, 'topic' => $topic], static fn ($v) => $v !== null && $v !== '');
+        return '/student/learning?' . http_build_query($query);
+    }
+
+    /** @param mixed $value */
+    private static function optionalId($value): ?int
+    {
+        return $value === null ? null : (int) $value;
+    }
 
     /** @return list<string> */
     private function modes(array $user): array

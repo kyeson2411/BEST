@@ -735,6 +735,8 @@ dialog.dialog::backdrop { background: rgba(26, 38, 32, 0.45); }
 .mode-option:has(input:checked) { border-color: var(--forest); box-shadow: inset 0 0 0 1px var(--forest); background: var(--leaf-soft); }
 .mode-option:has(input:focus-visible) { outline: 3px solid var(--forest); outline-offset: 2px; }
 .mode-option__title { display: flex; gap: 8px; align-items: center; font-weight: 700; margin-bottom: 4px; }
+a.mode-option { color: inherit; text-decoration: none; }
+.mode-option__go { display: inline-flex; margin-left: auto; color: var(--ink-2); }
 .mode-option__desc { display: block; font-size: 0.875rem; color: var(--ink-2); }
 
 /* Quiz and practice -------------------------------------------------------------------- */

@@ -104,6 +104,12 @@ Buttons (primary forest, secondary outlined, quiet text, danger coral), fields w
 empty state (Besley headline + one sentence + one action), toast region (`aria-live`), confirm dialog (native
 `<dialog>`), popover menu, skeleton lines, progress meter (`<meter>`/SVG with text value), inline SVG charts with a text summary.
 
+**Choice cards** (`.mode-grid` of `.mode-option`) are radio buttons shown as cards: an icon and a bold title, then one
+line saying what the choice does; the chosen card gets the forest border and `--leaf-soft` fill. A choice that
+opens another page instead of setting a value is a link card (`a.mode-option`, same look, no underline) with an
+arrow at the end of its title (`.mode-option__go`, `--ink-2`). Example: the companion's Flashcards card opens
+Practice with the class already picked.
+
 Icons: Lucide, 1.75px stroke, 20px in navigation, 16px inline, always paired with text or an accessible name.
 
 **Printed sign-in slips** (`shared/slips.php`) are the one paper artefact. Each slip is a fresh sheet

@@ -48,7 +48,34 @@ final class PracticeController extends Controller
             'materials' => $materials,
             'quizOn' => (bool) Settings::get($orgId, 'features.practice_quizzes', true) && (bool) Settings::get($orgId, 'ai.enabled', true),
             'cardsOn' => (bool) Settings::get($orgId, 'features.flashcards', true) && (bool) Settings::get($orgId, 'ai.enabled', true),
+            'picked' => $this->picked($classes, $materials),
         ]);
+    }
+
+    /**
+     * Form values from a link such as the companion's Flashcards card: one of the student's own classes or
+     * materials (any other id is ignored), a topic, and whether flashcards come first.
+     * @return array{class_id:?int,material_id:?int,topic:string,cards_first:bool}
+     */
+    private function picked(array $classes, array $materials): array
+    {
+        $classIds = array_map(static fn ($c) => (int) $c['id'], $classes);
+        $classId = $this->request->int('class_id');
+        $classId = in_array($classId, $classIds, true) ? $classId : ($classIds[0] ?? null);
+        $materialId = null;
+        $wanted = $this->request->int('material_id');
+        foreach ($materials as $m) {
+            if ((int) $m['id'] === $wanted) {
+                $materialId = $wanted;
+                $classId = (int) $m['class_id'];
+            }
+        }
+        return [
+            'class_id' => $classId,
+            'material_id' => $materialId,
+            'topic' => mb_substr($this->request->str('topic'), 0, 160),
+            'cards_first' => $this->request->str('kind') === 'flashcards',
+        ];
     }
 
     public function store(): Response

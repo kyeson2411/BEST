@@ -2,13 +2,21 @@
 /**
  * @var array|null $active @var list<array> $messages @var list<string> $modes @var list<array> $conversations @var bool $showArchived
  * @var list<array> $classes @var list<array> $materials @var int|null $remaining @var string $providerLabel @var bool $canDelete
- * @var bool $canShare @var int $retentionDays @var array|null $defaults @var string|null $pending
+ * @var bool $canShare @var int $retentionDays @var array|null $defaults @var string|null $pending @var string|null $practiceCards
  */
 use Sibol\Core\Dates;
 use Sibol\Services\Settings;
 
 $user = auth_user();
 $isStudent = $user['role'] === 'student';
+$practiceCards = $practiceCards ?? null;
+// Flashcards are made in Practice, so that card is a link there instead of a kind of chat.
+$practiceCard = static function (string $path, bool $followsForm): string {
+    return '<a class="mode-option" href="' . e(url($path)) . '"' . ($followsForm ? ' data-practice-link' : '') . '>'
+        . '<span class="mode-option__title">' . icon('layers', 'icon--sm') . e(Settings::modeLabel('flashcards'))
+        . '<span class="mode-option__go">' . icon('arrow-right', 'icon--sm') . '</span></span>'
+        . '<span class="mode-option__desc">' . e(Settings::modeDescription('flashcards')) . '</span></a>';
+};
 $groups = [];
 $todayStart = Dates::startOfTodayUtc();
 $weekStart = gmdate('Y-m-d H:i:s', strtotime($todayStart . ' UTC') - 6 * 86400);
@@ -158,6 +166,7 @@ $modeIcons = ['explain' => 'lightbulb', 'socratic' => 'list-ordered', 'practice'
             <h2 class="dialog__title" id="mode-title"><?= e(t('Change mode')) ?></h2>
             <div class="mode-grid">
               <?php foreach ($modes as $mode): ?>
+                <?php if ($mode === 'flashcards'): echo $practiceCards !== null ? $practiceCard($practiceCards, false) : ''; continue; endif; ?>
                 <label class="mode-option">
                   <input type="radio" name="mode" value="<?= e($mode) ?>"<?= checked($mode === $active['mode']) ?>>
                   <span class="mode-option__title"><?= icon($modeIcons[$mode] ?? 'circle-dot', 'icon--sm') ?><?= e(Settings::modeLabel($mode)) ?></span>
@@ -224,6 +233,7 @@ $modeIcons = ['explain' => 'lightbulb', 'socratic' => 'list-ordered', 'practice'
             <legend><?= e(t('Mode')) ?></legend>
             <div class="mode-grid">
               <?php foreach ($modes as $mode): ?>
+                <?php if ($mode === 'flashcards'): echo $practiceCards !== null ? $practiceCard($practiceCards, true) : ''; continue; endif; ?>
                 <label class="mode-option">
                   <input type="radio" name="mode" value="<?= e($mode) ?>"<?= checked($mode === (old('mode') ?: $defaults['mode'])) ?>>
                   <span class="mode-option__title"><?= icon($modeIcons[$mode] ?? 'circle-dot', 'icon--sm') ?><?= e(Settings::modeLabel($mode)) ?></span>

@@ -828,6 +828,13 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   - **Privacy:** only the student's current classes count. Practice questions drop out while the student's AI is
     off or when their material is no longer released. Teachers never see reviews, and nothing is graded. The
     queue is in the student's data export and is erased with their other private study data.
+- **Flashcards live in Practice.** **Practice → Flashcards** makes a set from a class's released materials: one
+  card at a time, flipped with a tap, marked **I knew this** or **Not yet**, and the cards not known yet come back
+  in **Review**. The companion's **Flashcards** card opens Practice instead of starting a chat, with the class
+  already picked: the class or material the student came from or chose on that screen, otherwise the class they
+  practised last. Practice puts **Flashcards** first and ready to press. Old links that started a flashcards chat
+  open Practice too, and flashcards chats from before stay readable. The school's **Flashcards** switch in
+  **Policies** still turns both off.
 - **Comment bank.** Teachers save feedback they write often (**Comment bank**, linked from **To review** and
   the grading page), optionally tied to a rubric criterion by its title. On the grading page the bank lists the
   comments for this rubric's criteria first. A click inserts a comment into the comment box the teacher was

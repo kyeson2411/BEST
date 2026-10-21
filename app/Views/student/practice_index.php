@@ -1,4 +1,7 @@
-<?php /** @var list<array> $sets @var list<array> $classes @var list<array> $materials @var bool $quizOn @var bool $cardsOn */ ?>
+<?php /** @var list<array> $sets @var list<array> $classes @var list<array> $materials @var bool $quizOn @var bool $cardsOn @var array $picked */
+// Coming from the companion's Flashcards card: flashcards are the main button, ready to press.
+$cardsFirst = $picked['cards_first'] && $cardsOn;
+?>
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Practice')) ?></h1>
@@ -47,22 +50,30 @@
       <?php else: ?>
         <form method="post" action="<?= e(url('/student/learning')) ?>">
           <?= csrf_field() ?>
-          <?= field('select', 'class_id', t('Class'), ['options' => array_column($classes, 'name', 'id'), 'value' => (string) $classes[0]['id']]) ?>
+          <?php if ($cardsFirst): ?><p class="meta" style="margin: 0 0 12px"><?= e(t('Flashcards are made here from your class materials. Check the class, then press Flashcards.')) ?></p><?php endif; ?>
+          <?= field('select', 'class_id', t('Class'), ['options' => array_column($classes, 'name', 'id'), 'value' => (string) $picked['class_id']]) ?>
           <div class="field">
             <label class="field__label" for="f-material_id"><?= e(t('Material')) ?> <span class="field__optional"><?= e(t('optional')) ?></span></label>
             <select class="input select" id="f-material_id" name="material_id">
               <option value=""><?= e(t('Latest material in the class')) ?></option>
               <?php foreach ($classes as $c): $items = array_filter($materials, static fn ($m) => (int) $m['class_id'] === (int) $c['id']); if (!$items) { continue; } ?>
                 <optgroup label="<?= e($c['name']) ?>">
-                  <?php foreach ($items as $m): ?><option value="<?= (int) $m['id'] ?>"><?= e($m['title']) ?></option><?php endforeach; ?>
+                  <?php foreach ($items as $m): ?><option value="<?= (int) $m['id'] ?>"<?= selected($m['id'], (string) $picked['material_id']) ?>><?= e($m['title']) ?></option><?php endforeach; ?>
                 </optgroup>
               <?php endforeach; ?>
             </select>
           </div>
-          <?= field('text', 'topic', t('Topic'), ['optional_label' => true, 'placeholder' => t('For example: Punnett squares'), 'attrs' => ['maxlength' => 160]]) ?>
+          <?= field('text', 'topic', t('Topic'), ['optional_label' => true, 'value' => $picked['topic'], 'placeholder' => t('For example: Punnett squares'), 'attrs' => ['maxlength' => 160]]) ?>
           <div class="cluster">
-            <?php if ($quizOn): ?><button class="btn btn--primary" type="submit" name="kind" value="quiz" data-busy="<?= e(t('Preparing…')) ?>"><?= icon('list-checks', 'icon--sm') ?><?= e(t('Practice questions')) ?></button><?php endif; ?>
-            <?php if ($cardsOn): ?><button class="btn btn--secondary" type="submit" name="kind" value="flashcards" data-busy="<?= e(t('Preparing…')) ?>"><?= icon('layers', 'icon--sm') ?><?= e(t('Flashcards')) ?></button><?php endif; ?>
+            <?php
+            $quizButton = $quizOn
+                ? '<button class="btn ' . ($cardsFirst ? 'btn--secondary' : 'btn--primary') . '" type="submit" name="kind" value="quiz" data-busy="' . e(t('Preparing…')) . '">' . icon('list-checks', 'icon--sm') . e(t('Practice questions')) . '</button>'
+                : '';
+            $cardsButton = $cardsOn
+                ? '<button class="btn ' . ($cardsFirst ? 'btn--primary' : 'btn--secondary') . '" type="submit" name="kind" value="flashcards" data-busy="' . e(t('Preparing…')) . '"' . ($cardsFirst ? ' autofocus' : '') . '>' . icon('layers', 'icon--sm') . e(t('Flashcards')) . '</button>'
+                : '';
+            echo $cardsFirst ? $cardsButton . $quizButton : $quizButton . $cardsButton;
+            ?>
           </div>
         </form>
       <?php endif; ?>

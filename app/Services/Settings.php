@@ -268,7 +268,7 @@ final class Settings
             'explain' => t('A clear explanation at the level you choose, with an example.'),
             'socratic' => t('One question at a time and hints first, so you work it out yourself.'),
             'practice' => t('A few questions on a topic, with explanations after you answer.'),
-            'flashcards' => t('Quick recall cards from a class material or your own notes.'),
+            'flashcards' => t('Opens Practice, where you flip cards made from your class materials.'),
             'summarize' => t('The key points of one class material, with page references.'),
             'study_plan' => t('Break a test or topic into short study sessions you can add to your calendar.'),
             'vocabulary' => t('Meanings of terms in English and Filipino, keeping technical words accurate.'),
