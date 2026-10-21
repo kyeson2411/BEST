@@ -1,7 +1,7 @@
 <?php
 /**
  * @var array|null $active @var list<array> $messages @var list<string> $modes @var list<array> $conversations @var bool $showArchived
- * @var list<array> $classes @var list<array> $materials @var int|null $remaining @var string $providerLabel @var bool $canDelete
+ * @var list<array> $classes @var list<array> $materials @var int|null $remaining @var string $demoLabel @var bool $canDelete
  * @var bool $canShare @var int $retentionDays @var array|null $defaults @var string|null $pending @var string|null $practiceCards
  */
 use Sibol\Core\Dates;
@@ -140,7 +140,7 @@ $modeIcons = ['explain' => 'lightbulb', 'socratic' => 'list-ordered', 'practice'
           </div>
           <div class="composer__foot">
             <span><?= e(t('Enter to send, Shift+Enter for a new line.')) ?></span>
-            <span><?= e($providerLabel) ?><?php if ($remaining !== null): ?>. <span data-remaining><?= e(tp(':count message left today', ':count messages left today', $remaining)) ?></span><?php endif; ?></span>
+            <span><?php if ($demoLabel !== ''): ?><?= e($demoLabel) ?><?= $remaining !== null ? '. ' : '' ?><?php endif; ?><?php if ($remaining !== null): ?><span data-remaining><?= e(tp(':count message left today', ':count messages left today', $remaining)) ?></span><?php endif; ?></span>
           </div>
           <p class="sr-only" role="status" aria-live="polite" data-composer-status></p>
         </form>
@@ -280,7 +280,7 @@ $modeIcons = ['explain' => 'lightbulb', 'socratic' => 'list-ordered', 'practice'
           </div>
           <div class="form-actions">
             <button class="btn btn--primary" type="submit" data-busy="<?= e(t('Starting…')) ?>"><?= e(t('Start session')) ?></button>
-            <span class="meta"><?= e($providerLabel) ?><?php if ($remaining !== null): ?>. <?= e(tp(':count message left today', ':count messages left today', $remaining)) ?><?php endif; ?></span>
+            <span class="meta"><?= e(implode('. ', array_filter([$demoLabel, $remaining !== null ? tp(':count message left today', ':count messages left today', $remaining) : '']))) ?></span>
           </div>
         </form>
       </div>

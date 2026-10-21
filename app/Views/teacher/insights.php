@@ -140,7 +140,7 @@ $past = array_values(array_filter($completion, static fn ($c) => $c['due_at'] !=
       <form method="post" action="<?= e(url('/teacher/insights/' . (int) $class['id'] . '/ideas')) ?>"><?= csrf_field() ?>
         <button class="btn btn--secondary btn--sm" type="submit" data-busy="<?= e(t('Thinking…')) ?>"<?= !$topics ? ' disabled' : '' ?>><?= icon('lightbulb', 'icon--sm') ?><?= e($ideas ? t('Get new ideas') : t('Suggest reteaching ideas')) ?></button>
       </form>
-      <p class="meta" style="margin-top:8px"><?= e(\Sibol\Services\Ai\Providers::label()) ?></p>
+      <?php if (\Sibol\Services\Ai\Providers::publicLabel() !== ''): ?><p class="meta" style="margin-top:8px"><?= e(\Sibol\Services\Ai\Providers::publicLabel()) ?></p><?php endif; ?>
     </section>
     <section class="panel panel--sunken" aria-labelledby="limits-title">
       <h2 class="panel__title" id="limits-title"><?= e(t('Reading these numbers')) ?></h2>

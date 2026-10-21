@@ -456,7 +456,7 @@ final class CompanionController extends Controller
             'classes' => $classes,
             'materials' => $materials,
             'remaining' => Usage::remainingToday($user),
-            'providerLabel' => Providers::label(),
+            'demoLabel' => Providers::publicLabel(),
             'canDelete' => $user['role'] !== 'student' || (bool) Settings::get((int) $user['organization_id'], 'privacy.students_can_delete_chats', true),
             'canShare' => $user['role'] === 'student' && (bool) Settings::get((int) $user['organization_id'], 'features.share_with_teacher', true),
             'retentionDays' => (int) Settings::get((int) $user['organization_id'], 'privacy.ai_retention_days', 365),

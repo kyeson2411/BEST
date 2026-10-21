@@ -48,7 +48,7 @@
   </fieldset>
   <div class="form-actions">
     <button class="btn btn--primary" type="submit" data-busy="<?= e(t('Preparing the draft…')) ?>"><?= e(t('Create lesson draft')) ?></button>
-    <span class="meta"><?= e(\Sibol\Services\Ai\Providers::label()) ?><?php if ($aiRemaining !== null): ?>. <?= e(tp(':count AI request left today', ':count AI requests left today', $aiRemaining)) ?><?php endif; ?></span>
+    <span class="meta"><?= e(implode('. ', array_filter([\Sibol\Services\Ai\Providers::publicLabel(), $aiRemaining !== null ? tp(':count AI request left today', ':count AI requests left today', $aiRemaining) : '']))) ?></span>
   </div>
 </form>
 <?php endif; ?>

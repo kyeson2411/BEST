@@ -57,4 +57,18 @@ final class Providers
         }
         return ($p->name() === 'anthropic' ? 'Claude' : t('Configured provider')) . ' (' . $p->model() . ')';
     }
+
+    /**
+     * What students and teachers see next to AI features: "Demo mode (no AI model)" while Sibol runs without a
+     * model (demo mode stays labelled), otherwise nothing. The provider and model name (label()) are for the
+     * administrator's AI pages only.
+     */
+    public static function publicLabel(): string
+    {
+        try {
+            return self::make()->isDemo() ? t('Demo mode (no AI model)') : '';
+        } catch (AiException $e) {
+            return '';
+        }
+    }
 }

@@ -193,6 +193,9 @@ Only publish photographs of students that the school has consent to use for its 
 ## AI provider
 
 All AI calls happen on the server. The browser never sees a key, a provider address or a raw prompt.
+Next to AI features, students and teachers see only how many requests they have left today, and "Demo mode (no
+AI model)" while Sibol runs without a model; the provider and model name appear only on the administrator's
+**Home**, **Policies** and **AI usage** pages.
 
 **Demo mode (`AI_PROVIDER=demo`).** No external calls. The companion finds the most relevant passages in the
 student's released materials and quotes them with page references, under a "Demo mode" label. Practice sets,

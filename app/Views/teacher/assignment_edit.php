@@ -195,7 +195,8 @@ $base = '/teacher/assignments/' . (int) $a['id'];
               <?= field('number', 'count_sa', t('Short answer'), ['value' => '1', 'attrs' => ['min' => 0, 'max' => 10]]) ?>
             </div>
             <button class="btn btn--secondary btn--block" type="submit" data-busy="<?= e(t('Drafting…')) ?>"><?= e(t('Draft questions')) ?></button>
-            <p class="meta" style="margin-top:8px"><?= e(\Sibol\Services\Ai\Providers::label()) ?><?php if ($aiRemaining !== null): ?>. <?= e(tp(':count AI request left today', ':count AI requests left today', $aiRemaining)) ?><?php endif; ?></p>
+            <?php $aiNote = implode('. ', array_filter([\Sibol\Services\Ai\Providers::publicLabel(), $aiRemaining !== null ? tp(':count AI request left today', ':count AI requests left today', $aiRemaining) : ''])); ?>
+            <?php if ($aiNote !== ''): ?><p class="meta" style="margin-top:8px"><?= e($aiNote) ?></p><?php endif; ?>
           </form>
         <?php endif; ?>
       </section>
