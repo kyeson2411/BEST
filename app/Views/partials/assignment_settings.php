@@ -25,7 +25,8 @@ $val = static fn (string $k, $default = '') => $a[$k] ?? $default;
   <?= field('text', 'title', t('Title'), ['required' => true, 'value' => (string) $val('title'), 'wrap_class' => 'span-2', 'attrs' => ['maxlength' => 200]]) ?>
   <?= field('textarea', 'instructions', t('Instructions for students'), ['value' => (string) $val('instructions'), 'rows' => 7, 'wrap_class' => 'span-2', 'hint' => t('Simple formatting works: **bold**, lists, and maths like $x^2$.'), 'attrs' => ['maxlength' => 20000]]) ?>
   <?= field('text', 'objectives', t('Learning objectives'), ['value' => (string) $val('objectives'), 'wrap_class' => 'span-2', 'optional_label' => true, 'attrs' => ['maxlength' => 2000]]) ?>
-  <?= field('select', 'category', t('Grading category'), ['options' => $categories, 'value' => (string) $val('category'), 'hint' => count($categories) > 1 ? t('Set by your school\'s grading policy.') : t('Your school uses points only.')]) ?>
+  <?= field('select', 'category', t('Grading category'), ['options' => $categories, 'value' => (string) $val('category'), 'hint' => count($categories) <= 1 ? t('Your school uses points only.')
+      : (setting('grading.model', 'points') === 'weighted' ? t('Set by your school\'s grading policy. Work without a category is not counted in the gradebook.') : t('Set by your school\'s grading policy.'))]) ?>
   <?php if (!empty($gradingPeriods)):
       $years = count(array_unique(array_column($gradingPeriods, 'academic_period_id')));
       $periodOptions = ['' => t('By due date')];

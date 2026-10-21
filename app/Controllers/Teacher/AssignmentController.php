@@ -23,6 +23,7 @@ use Sibol\Services\Grades;
 use Sibol\Services\Notifier;
 use Sibol\Services\Overrides;
 use Sibol\Services\SectionCopies;
+use Sibol\Services\Settings;
 
 final class AssignmentController extends Controller
 {
@@ -131,10 +132,13 @@ final class AssignmentController extends Controller
              FROM assignments a WHERE a.id = :a",
             ['a' => $id]
         );
+        $grading = (array) Settings::get((int) $user['organization_id'], 'grading', []);
         return $this->view('teacher/assignment', [
             'title' => $a['title'],
             'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], null]],
             'a' => $a,
+            'counted' => Grades::counts($a, $grading),
+            'categoryLabel' => Grades::categoryLabel($a['category'], $grading),
             'stats' => $stats,
             'questions' => Assessments::questions($id),
             'problems' => $a['status'] === 'draft' ? Assessments::publishProblems($a) : [],
@@ -477,6 +481,9 @@ final class AssignmentController extends Controller
         $this->flash('success', $opens
             ? t('Published. Students will be able to open it from :date.', ['date' => fmt_date($a['opens_at'], 'datetime_short')])
             : t('Published. Students in :class have been notified.', ['class' => $a['class_name']]));
+        if (!Grades::counts($a, (array) Settings::get((int) $user['organization_id'], 'grading', []))) {
+            $this->flash('warning', t('It has no grading category, so its scores are not counted in the gradebook yet. Edit it to choose one.'));
+        }
         return $this->redirect('/teacher/assignments/' . $id);
     }
 

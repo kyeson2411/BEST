@@ -1,4 +1,4 @@
-<?php /** @var array $a @var array $stats @var list<array> $questions @var list<string> $problems @var array $rubric @var list<array> $questionStats @var string|null $answersAt @var int $runningExtensions */
+<?php /** @var array $a @var bool $counted @var string|null $categoryLabel @var array $stats @var list<array> $questions @var list<string> $problems @var array $rubric @var list<array> $questionStats @var string|null $answersAt @var int $runningExtensions */
 [$sl, $st] = assignment_status($a);
 $base = '/teacher/assignments/' . (int) $a['id'];
 $isQuiz = $a['kind'] === 'quiz';
@@ -43,6 +43,9 @@ foreach ($questionStats as $qs) {
   <div class="stack">
     <?php if ($problems): ?>
       <div class="callout"><?= icon('list-checks') ?><div><p class="callout__title"><?= e(t('Before you publish')) ?></p><ul style="margin:0; padding-left:1.2em"><?php foreach ($problems as $p): ?><li><?= e($p) ?></li><?php endforeach; ?></ul></div></div>
+    <?php endif; ?>
+    <?php if (!$counted): ?>
+      <div class="callout callout--amber"><?= icon('triangle-alert') ?><div><p class="callout__title"><?= e(t('Not counted in the gradebook yet')) ?></p><p><?= e(t('This work has no grading category, so its scores are left out of every grade in the gradebook.')) ?> <a href="<?= e(url($base . '/edit') . '#f-category') ?>"><?= e(t('Choose a category')) ?></a></p></div></div>
     <?php endif; ?>
     <?php if ($questions): ?>
       <section class="section" aria-labelledby="q-title">
@@ -95,7 +98,7 @@ foreach ($questionStats as $qs) {
         <dt><?= e(t('Grades shown')) ?></dt><dd><?= e($a['feedback_release'] === 'manual' ? t('When you release them') : t('Immediately')) ?></dd>
         <?php if ($isQuiz): ?><dt><?= e(t('Answers shown')) ?></dt><dd><?= e($a['answers_released_at'] ? t('Released :d', ['d' => fmt_date($a['answers_released_at'])]) : ['never' => t('Never'), 'after_submit' => t('After submitting'), 'after_due' => t('After the due date'), 'manual' => t('When you release them')][$a['answer_key_release']]) ?>
           <?php if (!$a['answers_released_at'] && $a['answer_key_release'] === 'after_due' && $answersAt !== null && $answersAt !== $a['due_at']): ?><br><span class="meta"><?= e(t('Waiting for the latest extension: :date', ['date' => fmt_date($answersAt, 'datetime_short')])) ?></span><?php endif; ?></dd><?php endif; ?>
-        <dt><?= e(t('Category')) ?></dt><dd><?= e($a['category'] ?: t('None')) ?></dd>
+        <dt><?= e(t('Category')) ?></dt><dd><?= e($categoryLabel ?? t('None')) ?></dd>
       </dl>
     </section>
     <?php if ($rubric): ?>

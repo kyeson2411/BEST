@@ -800,6 +800,10 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
     grading periods keep one overall grade.
   - **Weights by subject group:** each group of subjects can weigh the categories differently; a subject without
     a group uses the default weights.
+  - **Work without a category:** with weighted categories, work that has none of the school's categories counts in
+    no grade (`Grades::counts`). The new-work form says so under **Grading category**, the work's page shows "Not
+    counted in the gradebook yet" with a link to choose one, publishing it says so, and the gradebook lists such
+    work above the table. The page shows the category by the school's name for it ("Written work").
   - **Transmutation table:** pasted as two columns (or the order's ranges) and shown back as Sibol reads it. It
     stays off until someone ticks that they checked every line against the official order and switches it on,
     and any change to the table needs that tick again. When it is on, each period's initial grade (two

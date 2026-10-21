@@ -15,6 +15,7 @@ $periodNames = array_column($periods, 'name', 'id');
 $current = ctype_digit($show) ? (int) $show : null;
 $assignments = $current !== null ? array_values(array_filter($book['assignments'], static fn (array $a): bool => ($a['period_id'] ?? null) === $current)) : $book['assignments'];
 $unplaced = $periods ? array_values(array_filter($book['assignments'], static fn (array $a): bool => ($a['period_id'] ?? null) === null)) : [];
+$uncounted = array_values(array_filter($book['assignments'], static fn (array $a): bool => !\Sibol\Services\Grades::counts($a, $grading)));
 $base = '/teacher/gradebook/' . (int) $class['id'];
 $gradeText = static function (?array $g) use ($transmuted): string {
     if (!$g || $g['grade'] === null) {
@@ -54,6 +55,11 @@ $gradeText = static function (?array $g) use ($transmuted): string {
       <?php foreach ($unplaced as $i => $a): ?><?= $i ? ', ' : ' ' ?><a href="<?= e(url('/teacher/assignments/' . (int) $a['id'] . '/edit')) ?>"><?= e(str_limit($a['title'], 50)) ?></a><?php endforeach; ?>.
       <?= e(t('Choose a grading period on each, or ask your administrator to adjust the periods.')) ?></span></p>
   <?php endif; ?>
+<?php endif; ?>
+<?php if ($uncounted): ?>
+  <p class="callout callout--amber"><?= icon('triangle-alert') ?><span><?= e(tp(':count piece of work has no grading category, so its scores count in no grade:', ':count pieces of work have no grading category, so their scores count in no grade:', count($uncounted))) ?>
+    <?php foreach ($uncounted as $i => $a): ?><?= $i ? ', ' : ' ' ?><a href="<?= e(url('/teacher/assignments/' . (int) $a['id'] . '/edit') . '#f-category') ?>"><?= e(str_limit($a['title'], 50)) ?></a><?php endforeach; ?>.
+    <?= e(t('Edit each one and choose a category.')) ?></span></p>
 <?php endif; ?>
 
 <?php if (!$book['students'] || !$book['assignments']): ?>

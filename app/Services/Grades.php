@@ -251,6 +251,30 @@ final class Grades
         return null;
     }
 
+    /**
+     * Whether a piece of work's scores count in the class record: always when the school grades by total points;
+     * with weighted categories only when it has one of the school's categories (none, or one the school no longer
+     * has, counts in no grade, as overall() leaves it out).
+     */
+    public static function counts(array $assignment, array $grading): bool
+    {
+        if (($grading['model'] ?? 'points') !== 'weighted' || empty($grading['categories'])) {
+            return true;
+        }
+        return self::categoryLabel((string) ($assignment['category'] ?? ''), $grading) !== null;
+    }
+
+    /** The school's name for a category key ("Written work"), or null when it has no such category. */
+    public static function categoryLabel(?string $key, array $grading): ?string
+    {
+        foreach ((array) ($grading['categories'] ?? []) as $c) {
+            if ((string) $key !== '' && (string) $c['key'] === (string) $key) {
+                return (string) $c['label'];
+            }
+        }
+        return null;
+    }
+
     /** Category options for assignment forms. @return array<string,string> */
     public static function categoryOptions(int $orgId): array
     {
