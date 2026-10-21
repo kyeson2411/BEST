@@ -31,7 +31,7 @@ final class Citations
                 }
             }
             return $kept ? '[' . implode(', ', $kept) . ']' : '';
-        }, $text);
+        }, self::normalizeMarkers($text));
         // Tidy spaces left behind by removed markers.
         $clean = (string) preg_replace('/ +([.,;:!?])/', '$1', $clean);
 
@@ -53,6 +53,20 @@ final class Citations
             ];
         }
         return ['text' => trim($clean), 'citations' => $citations];
+    }
+
+    /**
+     * Source markers written with other brackets, as some models do (【1】, 【1†source】, ［2］, 〔1, 2〕), become [1],
+     * so they are checked and linked like any other. Otherwise the source would be dropped, and an answer that used
+     * the notes would be labelled "Not found in your class materials".
+     */
+    public static function normalizeMarkers(string $text): string
+    {
+        return (string) preg_replace_callback(
+            '/[【［〔]\s*(\d{1,2}(?:\s*[,，、]\s*\d{1,2})*)\s*(?:†[^】］〕\n]*)?[】］〕]/u',
+            static fn (array $m): string => '[' . implode(', ', preg_split('/\s*[,，、]\s*/u', $m[1]) ?: []) . ']',
+            $text
+        );
     }
 
     /** The answer sentences that carry marker [n]. */

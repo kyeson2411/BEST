@@ -48,7 +48,7 @@ in this build; **Done (untested)** means implemented but not exercised; **Partia
 | Quiz attempts that survive bad connections | Done | `quiz.js`: save after each change and on hide, unsent answers in `sessionStorage` (cleared on save, submit, sign-out), offline notice, resend on reconnect; receipt lists saved answers; teacher reopens with minutes (migration 008). PHPUnit `QuizAttemptsTest`; browser `quiz-offline.spec` in Playwright's offline mode |
 | Companion modes: explain, step-by-step, practice quiz, summary, study plan, vocabulary EN/FIL, ask class materials; the Flashcards card opens Practice (real flip cards) with the class picked | Done (demo mode) | live-model behaviour untested; `ai:eval` checks it once a key is added |
 | Streaming, stop, regenerate | Done (demo mode) | |
-| Citations to the exact source passage | Done | `Citations::resolve`; `CitationsTest`; browser test checks source tags |
+| Citations to the exact source passage | Done | `Citations::resolve` (markers in other brackets such as 【1】 read as [1], `Citations::normalizeMarkers`); `CitationsTest`; browser test checks source tags |
 | Private conversations, delete/archive, retention | Done | `PrivacyAndUsageTest` |
 | Report an answer; share an excerpt with the teacher | Done | report → admin review → reporter notified (browser test) |
 | AI disclaimer and "will not do graded work" rule | Done | composer note; system prompts in `Services/Ai/Prompts.php` |

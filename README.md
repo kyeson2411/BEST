@@ -763,7 +763,9 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
 - Material text is wrapped as numbered reference blocks that cannot close their own tags, and the
   instructions tell the model to treat it as data and ignore instructions inside it (prompt-injection defence).
 - Citations are checked after generation: markers for passages that were not supplied are removed, and each
-  kept citation stores the real passage it points to.
+  kept citation stores the real passage it points to. Markers in other brackets, such as 【1】 (Groq's
+  `openai/gpt-oss-120b` sometimes writes these), are read as [1], so the source is linked and the answer is not
+  labelled "Not found in your class materials".
 - The companion is told not to do graded work for students; teachers' AI drafts (questions, lessons, grading
   suggestions) are never shown to students until the teacher reviews them.
 

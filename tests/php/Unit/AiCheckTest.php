@@ -20,6 +20,7 @@ final class AiCheckTest extends TestCase
     {
         self::assertSame([1, 2, 3, 2], Checks::markers('Alveoli are thin [1][2]. They are moist [3, 2]. In maths \[ x^2 \] is not a citation.'));
         self::assertSame([], Checks::markers('No sources here, and [a] is not a marker.'));
+        self::assertSame([1, 4], Checks::markers('Some models write 【1】 or 【4†source】.'), 'Other brackets count, so an invented 【4】 is caught');
     }
 
     public function testQuotationsMustComeFromTheSuppliedText(): void

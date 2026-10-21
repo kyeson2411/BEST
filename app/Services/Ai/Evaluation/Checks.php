@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sibol\Services\Ai\Evaluation;
 
+use Sibol\Services\Ai\Citations;
 use Sibol\Services\Ai\Language;
 
 /**
@@ -23,10 +24,10 @@ final class Checks
     private const NEGATION = '(?:\bnot?\b|\bnothing\b|\bnone\b|n\'t\b|\bonly\b|\bhindi\b|\bwala(?:ng)?\b)';
     private const COVERAGE = '(?:cover|includ|mention|discuss|explain|contain|address|talk|say|said|match|find|found|about|\bin (?:your|the)\b|saklaw|sakop|tinalakay|tinatalakay|nabanggit|binanggit|binabanggit|kasama|nakasaad|sinasabi|nilalaman|naglalaman|tungkol|tumugma|nahanap|makita)';
 
-    /** Citation markers such as [2] or [1, 3], in order of appearance. @return list<int> */
+    /** Citation markers such as [2], [1, 3] or 【2】, in order of appearance. @return list<int> */
     public static function markers(string $text): array
     {
-        preg_match_all('/\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\]/', $text, $m);
+        preg_match_all('/\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\]/', Citations::normalizeMarkers($text), $m);
         $out = [];
         foreach ($m[1] as $group) {
             foreach (preg_split('/\s*,\s*/', $group) ?: [] as $n) {

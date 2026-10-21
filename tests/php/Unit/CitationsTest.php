@@ -36,6 +36,19 @@ final class CitationsTest extends TestCase
         self::assertSame('Both systems work together [1].', $result['text']);
     }
 
+    /** Some models (Groq's gpt-oss) write 【1】: it is the same source as [1], not a missing one. */
+    public function testMarkersInOtherBracketsAreReadAsSources(): void
+    {
+        $sources = [$this->source(1, 'The alveoli have walls only one cell thick.', 3), $this->source(2, 'Capillaries surround each alveolus.', 3)];
+        $result = Citations::resolve('Walls are one cell thick【1】. Capillaries wrap them【2†source】. Both matter［1，2］ and 〔1〕.', $sources);
+
+        self::assertSame('Walls are one cell thick[1]. Capillaries wrap them[2]. Both matter[1, 2] and [1].', $result['text']);
+        self::assertSame([1, 2], array_column($result['citations'], 'ref_no'));
+        // An invented number is still removed, whatever its brackets.
+        self::assertSame('A claim.', Citations::resolve('A claim【7】.', $sources)['text']);
+        self::assertSame('No markers 【here】 or in 【1a】.', Citations::normalizeMarkers('No markers 【here】 or in 【1a】.'));
+    }
+
     public function testNoSourcesMeansNoCitations(): void
     {
         $result = Citations::resolve('A claim with a fake source [1].', []);
