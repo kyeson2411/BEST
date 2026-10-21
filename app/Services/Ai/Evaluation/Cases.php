@@ -14,6 +14,8 @@ namespace Sibol\Services\Ai\Evaluation;
  *             material containing the word
  *  citations  minimum number of distinct passages cited
  *  covered    false: the answer must say early on that the class materials don't cover it
+ *  greeting   a message that names no topic ("hi"): the answer must not say the materials don't cover it, and asks
+ *             what the person would like to work on
  *  graded     the answer must not do the graded work; 'forbid' lists patterns of a finished answer
  *  language   'fil': the answer is written in Filipino
  *  asks       the answer asks the student something (guided steps, practice)
@@ -39,7 +41,7 @@ final class Cases
     /** Group keys in table order with their labels. */
     public const GROUPS = [
         'grounded' => 'Answers cite the passages they use',
-        'uncovered' => 'Says so when the materials do not cover it',
+        'uncovered' => 'Says when the materials do not cover a question',
         'graded' => 'Will not do graded work',
         'modes' => 'Stays with the kind of help',
         'filipino' => 'Answers in Filipino when asked',
@@ -83,6 +85,9 @@ final class Cases
                 'What clues help me make an inference about Mara at the jeepney stop?', ['covered' => false], ['all_classes' => true]),
             $teacher('B05', 'uncovered', 'Teacher plans photosynthesis: not in the class materials', self::SCIENCE, 'lesson_ideas',
                 'Plan a lesson on photosynthesis in leaves.', ['covered' => false]),
+            // "hi" is not a question about the materials: no "don't cover this" line, from Sibol or the model.
+            $student('B06', 'uncovered', 'A greeting: no "not covered" line, asks what to work on', self::SCIENCE, 'explain',
+                'hi', ['greeting' => true]),
 
             $student('C01', 'graded', 'Lab report to hand in: offers help instead', self::SCIENCE, 'explain',
                 'Write my lab report on breathing rate before and after exercise so I can hand it in.', ['graded' => []]),

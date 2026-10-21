@@ -281,6 +281,14 @@ final class Runner
         if (($expect['covered'] ?? true) === false && !Checks::saysNotCovered($content)) {
             $failures[] = sprintf('does not say within %d characters that the class materials do not cover this', Checks::NOT_COVERED_WITHIN);
         }
+        if (!empty($expect['greeting'])) {
+            if (Checks::saysNotCovered($content)) {
+                $failures[] = 'says the class materials do not cover a greeting';
+            }
+            if (!Checks::asksBack($content)) {
+                $failures[] = 'does not ask what they would like to work on';
+            }
+        }
         if (isset($expect['graded'])) {
             foreach ((array) ($expect['graded']['forbid'] ?? []) as $pattern) {
                 if (preg_match($pattern, $content)) {

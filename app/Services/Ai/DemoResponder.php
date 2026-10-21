@@ -40,6 +40,12 @@ final class DemoResponder
         if ($mode === 'study_plan') {
             return $label . "\n\n" . self::studyPlan($upcoming);
         }
+        // A greeting or "1+1" asks about nothing in the materials, so it is not told that they don't cover it.
+        if ($mode !== 'summarize' && Retrieval::namesNoTopic($question)) {
+            return $label . "\n\n" . ($user['role'] === 'teacher'
+                ? t('What are you preparing? Name a topic, a lesson or practice items, and I will start from your class materials.')
+                : t('Ask me about a topic from your class materials, and I will show you the passages that match. What would you like to look at?'));
+        }
         if (!$sources) {
             return $label . "\n\n" . t('None of the released class materials matched “:q”. Try different key words, choose a class or a specific material when you start a session, or ask your teacher.', ['q' => \Sibol\Core\Markdown::plain($question, 80)]);
         }

@@ -6,11 +6,14 @@ namespace Sibol\Tests\Integration;
 
 use Sibol\Core\Auth;
 use Sibol\Core\Db;
+use Sibol\Core\RateLimiter;
 use Sibol\Services\Ai\AiRequest;
 use Sibol\Services\Ai\AiResult;
 use Sibol\Services\Ai\Companion;
+use Sibol\Services\Ai\DemoResponder;
 use Sibol\Services\Ai\Evaluation\ScriptedProvider;
 use Sibol\Services\Ai\Providers;
+use Sibol\Services\Ai\Retrieval;
 use Sibol\Services\Settings;
 
 /**
@@ -37,6 +40,8 @@ final class CoverageNoticeTest extends IntegrationTestCase
     {
         $janelle = $this->person('janelle.ocampo');
         Auth::actingAs($janelle);
+        // These turns are not the per-minute limit's business.
+        RateLimiter::clear('ai-burst', (string) $janelle['id']);
         Providers::fake($provider ?? new ScriptedProvider(function (AiRequest $request): AiResult {
             $this->request = $request;
             $result = new AiResult();
@@ -102,6 +107,41 @@ final class CoverageNoticeTest extends IntegrationTestCase
         self::assertStringStartsWith('**Your class materials may not cover this directly.**', (string) Companion::coverageNotice($janelle, $conversation, 'How do volcanoes and tectonic plates form islands?', $sources));
         self::assertNull(Companion::coverageNotice($janelle, $conversation, 'Where does gas exchange happen in the alveoli?', $sources));
         self::assertNull(Companion::coverageNotice($janelle, ['mode' => 'study_plan', 'language' => 'en'], 'Plan my week', []), 'Study plans are not questions about the materials');
+    }
+
+    public function testAGreetingThanksOrASumGetsNoNotice(): void
+    {
+        foreach (['hi', 'Thank you po!', '1+1'] as $message) {
+            $turn = $this->ask($message);
+            self::assertSame('The model answer.', $turn['answer'], $message);
+            self::assertStringContainsString('names no topic from the class materials', $this->lastPrompt(), $message);
+            self::assertStringContainsString('Do not say that the class materials do not cover it', $this->lastPrompt(), $message);
+            self::assertStringNotContainsString('No class material passages matched', $this->lastPrompt(), $message);
+        }
+        // A greeting with a question in it is still a question.
+        self::assertStringStartsWith("**Your class materials don't cover this.**", $this->ask('Hello! What causes earthquakes?')['answer']);
+    }
+
+    public function testMessagesThatNameNoTopic(): void
+    {
+        foreach (['hi', 'Hello!', 'thank you', 'Good morning po', 'Salamat po', 'Magandang umaga po', 'ok', '1+1', 'How are you?',
+            'Who are you?', 'I don\'t understand', '???', 'test'] as $message) {
+            self::assertTrue(Retrieval::namesNoTopic($message), $message);
+        }
+        foreach (['What causes earthquakes?', 'Hello, what is diffusion?', 'Good morning, ano ang alveoli?', 'Thanks! Now explain osmosis.',
+            'Ilan ang silid ng puso?'] as $message) {
+            self::assertFalse(Retrieval::namesNoTopic($message), $message);
+        }
+    }
+
+    public function testDemoModeAnswersAGreetingWithoutSayingTheMaterialsMissIt(): void
+    {
+        $janelle = $this->person('janelle.ocampo');
+        $answer = DemoResponder::respond($janelle, ['mode' => 'explain', 'language' => 'en'], 'hi', []);
+        self::assertStringContainsString('Ask me about a topic from your class materials', $answer);
+        self::assertStringNotContainsString('matched', $answer);
+        self::assertStringContainsString('Demo mode', $answer, 'Still labelled');
+        self::assertStringContainsString('None of the released class materials matched', DemoResponder::respond($janelle, ['mode' => 'explain', 'language' => 'en'], 'What causes earthquakes?', []));
     }
 
     public function testARefusalIsStoredWithoutTheNotice(): void

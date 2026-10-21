@@ -189,13 +189,14 @@ final class Companion
 
     /**
      * The sentence that opens an answer when the class materials do not cover the question: no passage matched, or
-     * the passages share fewer than half of its key words. In the answer's language. Null when they do cover it, and
-     * for study plans and summaries of a chosen material, which are not questions about the materials.
+     * the passages share fewer than half of its key words. In the answer's language. Null when they do cover it, for
+     * study plans and summaries of a chosen material, and for messages that name no topic ("hi", "thanks", "1+1"),
+     * which are not questions about the materials.
      */
     public static function coverageNotice(array $user, array $conversation, string $question, array $sources): ?string
     {
         $mode = (string) $conversation['mode'];
-        if (in_array($mode, ['study_plan', 'summarize'], true)) {
+        if (in_array($mode, ['study_plan', 'summarize'], true) || Retrieval::namesNoTopic($question)) {
             return null;
         }
         $none = $sources === [];
@@ -279,7 +280,10 @@ final class Companion
             $context[] = "The student's upcoming work:\n" . implode("\n", $lines);
         }
         $block = Prompts::sourceBlock($sources);
-        if ($block === '') {
+        if ($block === '' && $conversation['mode'] !== 'study_plan' && Retrieval::namesNoTopic($question)) {
+            // A greeting or "1+1" is not a question about the materials, so it gets no "don't cover this" line from anyone.
+            $block = '(This message names no topic from the class materials, for example a greeting, thanks or a quick sum: reply briefly and ask what they would like to work on. Do not say that the class materials do not cover it.)';
+        } elseif ($block === '') {
             $block = $conversation['mode'] === 'study_plan' ? '' : '(No class material passages matched this question.'
                 . ($noticeShown ? ' Sibol has already told the reader that the class materials do not cover it, so do not say that again.' : '') . ')';
         } elseif ($noticeShown) {

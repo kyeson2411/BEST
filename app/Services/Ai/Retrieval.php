@@ -18,6 +18,14 @@ final class Retrieval
 {
     public const MAX_SOURCES = 6;
 
+    /** Greetings, thanks and short replies, in English and Filipino, and what is left of "don't" and the like. */
+    private const SMALL_TALK = ['hello', 'hey', 'hiya', 'howdy', 'thanks', 'thank', 'thx', 'okay', 'okey', 'sure', 'yes', 'yeah',
+        'yep', 'yup', 'nope', 'cool', 'nice', 'great', 'good', 'morning', 'afternoon', 'evening', 'night', 'day', 'bye', 'goodbye',
+        'see', 'later', 'welcome', 'sorry', 'wow', 'lol', 'haha', 'hahaha', 'hehe', 'test', 'testing', 'understand', 'idea',
+        'confused', 'stuck', 'don', 'doesn', 'didn', 'isn', 'aren', 'wasn', 'weren', 'won', 'wouldn', 'couldn', 'shouldn',
+        'haven', 'hasn', 'kumusta', 'kamusta', 'musta', 'magandang', 'umaga', 'tanghali', 'hapon', 'gabi', 'salamat', 'maraming',
+        'sige', 'ayos', 'huy', 'paalam', 'ingat'];
+
     /**
      * @return list<array{n:int,chunk_id:int,material_id:int,version_id:int,class_id:int,title:string,extension:?string,page_from:?int,page_to:?int,section_title:?string,content:string,score:float}>
      */
@@ -109,6 +117,15 @@ final class Retrieval
         }
         // Numeric words ("150") become integer array keys; keep every keyword a string.
         return array_map('strval', array_keys($out));
+    }
+
+    /**
+     * Whether a message names nothing to look up in the class materials: a greeting, thanks, "ok", "I don't
+     * understand" or a sum such as "1+1" (no keyword beyond small talk).
+     */
+    public static function namesNoTopic(string $message): bool
+    {
+        return array_diff(self::keywords(self::cleanQuery($message)), self::SMALL_TALK) === [];
     }
 
     /**

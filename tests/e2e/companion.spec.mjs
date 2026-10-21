@@ -51,3 +51,17 @@ test('the student is told the report was reviewed', async ({ page }) => {
   await page.goto('notifications');
   await expect(page.getByText('The answer you reported was reviewed').first()).toBeVisible();
 });
+
+test('a greeting is answered with a question, not with "the materials don\'t cover this"', async ({ page }) => {
+  await demoLogin(page, 'student');
+  await page.goto('companion/new');
+  await page.getByLabel('Class', { exact: true }).selectOption({ label: 'Science 9 – Narra' });
+  await page.getByLabel('Your first message').fill('hi');
+  await page.getByRole('button', { name: 'Start session' }).click();
+
+  const answer = page.locator('.msg--assistant').last();
+  await expect(answer).toContainText('Ask me about a topic from your class materials', { timeout: 30_000 });
+  await expect(answer).toContainText('Demo mode');
+  await expect(answer).not.toContainText('matched');
+  await expect(answer).not.toContainText("don't cover");
+});

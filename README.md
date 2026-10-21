@@ -237,14 +237,15 @@ prices. Your provider's invoice is the authority.
 
 ### Checking the AI before going live
 
-`bin\sibol.php ai:eval` sends 33 fixed student and teacher prompts about the demo school's materials through the
+`bin\sibol.php ai:eval` sends 34 fixed student and teacher prompts about the demo school's materials through the
 real companion (limits, permission-filtered retrieval, prompt, provider, citation checks, storage) and prints a
 pass/fail table with each case's tokens and estimated cost. It checks that:
 
 - citations point only to passages that were supplied, cited passages are about the question, and quoted words
   and page numbers come from those passages; no passage comes from outside the person's classes;
 - when the materials do not cover a question, the answer says so first, including when a passage only looks
-  related and when the reading belongs to another section;
+  related and when the reading belongs to another section; a greeting such as "hi" is not told that (neither by
+  Sibol nor by the model) and gets asked what the student would like to work on;
 - asked to write a lab report, a reading response or a submission, or for quiz answers, the companion helps
   instead of doing the work;
 - a kind of help with one job keeps to it: a sum typed into **Make a study plan** is not worked out there (the
@@ -268,7 +269,7 @@ C:\xampp\php\php.exe bin\sibol.php ai:eval --demo                  :: demo mode,
 C:\xampp\php\php.exe bin\sibol.php ai:eval --case=B02,D04 --show   :: some cases, with their answers
 ```
 
-In demo mode all 33 cases pass at no cost. With a model, 29 cases make one request each (the refusal and limit
+In demo mode all 34 cases pass at no cost. With a model, 30 cases make one request each (the refusal and limit
 cases never reach the provider); the cost of a run has not been measured yet, so read it from the table. The
 checks are patterns, not judgement: read a live run's answers with `--show` before going live, and treat a pass
 as a floor, not a guarantee about other questions.
@@ -403,7 +404,7 @@ permission-filtered retrieval (other sections, drafts and scheduled materials ne
 a full demo companion turn, data export and erasure, daily limits and usage accounting, audit-log hygiene and
 retention purging, copying work to other sections without exposing drafts, extensions and excused work,
 reopening quiz attempts, the notification badge's count-only background check, retrieval of Filipino questions,
-headings and numbers, the AI check (all 33 cases pass in demo mode and leave nothing behind; a scripted
+headings and numbers, the AI check (all 34 cases pass in demo mode and leave nothing behind; a scripted
 model that invents citations, ignores the language or writes graded work fails; one that follows the rules
 passes; its checks are unit-tested with good and bad answers), usernames made from names, sign-in slip codes and
 who may print them, sections and advisers, the QR encoder (published Reed-Solomon examples, format and
@@ -463,7 +464,7 @@ They cover the landing page (photo, seal and motto load; the seal stays pinned t
 sign-in and sign-out, role homes, permission boundaries for every role (403 for other roles'
 areas, 404 for records outside your classes, CSRF), a teacher building a quiz with AI drafts that must be
 approved before publishing, a student taking it and receiving a receipt, grade release, the companion with
-cited sources and answer reporting, administrator invitation and one-time links, CSV import with a preview,
+cited sources and answer reporting (and a greeting answered with a question, not "the materials don't cover this"), administrator invitation and one-time links, CSV import with a preview,
 class setup, a policy switch, a data export downloaded only by its owner, the audit log, Filipino text written
 by the page scripts, copying a material, a quiz and a lesson to another section as drafts, an extension and an
 excused student, quiz attempts in offline mode, the live notification badge, demo answers in the session's
@@ -998,7 +999,9 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   passage matched (and "may not cover this directly" when the passages share fewer than half of the question's
   key words), in the answer's language, and tells the model not to repeat it (`Companion::coverageNotice`). Like
   demo mode, this counts key words and cannot judge meaning: a passage that shares the words but not the answer
-  gets no notice, so the prompt rule still applies.
+  gets no notice, so the prompt rule still applies. A message that names no topic (a greeting, thanks, "I don't
+  understand" or a sum such as "1+1", in English or Filipino: `Retrieval::namesNoTopic`) gets no notice; the model
+  is told to reply briefly and ask what the student would like to work on, and demo mode asks the same.
 - The Filipino translation covers the whole interface but was drafted with AI and has not yet been reviewed
   by a Filipino teacher.
 - The DepEd grading templates were typed in by hand. The published copy of DepEd Order No. 8, s. 2015 is a
