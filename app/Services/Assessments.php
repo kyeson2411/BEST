@@ -169,6 +169,10 @@ final class Assessments
         }
         if ($assignment['due_at'] === null) {
             $problems[] = t('Set a due date.');
+        } elseif ($assignment['kind'] !== 'paper' && $assignment['due_at'] < Db::now()) {
+            // Students answer online work in Sibol, so it would arrive already overdue: missing, or late for a deadline
+            // they never had. Work done in class or on paper keeps past dates, since its scores are entered afterwards.
+            $problems[] = t('The due date has already passed. Choose a new due date so students can hand it in on time.');
         }
         if ((float) $assignment['points_possible'] <= 0 && !$questions) {
             $problems[] = t('Set the points this assignment is worth.');

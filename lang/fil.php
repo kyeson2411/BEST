@@ -2689,6 +2689,7 @@ return [
     'The document is missing its main text part.' => 'Nawawala sa dokumento ang pangunahing bahagi ng teksto nito.',
     'The document structure could not be read.' => 'Hindi mabasa ang istruktura ng dokumento.',
     'The draft and its questions are deleted permanently.' => 'Permanenteng mabubura ang draft at ang mga tanong nito.',
+    'The due date has already passed. Choose a new due date so students can hand it in on time.' => 'Lampas na ang takdang araw. Pumili ng bagong takdang araw para maipasa ito ng mga mag-aaral sa tamang oras.',
     'The due date has passed and this assignment does not accept late work.' => 'Lampas na ang takdang araw at hindi tumatanggap ng huling pasa ang gawaing ito.',
     'The due date has passed and this assignment does not accept late work. Talk to your teacher if something got in the way.' => 'Lampas na ang takdang araw at hindi tumatanggap ng huling pasa ang gawaing ito. Kausapin ang iyong guro kung may naging hadlang.',
     'The due date has passed and this quiz no longer accepts attempts.' => 'Lampas na ang takdang araw at hindi na tumatanggap ng pagtatangka ang quiz na ito.',

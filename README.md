@@ -802,6 +802,11 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   online work on a printed copy (their online submissions are never overwritten). Saving is audit-logged with
   counts only. Any assignment or quiz prints as a blank copy (no answers; AI drafts not yet approved are left
   out) or as the teacher's copy with the answer key, which only the class's teachers can open.
+- **Past due dates.** Work done in class or on paper can be published with a date that has passed, since its scores
+  are entered afterwards. An assignment or a quiz, which students answer in Sibol, cannot: students would get it
+  already missing, or late for a deadline they never had, so "Before you publish" asks for a new due date first
+  ("The due date has already passed. Choose a new due date so students can hand it in on time."). Moving the due
+  date of work already published, and giving one student more time, work as before.
 - **Grading periods, weights by subject group and transmutation.** Sibol does not decide a school's grading
   policy; an administrator sets it up under **School settings → Grading** (`/admin/grading`):
   - **Grading periods** are quarters or terms inside a school year (**Subjects and terms → Academic periods**:
