@@ -99,6 +99,21 @@
     syncCards();
   }
 
+  /* The "new session" form follows the chosen kind of help: its own question and example above the message
+     box, and the explanation level only where it is used (Explain a topic). */
+  var askHint = doc.getElementById('f-question-hint');
+  var askBox = doc.getElementById('f-question');
+  var levelPick = doc.getElementById('f-level');
+  var levelField = levelPick && levelPick.closest('.field');
+  function followMode(radio) {
+    if (!radio || !askHint) return;
+    askHint.textContent = radio.getAttribute('data-ask') || '';
+    if (askBox) askBox.placeholder = radio.getAttribute('data-example') || '';
+    if (levelField) levelField.hidden = radio.value !== 'explain';
+  }
+  $all('input[name="mode"][data-ask]').forEach(function (r) { r.addEventListener('change', function () { followMode(r); }); });
+  followMode($('input[name="mode"][data-ask]:checked'));
+
   if (!form || !exchanges) return;
 
   var input = $('textarea', form);

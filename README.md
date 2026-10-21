@@ -835,6 +835,11 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   practised last. Practice puts **Flashcards** first and ready to press. Old links that started a flashcards chat
   open Practice too, and flashcards chats from before stay readable. The school's **Flashcards** switch in
   **Policies** still turns both off.
+- **The companion's form follows the kind of help.** Each kind asks its own question above the message box, with
+  an example (**Make a study plan**: *What test or deadline is coming, and when are you free?*; teachers' kinds
+  too), and **Explanation level** shows only for **Explain a topic**, the one kind it changes. An empty chat shows
+  the same question and example. The material lists on the companion and in **Practice** offer only the chosen
+  class's materials; with no class chosen, the companion's list is switched off ("Choose a class first").
 - **Comment bank.** Teachers save feedback they write often (**Comment bank**, linked from **To review** and
   the grading page), optionally tied to a rubric criterion by its title. On the grading page the bank lists the
   comments for this rubric's criteria first. A click inserts a comment into the comment box the teacher was

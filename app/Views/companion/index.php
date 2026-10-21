@@ -120,6 +120,9 @@ $modeIcons = ['explain' => 'lightbulb', 'socratic' => 'list-ordered', 'practice'
           <div class="empty" id="thread-empty">
             <h3 class="empty__title"><?= e(Settings::modeLabel((string) $active['mode'])) ?></h3>
             <p class="empty__body"><?= e(Settings::modeDescription((string) $active['mode'])) ?></p>
+            <?php if (Settings::modeQuestion((string) $active['mode']) !== ''): ?>
+              <p class="meta"><?= e(Settings::modeQuestion((string) $active['mode'])) ?> <?= e(Settings::modeExample((string) $active['mode'])) ?></p>
+            <?php endif; ?>
           </div>
         <?php endif; ?>
       </div>
@@ -227,6 +230,7 @@ $modeIcons = ['explain' => 'lightbulb', 'socratic' => 'list-ordered', 'practice'
         </div>
         <h2 class="page-title" id="thread-title"><?= e($isStudent ? t('What would you like to work on?') : t('What are you preparing?')) ?></h2>
         <p class="page-lead" style="margin-bottom: 24px"><?= e($isStudent ? t('Choose how the companion should help. It explains and guides; it will not do graded work for you.') : t('Drafts are for you to review and adapt. Nothing is shared with students.')) ?></p>
+        <?php $startMode = (string) (old('mode') ?: $defaults['mode']); ?>
         <form method="post" action="<?= e(url('/companion')) ?>" style="max-width: 920px">
           <?= csrf_field() ?>
           <fieldset>
@@ -235,7 +239,7 @@ $modeIcons = ['explain' => 'lightbulb', 'socratic' => 'list-ordered', 'practice'
               <?php foreach ($modes as $mode): ?>
                 <?php if ($mode === 'flashcards'): echo $practiceCards !== null ? $practiceCard($practiceCards, true) : ''; continue; endif; ?>
                 <label class="mode-option">
-                  <input type="radio" name="mode" value="<?= e($mode) ?>"<?= checked($mode === (old('mode') ?: $defaults['mode'])) ?>>
+                  <input type="radio" name="mode" value="<?= e($mode) ?>"<?= checked($mode === $startMode) ?> data-ask="<?= e(Settings::modeQuestion($mode)) ?>" data-example="<?= e(Settings::modeExample($mode)) ?>">
                   <span class="mode-option__title"><?= icon($modeIcons[$mode] ?? 'circle-dot', 'icon--sm') ?><?= e(Settings::modeLabel($mode)) ?></span>
                   <span class="mode-option__desc"><?= e(Settings::modeDescription($mode)) ?></span>
                 </label>
@@ -252,8 +256,8 @@ $modeIcons = ['explain' => 'lightbulb', 'socratic' => 'list-ordered', 'practice'
             <div class="field<?= field_error('material_id') ? ' field--error' : '' ?>">
               <label class="field__label" for="f-material_id"><?= e(t('Focus on one material')) ?> <span class="field__optional"><?= e(t('optional')) ?></span></label>
               <p class="field__hint" id="f-material_id-hint"><?= e(t('Needed for summaries.')) ?></p>
-              <select class="input select" id="f-material_id" name="material_id" aria-describedby="f-material_id-hint" data-material-select>
-                <option value=""><?= e(t('Any material in the class')) ?></option>
+              <select class="input select" id="f-material_id" name="material_id" aria-describedby="f-material_id-hint" data-material-select data-follows="#f-class_id">
+                <option value="" data-any="<?= e(t('Any material in the class')) ?>" data-none="<?= e(t('Choose a class first')) ?>"><?= e(t('Any material in the class')) ?></option>
                 <?php foreach ($classes as $c): $items = array_filter($materials, static fn ($m) => (int) $m['class_id'] === (int) $c['id']); if (!$items) { continue; } ?>
                   <optgroup label="<?= e($c['name']) ?>" data-class="<?= (int) $c['id'] ?>">
                     <?php foreach ($items as $m): ?>
@@ -268,7 +272,11 @@ $modeIcons = ['explain' => 'lightbulb', 'socratic' => 'list-ordered', 'practice'
             <?php if ($isStudent): ?>
               <?= field('select', 'level', t('Explanation level'), ['options' => ['' => t('Not set'), 'simpler' => t('Simpler'), 'grade' => t('At my grade level'), 'challenge' => t('More challenging')], 'value' => 'grade']) ?>
             <?php endif; ?>
-            <?= field('textarea', 'question', t('Your first message'), ['value' => (string) ($defaults['question'] ?? ''), 'rows' => 3, 'wrap_class' => 'span-2', 'optional_label' => true, 'attrs' => ['maxlength' => (int) setting('ai.max_question_chars', 2000)]]) ?>
+            <?= field('textarea', 'question', t('Your first message'), [
+                'value' => (string) ($defaults['question'] ?? ''), 'rows' => 3, 'wrap_class' => 'span-2', 'optional_label' => true,
+                'hint' => Settings::modeQuestion($startMode), 'placeholder' => Settings::modeExample($startMode),
+                'attrs' => ['maxlength' => (int) setting('ai.max_question_chars', 2000)],
+            ]) ?>
           </div>
           <div class="form-actions">
             <button class="btn btn--primary" type="submit" data-busy="<?= e(t('Starting…')) ?>"><?= e(t('Start session')) ?></button>

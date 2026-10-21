@@ -300,6 +300,37 @@
     sel.addEventListener('change', function () { if (sel.value) window.location.href = sel.value; });
   });
 
+  /* A material list that follows a class list: select[data-follows="#class-select"] offers only the chosen
+     class's <optgroup data-class>. With no class chosen it is switched off and its first option shows its
+     data-none text. Without JS every class's materials stay listed (the server takes the material's class). */
+  $all('select[data-follows]').forEach(function (list) {
+    var classes = $(list.getAttribute('data-follows'));
+    if (!classes) return;
+    var groups = $all('optgroup', list);
+    var first = list.options[0];
+    var chosen = list.options[list.selectedIndex];
+    if (classes.value === '' && chosen && chosen.parentNode.tagName === 'OPTGROUP') {
+      classes.value = chosen.parentNode.getAttribute('data-class');
+    }
+    function follow() {
+      var classId = classes.value;
+      var kept = list.value;
+      groups.forEach(function (g) {
+        var match = classId !== '' && g.getAttribute('data-class') === classId;
+        if (match && !g.parentNode) list.appendChild(g);
+        if (!match && g.parentNode) g.parentNode.removeChild(g);
+      });
+      list.value = kept;
+      if (list.selectedIndex < 0 || list.value !== kept) list.selectedIndex = 0;
+      list.disabled = classId === '';
+      if (first && first.hasAttribute('data-none')) {
+        first.textContent = first.getAttribute(classId === '' ? 'data-none' : 'data-any');
+      }
+    }
+    classes.addEventListener('change', follow);
+    follow();
+  });
+
   /* Copy buttons --------------------------------------------------------------- */
   $all('[data-copy]').forEach(function (btn) {
     btn.addEventListener('click', function () {

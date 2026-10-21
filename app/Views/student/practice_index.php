@@ -54,10 +54,10 @@ $cardsFirst = $picked['cards_first'] && $cardsOn;
           <?= field('select', 'class_id', t('Class'), ['options' => array_column($classes, 'name', 'id'), 'value' => (string) $picked['class_id']]) ?>
           <div class="field">
             <label class="field__label" for="f-material_id"><?= e(t('Material')) ?> <span class="field__optional"><?= e(t('optional')) ?></span></label>
-            <select class="input select" id="f-material_id" name="material_id">
+            <select class="input select" id="f-material_id" name="material_id" data-follows="#f-class_id">
               <option value=""><?= e(t('Latest material in the class')) ?></option>
               <?php foreach ($classes as $c): $items = array_filter($materials, static fn ($m) => (int) $m['class_id'] === (int) $c['id']); if (!$items) { continue; } ?>
-                <optgroup label="<?= e($c['name']) ?>">
+                <optgroup label="<?= e($c['name']) ?>" data-class="<?= (int) $c['id'] ?>">
                   <?php foreach ($items as $m): ?><option value="<?= (int) $m['id'] ?>"<?= selected($m['id'], (string) $picked['material_id']) ?>><?= e($m['title']) ?></option><?php endforeach; ?>
                 </optgroup>
               <?php endforeach; ?>

@@ -108,7 +108,14 @@ empty state (Besley headline + one sentence + one action), toast region (`aria-l
 line saying what the choice does; the chosen card gets the forest border and `--leaf-soft` fill. A choice that
 opens another page instead of setting a value is a link card (`a.mode-option`, same look, no underline) with an
 arrow at the end of its title (`.mode-option__go`, `--ink-2`). Example: the companion's Flashcards card opens
-Practice with the class already picked.
+Practice with the class already picked. The form under the cards follows the chosen one: in the companion, the
+message box's hint asks that kind of help's own question and its placeholder gives an example, and fields that
+only one kind uses (Explanation level) show only for it.
+
+**A list that depends on another list follows it.** A material list (`select[data-follows="#class-select"]`, its
+options grouped in `<optgroup data-class>`) offers only the chosen class's materials, drops a material from another
+class when the class changes, and is switched off with "Choose a class first" until a class is chosen. Without
+JavaScript every group stays listed and the server takes the material's class.
 
 Icons: Lucide, 1.75px stroke, 20px in navigation, 16px inline, always paired with text or an accessible name.
 

@@ -282,6 +282,46 @@ final class Settings
         return $descriptions[$mode] ?? '';
     }
 
+    /** What to write in the first message for a companion mode (the hint above the message box). */
+    public static function modeQuestion(string $mode): string
+    {
+        $questions = [
+            'explain' => t('What should it explain?'),
+            'socratic' => t('What problem are you working on?'),
+            'practice' => t('What topic should it quiz you on?'),
+            'summarize' => t('Choose the material to summarise above. Anything the summary should focus on?'),
+            'study_plan' => t('What test or deadline is coming, and when are you free?'),
+            'vocabulary' => t('Which words or terms?'),
+            'ask_materials' => t('Choose a class above. What do you want to find in its materials?'),
+            'lesson_ideas' => t('What lesson are you planning, and for how long?'),
+            'explain_for_class' => t('Which concept do your students find hard?'),
+            'examples' => t('Examples of what, and how many?'),
+            'differentiate' => t('Which activity do you want to adapt?'),
+            'feedback_helper' => t('What feedback have you decided to give?'),
+        ];
+        return $questions[$mode] ?? '';
+    }
+
+    /** An example first message for a companion mode (the message box's placeholder). */
+    public static function modeExample(string $mode): string
+    {
+        $examples = [
+            'explain' => t('For example: How does the heart pump blood?'),
+            'socratic' => t('For example: Solve 2x + 3 = 11'),
+            'practice' => t('For example: Punnett squares'),
+            'summarize' => t('For example: Just the main ideas, in short points'),
+            'study_plan' => t('For example: Science quiz on Friday. I am free after 5 PM.'),
+            'vocabulary' => t('For example: allele, genotype, phenotype'),
+            'ask_materials' => t('For example: What does the module say about the alveoli?'),
+            'lesson_ideas' => t('For example: Grade 9 Science, heredity, 60 minutes'),
+            'explain_for_class' => t('For example: Why the walls of the alveoli are thin'),
+            'examples' => t('For example: Five quadratic equations to solve by factoring'),
+            'differentiate' => t('For example: A group lab on breathing rates'),
+            'feedback_helper' => t('For example: Clear data table; the conclusion needs evidence from the data'),
+        ];
+        return $examples[$mode] ?? '';
+    }
+
     private static function isList(array $value): bool
     {
         return $value === [] || array_keys($value) === range(0, count($value) - 1);
