@@ -305,6 +305,12 @@ final class Runner
         if (!empty($expect['asks']) && !Checks::asksBack($content)) {
             $failures[] = 'does not ask the student anything';
         }
+        if (isset($expect['stays']) && !Checks::staysOnTask($content, (string) $expect['stays']['about'], (array) ($expect['stays']['forbid'] ?? []))) {
+            $failures[] = 'answers a message this kind of help is not for instead of steering back to it';
+        }
+        if (!empty($expect['plan']) && !Checks::hasPlan($content)) {
+            $failures[] = 'has no ```plan block of dated sessions for the calendar';
+        }
         return [$failures, $content];
     }
 

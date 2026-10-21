@@ -124,6 +124,28 @@ final class Checks
         );
     }
 
+    /**
+     * Whether an answer to a message the kind of help is not for keeps to its job: it talks about what this kind
+     * of help does ($about) and does not answer the message anyway (any $forbid pattern).
+     * @param list<string> $forbid
+     */
+    public static function staysOnTask(string $text, string $about, array $forbid): bool
+    {
+        $text = self::withoutDemoLabel($text);
+        foreach ($forbid as $pattern) {
+            if (preg_match($pattern, $text)) {
+                return false;
+            }
+        }
+        return (bool) preg_match($about, $text);
+    }
+
+    /** Whether the answer has a ```plan block with at least one "YYYY-MM-DD HH:MM | minutes | task" line. */
+    public static function hasPlan(string $text): bool
+    {
+        return (bool) preg_match('/```plan\s*\R\s*\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}\s*\|\s*\d+\s*\|\s*\S/u', $text);
+    }
+
     /** Whether the answer asks the student something or leaves a blank to fill. */
     public static function asksBack(string $text): bool
     {

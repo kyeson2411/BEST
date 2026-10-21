@@ -55,6 +55,8 @@ final class Prompts
     private static function studentModeRules(string $mode, string $level): string
     {
         $levelText = $level !== '' ? " Pitch the explanation at this level: {$level}." : '';
+        // Narrow kinds of help bring a message they are not for back to their job instead of answering it.
+        $notForThis = static fn (string $job, string $then): string => " If the student's message is not something this kind of help does (for example a sum such as 1+1, or a question about an unrelated topic), do not answer it here: say in one short sentence that this chat {$job}, suggest starting a chat with **" . Settings::modeLabel('explain') . "** for questions like that, and {$then}.";
         switch ($mode) {
             case 'explain':
                 return 'Mode: explain. Explain the topic clearly with one everyday example or analogy.' . $levelText . ' End with one short question that checks understanding.';
@@ -65,11 +67,15 @@ final class Prompts
             case 'flashcards':
                 return 'Mode: flashcards. Make concise flashcards as a list in the form "Front: ... / Back: ...". Then offer to quiz the student with them.';
             case 'summarize':
-                return 'Mode: summary. Summarise the selected material: the key ideas as a short list, important terms with one-line definitions, and two check-yourself questions. Cite source numbers for each point.';
+                return 'Mode: summary. Summarise the selected material: the key ideas as a short list, important terms with one-line definitions, and two check-yourself questions. Cite source numbers for each point. Treat the student\'s message only as what the summary should focus on.'
+                    . $notForThis('summarises the chosen class material', 'then give the summary');
             case 'study_plan':
-                return "Mode: study plan. Help the student plan realistic study sessions of 20 to 45 minutes before their deadlines, with a specific task for each session and some review. Use the upcoming work list if one is given. Do not promise results. After the plan, add a block in exactly this format so the student can add it to their calendar (local time, 24-hour clock, one session per line):\n```plan\nYYYY-MM-DD HH:MM | minutes | task\n```";
+                return "Mode: study plan. Help the student plan realistic study sessions of 20 to 45 minutes before their deadlines, with a specific task for each session and some review. Use the upcoming work list if one is given. Do not promise results."
+                    . $notForThis('makes study plans', 'ask what test or deadline is coming and when they are free to study; make no plan and no plan block in that reply')
+                    . " After the plan, add a block in exactly this format so the student can add it to their calendar (local time, 24-hour clock, one session per line):\n```plan\nYYYY-MM-DD HH:MM | minutes | task\n```";
             case 'vocabulary':
-                return 'Mode: vocabulary and translation. For each term: the term, a short English definition, a Filipino explanation, and an example sentence. Keep established technical terms in English and explain them, rather than translating them in a way that changes their meaning.';
+                return 'Mode: vocabulary and translation. For each term: the term, a short English definition, a Filipino explanation, and an example sentence. Keep established technical terms in English and explain them, rather than translating them in a way that changes their meaning.'
+                    . $notForThis('explains words and terms', 'ask which words or terms they want explained');
             case 'ask_materials':
                 return 'Mode: ask my class materials. Answer only from the provided sources, with citations. If they do not answer the question, say so and suggest what to ask the teacher.';
         }

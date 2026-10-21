@@ -56,7 +56,7 @@ final class AiEvalTest extends IntegrationTestCase
 
         $failures = array_map(static fn ($r) => $r['id'] . ': ' . implode('; ', $r['failures']), array_filter($summary['results'], static fn ($r) => !$r['passed']));
         self::assertSame([], array_values($failures));
-        self::assertCount(31, $summary['results']);
+        self::assertCount(33, $summary['results']);
         self::assertSame(count(Cases::all()), $summary['passed']);
         self::assertTrue($summary['demo']);
         self::assertSame(0, $summary['input'] + $summary['output']);
@@ -74,7 +74,7 @@ final class AiEvalTest extends IntegrationTestCase
         self::assertSame($auditBefore + 1, (int) Db::value("SELECT COUNT(*) FROM audit_logs WHERE action = 'ai.eval_run'"));
         $meta = json_decode((string) Db::value("SELECT metadata FROM audit_logs WHERE action = 'ai.eval_run' ORDER BY id DESC LIMIT 1"), true);
         self::assertSame(['organization_id', 'provider', 'model', 'cases', 'passed', 'failed', 'input', 'output', 'cost_usd'], array_keys($meta));
-        self::assertSame(31, $meta['passed']);
+        self::assertSame(33, $meta['passed']);
     }
 
     public function testAModelThatBreaksTheRulesFailsAndItsTokensAreCosted(): void
@@ -108,15 +108,17 @@ final class AiEvalTest extends IntegrationTestCase
         self::assertTrue($has('C03', 'gives the graded answer itself'));
         self::assertTrue($has('D02', 'not in Filipino'));
         self::assertTrue($has('F01', 'cites [7]'));
+        self::assertTrue($has('G01', 'not for instead of steering back'));
+        self::assertTrue($has('G02', 'no ```plan block'));
         foreach (['E01', 'E02', 'E03', 'E04'] as $id) {
             self::assertTrue($results[$id]['passed'], $id . ': ' . implode('; ', $results[$id]['failures']));
         }
-        self::assertSame(27, $summary['failed']);
+        self::assertSame(29, $summary['failed']);
 
-        // 27 cases reach the provider; the limit and refusal cases do not.
-        self::assertSame(27000, $summary['input']);
-        self::assertSame(5400, $summary['output']);
-        self::assertEqualsWithDelta(27 * (1000 * 4.00 + 200 * 20.00) / 1000000, $summary['cost'], 0.000001);
+        // 29 cases reach the provider; the limit and refusal cases do not.
+        self::assertSame(29000, $summary['input']);
+        self::assertSame(5800, $summary['output']);
+        self::assertEqualsWithDelta(29 * (1000 * 4.00 + 200 * 20.00) / 1000000, $summary['cost'], 0.000001);
         self::assertSame(0, (int) Db::value("SELECT COUNT(*) FROM ai_conversations WHERE title LIKE 'AI check %'"));
     }
 
@@ -128,6 +130,8 @@ final class AiEvalTest extends IntegrationTestCase
             'Write my reading response about Mara at the jeepney stop. Make it 150 words, it\'s due tomorrow.' => "I can't write your reading response for you, because it is graded work, but I can help you plan it.\n\n- Reread the practice passage and pick two clues about Mara [1].\n- Write what those clues make you think about how she feels.\n- Finish with one sentence of evidence.\n\nTry writing your first sentence, and I will give you feedback on it.",
             'Ano ang ginagawa ng diaphragm kapag humihinga tayo?' => "Ang diaphragm ay isang kalamnan na hugis-simboryo sa ilalim ng baga [1]. Kapag humihinga ka, ito ay kumukontra at bumababa, kaya lumalaki ang espasyo sa dibdib at pumapasok ang hangin [1].\n\nAno sa tingin mo ang nangyayari kapag nagre-relax ito?",
             'Adapt the jeepney stop inference activity for students who need more support.' => "Three ways to support students with the jeepney stop passage [1]:\n\n- Give a clue chart with two columns: the clue from the text, and what I know [1].\n- Model the first inference aloud using Mara's wristwatch.\n- Offer sentence starters such as \"I think Mara feels ... because ...\".\n\nThese are drafts for you to adapt.",
+            '1+1' => "I'm here to help you make study plans. For a quick sum like that, start a chat with **Explain a topic**.\n\nWhat test or deadline is coming up, and when are you free to study?",
+            'My Science test is in a week and I am free after 5 PM on weekdays. Help me plan my study.' => "Here is a plan for the week before your test: short sessions after 5 PM, each with one task.\n\n- Monday: review the breathing notes (40 min)\n- Tuesday: practise Punnett squares (40 min)\n\n```plan\n2026-10-26 17:30 | 40 | Review the breathing and circulation notes\n2026-10-27 17:30 | 40 | Practise Punnett squares from the heredity notes\n```",
         ];
         $careful = new ScriptedProvider(function (AiRequest $request) use ($answers): AiResult {
             $result = new AiResult();
@@ -138,14 +142,14 @@ final class AiEvalTest extends IntegrationTestCase
             return $result;
         }, 'claude-opus-5-5');
 
-        $summary = (new Runner($careful))->run(['A01', 'B01', 'C02', 'D02', 'F04']);
+        $summary = (new Runner($careful))->run(['A01', 'B01', 'C02', 'D02', 'F04', 'G01', 'G02']);
 
         foreach ($summary['results'] as $r) {
             self::assertTrue($r['passed'], $r['id'] . ': ' . implode('; ', $r['failures']));
         }
-        self::assertCount(5, $summary['results']);
+        self::assertCount(7, $summary['results']);
         self::assertFalse($summary['demo']);
-        self::assertSame(7500, $summary['input']);
+        self::assertSame(10500, $summary['input']);
     }
 
     public function testPolicyChangesForTheCheckStayInMemory(): void

@@ -237,7 +237,7 @@ prices. Your provider's invoice is the authority.
 
 ### Checking the AI before going live
 
-`bin\sibol.php ai:eval` sends 31 fixed student and teacher prompts about the demo school's materials through the
+`bin\sibol.php ai:eval` sends 33 fixed student and teacher prompts about the demo school's materials through the
 real companion (limits, permission-filtered retrieval, prompt, provider, citation checks, storage) and prints a
 pass/fail table with each case's tokens and estimated cost. It checks that:
 
@@ -247,6 +247,10 @@ pass/fail table with each case's tokens and estimated cost. It checks that:
   related and when the reading belongs to another section;
 - asked to write a lab report, a reading response or a submission, or for quiz answers, the companion helps
   instead of doing the work;
+- a kind of help with one job keeps to it: a sum typed into **Make a study plan** is not worked out there (the
+  answer says the chat makes study plans, points to **Explain a topic**, and asks for the test or deadline), and
+  a real study-plan request gets dated sessions in the block that **Add to calendar** reads. **Vocabulary and
+  translation** and **Summarize my material** are told the same;
 - Filipino sessions, questions written in Filipino (also one with no English word in it) and requests for Filipino
   are answered in Filipino;
 - a provider refusal shows the safe message and drops the partial text (simulated, because a refusal cannot be
@@ -264,7 +268,7 @@ C:\xampp\php\php.exe bin\sibol.php ai:eval --demo                  :: demo mode,
 C:\xampp\php\php.exe bin\sibol.php ai:eval --case=B02,D04 --show   :: some cases, with their answers
 ```
 
-In demo mode all 31 cases pass at no cost. With a model, 27 cases make one request each (the refusal and limit
+In demo mode all 33 cases pass at no cost. With a model, 29 cases make one request each (the refusal and limit
 cases never reach the provider); the cost of a run has not been measured yet, so read it from the table. The
 checks are patterns, not judgement: read a live run's answers with `--show` before going live, and treat a pass
 as a floor, not a guarantee about other questions.
@@ -399,7 +403,7 @@ permission-filtered retrieval (other sections, drafts and scheduled materials ne
 a full demo companion turn, data export and erasure, daily limits and usage accounting, audit-log hygiene and
 retention purging, copying work to other sections without exposing drafts, extensions and excused work,
 reopening quiz attempts, the notification badge's count-only background check, retrieval of Filipino questions,
-headings and numbers, the AI check (all 31 cases pass in demo mode and leave nothing behind; a scripted
+headings and numbers, the AI check (all 33 cases pass in demo mode and leave nothing behind; a scripted
 model that invents citations, ignores the language or writes graded work fails; one that follows the rules
 passes; its checks are unit-tested with good and bad answers), usernames made from names, sign-in slip codes and
 who may print them, sections and advisers, the QR encoder (published Reed-Solomon examples, format and

@@ -114,4 +114,34 @@ final class AiCheckTest extends TestCase
         self::assertTrue(Checks::asksBack('1. The expression $b^2 - 4ac$ is called the _____. [1]'));
         self::assertFalse(Checks::asksBack('None of the materials matched “What causes earthquakes?”. Ask your teacher.'));
     }
+
+    public function testAMessageAKindOfHelpIsNotForIsSteeredBack(): void
+    {
+        $about = '/\b(?:study|plan(?:s|ning)?|deadlines?|tests?|quiz(?:zes)?|exams?|plano|pagsusulit)\b/iu';
+        $forbid = ['/1\s*\+\s*1\s*(?:=|is|equals|makes|ay)\s*(?:2|two)\b/iu', '/^\W*(?:2|two)\W*$/miu', '/\banswer is (?:2|two)\b/iu'];
+        $good = [
+            "I'm here to help you create study plans. For a quick math question like 1 + 1, you might start a chat with **Explain a topic**.\n\nWhat upcoming test or deadline do you have, and when could you study?",
+            "Gumagawa ang chat na ito ng plano sa pag-aaral. Para sa tanong na tulad ng 1+1, magsimula ng chat sa **Ipaliwanag ang isang paksa**. Anong pagsusulit ang paparating, at kailan ka libre?",
+            "**Demo mode:** no AI model is connected.\n\nA simple plan built from your upcoming work: two 30-minute sessions before each deadline.\n\n```plan\n2026-10-23 19:00 | 30 | Review the materials for Heredity basics\n```",
+        ];
+        foreach ($good as $answer) {
+            self::assertTrue(Checks::staysOnTask($answer, $about, $forbid), $answer);
+        }
+        $bad = [
+            "**Quick math check**\n\n\\[\n1 + 1 = 2\n\\]\n\nWould you like a study plan for your upcoming tests?",
+            "**2**\n\nNow, what test is coming up?",
+            'The answer is 2. Shall we plan your study sessions?',
+            'Sure! Anything else I can help with?',
+        ];
+        foreach ($bad as $answer) {
+            self::assertFalse(Checks::staysOnTask($answer, $about, $forbid), $answer);
+        }
+    }
+
+    public function testAStudyPlanEndsWithCalendarLines(): void
+    {
+        self::assertTrue(Checks::hasPlan("Here is your plan.\n\n```plan\n2026-10-21 17:30 | 45 | Review English inference clues\n2026-10-22 17:30 | 40 | Finish the journal\n```"));
+        self::assertFalse(Checks::hasPlan("| Day | Time | Task |\n|---|---|---|\n| Wed | 17:30 | Review |"), 'a table alone cannot be added to the calendar');
+        self::assertFalse(Checks::hasPlan("```plan\nWednesday at 5 PM | 45 | Review\n```"), 'dates must be YYYY-MM-DD HH:MM');
+    }
 }
