@@ -154,7 +154,7 @@ of files on disk.
 | `AI_API_KEY` | empty | Provider key. Read only on the server. |
 | `AI_MODEL` | empty | Model name. Empty means `claude-opus-5-5` for `anthropic`. Required for `openai_compatible`. |
 | `AI_BASE_URL` | empty | `openai_compatible` only, e.g. `https://api.groq.com/openai/v1`. |
-| `AI_TIMEOUT_SECONDS` | `90` | Per-request timeout. |
+| `AI_TIMEOUT_SECONDS` | `90` | Per-request timeout. A request that times out is not tried again (see [When the AI service fails](#ai-provider)). |
 | `AI_EFFORT` | `medium` | Claude only: `low`, `medium` or `high` reasoning effort. |
 | `AI_FALLBACKS` | `default` | Claude only: `default` or `off` (see below). |
 | `AI_PRICE_INPUT_PER_MTOK`, `AI_PRICE_OUTPUT_PER_MTOK` | empty | Your prices in USD per million tokens for the cost estimate. |
@@ -234,6 +234,18 @@ Check your provider's data-retention terms and your school's agreement before en
 Administrators see totals in **AI usage** and set per-day limits and a monthly token budget in **Policies**.
 The built-in price table in `app/Services/Ai/Usage.php` is an estimate; set `AI_PRICE_*` to your contract
 prices. Your provider's invoice is the authority.
+
+**When the AI service fails.** Everything else in Sibol keeps working; the person sees a plain message with
+**Try again**, and a request the service failed does not count toward their daily limit (**AI usage** still lists
+it as failed, and the log keeps the provider's own message for the administrator):
+- cannot be reached (no internet, service down): tried three times within about 10 seconds, then "Sibol can't reach
+  the AI service right now…";
+- no answer within `AI_TIMEOUT_SECONDS`: not tried again, so the wait is one timeout (90 seconds by default), then
+  "The AI service is taking too long to answer…" (three waits used to outlast the request itself);
+- busy (429, or Groq's free plan answering 413 when a request does not fit its tokens-per-minute limit): tried
+  again after the wait the service asks for, then "The AI service is busy right now. Try again in a minute.";
+- a wrong key or model name: "The school's AI service is not set up correctly right now. Tell your teacher or the
+  school administrator." (setting names are not shown to students).
 
 ### Checking the AI before going live
 
@@ -1000,7 +1012,9 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   still put its own wording in quotation marks and wrote sample paragraphs for graded writing. It also answered
   questions the materials do not cover without saying so first; the companion now says that itself (below), and
   those cases pass. `qwen/qwen3.8-27b` did about the same. Groq's free tier also hit its per-minute limit during
-  the run. Keep students in demo mode until a model passes `ai:eval`.
+  the run, and on 21 October a fourth quick request within a minute was refused as "too large" (its 8,000
+  tokens-per-minute limit counts the 8,000-token answer allowance Sibol asks for): ask one question at a time on
+  that plan. Keep students in demo mode until a model passes `ai:eval`.
 - With a connected model, Sibol itself opens the answer with "Your class materials don't cover this." when no
   passage matched (and "may not cover this directly" when the passages share fewer than half of the question's
   key words), in the answer's language, and tells the model not to repeat it (`Companion::coverageNotice`). Like

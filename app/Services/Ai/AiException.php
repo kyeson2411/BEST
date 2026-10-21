@@ -28,10 +28,13 @@ final class AiException extends \RuntimeException
     public static function fromStatus(int $status, string $providerMessage, ?int $retryAfter = null): self
     {
         switch (true) {
-            case $status === 401 || $status === 403:
-                return new self('auth', t('The AI service rejected the school\'s credentials. An administrator needs to check the API key.'), false, $status);
-            case $status === 404:
-                return new self('model_unavailable', t('The configured AI model is not available. An administrator needs to check AI_MODEL.'), false, $status);
+            case $status === 401 || $status === 403 || $status === 404:
+                // A wrong key or model name. Students and teachers see this; what to fix is in the log and on AI usage.
+                return new self($status === 404 ? 'model_unavailable' : 'auth', t('The school\'s AI service is not set up correctly right now. Tell your teacher or the school administrator. Everything else in Sibol works as usual.'), false, $status);
+            case $status === 413 && preg_match('/per minute|\bTPM\b|\bOTPM\b/i', $providerMessage) === 1:
+                // Groq's free plan answers 413 when a request does not fit its tokens-per-minute limit: a short wait
+                // helps, a shorter question does not.
+                return new self('rate_limited', t('The AI service is busy right now. Try again in a minute.'), true, $status, $retryAfter);
             case $status === 413:
                 return new self('too_large', t('That request was too large for the AI service. Try a shorter question or a smaller material.'), false, $status);
             case $status === 429:

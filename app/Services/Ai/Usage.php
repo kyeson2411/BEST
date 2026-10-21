@@ -81,10 +81,11 @@ final class Usage
         ]);
     }
 
+    /** Requests that got an answer (or were stopped part-way) today. A request the AI service failed does not count. */
     public static function usedToday(array $user): int
     {
         return (int) Db::value(
-            "SELECT COUNT(*) FROM ai_usage_events WHERE user_id = :u AND created_at >= :since AND status IN ('ok','error','cancelled')",
+            "SELECT COUNT(*) FROM ai_usage_events WHERE user_id = :u AND created_at >= :since AND status IN ('ok','cancelled')",
             ['u' => (int) $user['id'], 'since' => Dates::startOfTodayUtc()]
         );
     }
