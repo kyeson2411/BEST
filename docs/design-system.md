@@ -156,3 +156,7 @@ photograph of its students carry the identity, and the field-notebook system fra
 Plain verbs, sentence case, no filler. A button says what happens ("Release feedback"), and the toast echoes it
 ("Feedback released"). Errors say what happened and how to fix it. Empty states invite the next action. The
 companion is warm but brief; it never claims certainty it does not have.
+
+Status text follows the state. Once work is handed in or graded, its page says what already happened ("Released
+yesterday", "Shown below with your answers") instead of a rule about the future, and stops offering help to do it:
+"Stuck? Get a hint" shows only while the student can still hand in, start an attempt, or prepare for work in class.

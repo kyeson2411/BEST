@@ -26,6 +26,10 @@ $answerRule = [
 ][$assignment['answer_key_release']];
 $editable = !$isQuiz && $state['can_submit'];
 $returned = $latest && $latest['status'] === 'returned';
+// "Stuck? Get a hint" while the work can still be done: not once it is handed in, graded, excused or past its date in class.
+$stillOpen = !$state['excused'] && ($isPaper
+    ? !$latest && ($assignment['due_at'] === null || $assignment['due_at'] > \Sibol\Core\Db::now())
+    : ($state['can_submit'] || $state['can_start'] || $state['in_progress'] !== null));
 // The student's own time: the time limit plus any extra minutes from their teacher.
 $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time_limit_minutes'] + (int) ($assignment['extra_minutes'] ?? 0) : 0;
 ?>
@@ -308,11 +312,11 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
           <dt><?= e(t('Attempts')) ?></dt><dd><?= e(t(':used of :max used', ['used' => (int) $state['submitted_count'], 'max' => (int) $assignment['max_attempts']])) ?></dd>
         <?php endif; ?>
         <?php if (!$isPaper): ?><dt><?= e(t('Late work')) ?></dt><dd><?= e($latePolicy) ?></dd><?php endif; ?>
-        <dt><?= e(t('Feedback')) ?></dt><dd><?= e($assignment['feedback_release'] === 'immediate' ? t('Shown as soon as you submit, for automatically marked questions.') : t('Shown when your teacher releases it.')) ?></dd>
-        <?php if ($isQuiz): ?><dt><?= e(t('Answers')) ?></dt><dd><?= e($answerRule) ?></dd><?php endif; ?>
+        <dt><?= e(t('Feedback')) ?></dt><dd><?= e($released ? t('Released :when', ['when' => fmt_rel($reviewSub['released_at'])]) : ($assignment['feedback_release'] === 'immediate' ? t('Shown as soon as you submit, for automatically marked questions.') : t('Shown when your teacher releases it.'))) ?></dd>
+        <?php if ($isQuiz): ?><dt><?= e(t('Answers')) ?></dt><dd><?= e($answersReleased ? t('Shown below with your answers.') : $answerRule) ?></dd><?php endif; ?>
       </dl>
     </section>
-    <?php if (my_ai_on()): ?>
+    <?php if (my_ai_on() && $stillOpen): ?>
       <section class="panel panel--sunken" aria-labelledby="help-title">
         <h2 class="panel__title" id="help-title"><?= e(t('Stuck?')) ?></h2>
         <p style="font-size:.9375rem"><?= e(t('The companion can explain the topic or guide you with hints. It will not do the work for you.')) ?></p>

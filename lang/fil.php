@@ -2390,6 +2390,7 @@ return [
     'Showing :shown of :total. Narrow the list with the filters.' => 'Ipinapakita ang :shown sa :total. Paliitin ang listahan gamit ang mga filter.',
     'Showing the first :n of :total passages.' => 'Ipinapakita ang unang :n sa :total sipi.',
     'Shown as soon as you submit, for automatically marked questions.' => 'Ipinapakita pagkapasa mo, para sa mga tanong na awtomatikong minamarkahan.',
+    'Shown below with your answers.' => 'Nasa ibaba, kasama ng iyong mga sagot.',
     'Shown in the privacy notice, for example your Data Protection Officer.' => 'Ipinapakita sa abiso sa privacy, halimbawa ang inyong Data Protection Officer.',
     'Shown instead of the given name, if set.' => 'Ipinapakita sa halip na unang pangalan, kung nakatakda.',
     'Shown instead of your first name, for example a nickname.' => 'Ipapakita sa halip na iyong unang pangalan, halimbawa ang iyong palayaw.',
