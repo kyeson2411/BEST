@@ -275,7 +275,7 @@ final class ClassController extends Controller
         $annId = Db::insert('announcements', ['organization_id' => (int) $user['organization_id'], 'class_id' => $id, 'author_id' => (int) $user['id'], 'title' => $data['title'], 'body' => $data['body'], 'created_at' => Db::now(), 'updated_at' => Db::now()]);
         Notifier::send((int) $user['organization_id'], Notifier::classStudents($id), 'announcement', $data['title'], $class['name'], '/student/classes/' . $id . '?tab=announcements', 'announcement:' . $annId);
         Audit::log('announcement.posted', 'class', $id);
-        $this->flash('success', t('Announcement posted. Students have been notified in Sibol.'));
+        $this->flash('success', t('Announcement posted. Students have been notified in B.E.S.T. Learning and Interactive Study System.'));
         return $this->redirect('/teacher/classes/' . $id . '?tab=announcements');
     }
 

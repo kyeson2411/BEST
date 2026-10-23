@@ -36,7 +36,7 @@ test('students imported without email set up their account from a printed slip',
   await page.getByRole('link', { name: 'Print sign-in slips' }).click();
   await expect(page.locator('.slip')).toHaveCount(2);
   await expect(page.getByRole('heading', { name: /Grade 9 – Molave/ })).toBeVisible();
-  await expect(page.locator('.slip').first()).toContainText('Set up your Sibol account');
+  await expect(page.locator('.slip').first()).toContainText('Set up your B.E.S.T. Learning and Interactive Study System account');
   await expect(page.locator('.slip').first()).toContainText('mylene.abad');
   await expect(page.locator('.slip svg.slip__qr')).toHaveCount(2);
   const code = await firstSlipCode(page);
@@ -78,7 +78,7 @@ test("an adviser prints a password slip and the student chooses a new password",
   await expect(row).toContainText('enzo.castillo');
   await confirmClick(page, row.getByRole('button', { name: 'Password slip' }));
   await expect(page.locator('.slip')).toHaveCount(1);
-  await expect(page.locator('.slip')).toContainText('Choose a new Sibol password');
+  await expect(page.locator('.slip')).toContainText('Choose a new B.E.S.T. Learning and Interactive Study System password');
   const code = await firstSlipCode(page);
 
   // The QR code holds the reset link; opening it is the same as scanning.

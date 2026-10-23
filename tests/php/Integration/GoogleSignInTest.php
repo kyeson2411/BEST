@@ -193,7 +193,7 @@ PEM;
         $joy = $this->person('joy.santiago');
         $found = GoogleSignIn::account('JOY.SANTIAGO@demo.sibol.test');
         self::assertSame([(int) $joy['id'], 'teacher', $joy['updated_at']], [(int) $found['id'], $found['role'], $found['updated_at']]);
-        $this->assertNoAccount('nobody@demo.sibol.test', 'no account', 'No Sibol account uses nobody@demo.sibol.test');
+        $this->assertNoAccount('nobody@demo.sibol.test', 'no account', 'No B.E.S.T. Learning and Interactive Study System account uses nobody@demo.sibol.test');
         Db::update('users', ['status' => 'deactivated'], ['id' => (int) $joy['id']]);
         try {
             $this->assertNoAccount('joy.santiago@demo.sibol.test', 'deactivated', 'has been deactivated');

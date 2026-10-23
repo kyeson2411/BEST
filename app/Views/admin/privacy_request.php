@@ -29,7 +29,7 @@ $erased = $person['anonymized_at'] !== null;
       <?php if ($request['request_type'] === 'export'): ?>
         <section class="section" aria-labelledby="exp-title">
           <h2 class="section__title" id="exp-title"><?= e(t('Prepare their data')) ?></h2>
-          <p><?= e(t('Sibol builds a JSON file with their account, classes, submitted work, released grades, companion conversations, practice and study plans. Only the requester can download it, for :days days.', ['days' => Privacy::EXPORT_DAYS])) ?></p>
+          <p><?= e(t('B.E.S.T. Learning and Interactive Study System builds a JSON file with their account, classes, submitted work, released grades, companion conversations, practice and study plans. Only the requester can download it, for :days days.', ['days' => Privacy::EXPORT_DAYS])) ?></p>
           <form method="post" action="<?= e(url($base . '/export')) ?>" data-confirm="<?= e(t('The file is created now and the requester is notified.')) ?>" data-confirm-title="<?= e(t('Prepare export?')) ?>" data-confirm-action="<?= e(t('Prepare export')) ?>">
             <?= csrf_field() ?><button class="btn btn--primary" type="submit" data-busy="<?= e(t('Preparing…')) ?>"><?= icon('download', 'icon--sm') ?><?= e(t('Prepare export and complete')) ?></button></form>
         </section>

@@ -1,5 +1,5 @@
 <?php /** @var list<array<string,mixed>> $demoAccounts */ ?>
-<h1 class="auth__title"><?= e(t('Sign in to Sibol')) ?></h1>
+<h1 class="auth__title"><?= e(t('Sign in to B.E.S.T. Learning and Interactive Study System')) ?></h1>
 <p class="auth__sub"><?= e(t('A learning companion that helps you understand, not just answer.')) ?></p>
 
 <form method="post" action="<?= e(url('/login')) ?>" novalidate>

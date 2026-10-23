@@ -77,7 +77,7 @@ final class Settings
                 'students_can_delete_chats' => true,
                 'contact_name' => 'School Data Protection Officer',
                 'contact_email' => '',
-                'help_text' => 'If something you read or experience in Sibol worries you, talk to your class adviser or the guidance office. Sibol is not monitored in real time.',
+                'help_text' => 'If something you read or experience in B.E.S.T. Learning and Interactive Study System worries you, talk to your class adviser or the guidance office. It is not monitored in real time.',
             ],
             'notifications' => [
                 'deadline_reminder_hours' => 24,

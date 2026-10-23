@@ -14,7 +14,7 @@ foreach ((array) ($content['sources'] ?? []) as $s) {
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Daily Lesson Log')) ?></h1>
-    <p class="page-lead"><?= e($lesson['title']) ?>. <?= e(t('The rows of the Daily Lesson Log in DepEd Order No. 42, s. 2016, filled from this lesson\'s current draft. Rows Sibol has nothing for are left blank to write in.')) ?></p>
+    <p class="page-lead"><?= e($lesson['title']) ?>. <?= e(t('The rows of the Daily Lesson Log in DepEd Order No. 42, s. 2016, filled from this lesson\'s current draft. Rows B.E.S.T. Learning and Interactive Study System has nothing for are left blank to write in.')) ?></p>
   </div>
   <div class="page-actions">
     <a class="btn btn--secondary" href="<?= e(url('/teacher/lessons/' . (int) $lesson['id'])) ?>"><?= e(t('Back to the lesson')) ?></a>
@@ -23,13 +23,13 @@ foreach ((array) ($content['sources'] ?? []) as $s) {
 </div>
 
 <div class="print-notes">
-  <div class="callout callout--amber" style="margin-bottom: 20px"><?= icon('triangle-alert') ?><p><?= e(t('Check this layout against your school\'s own DLL template before you hand it in. Sibol has not been given that file yet, so the columns for each day of the week are not here: this is one lesson.')) ?></p></div>
+  <div class="callout callout--amber" style="margin-bottom: 20px"><?= icon('triangle-alert') ?><p><?= e(t('Check this layout against your school\'s own DLL template before you hand it in. B.E.S.T. Learning and Interactive Study System has not been given that file yet, so the columns for each day of the week are not here: this is one lesson.')) ?></p></div>
 </div>
 
 <article class="print-sheet dll" aria-labelledby="dll-title">
   <header>
     <h2 class="print-sheet__title" id="dll-title"><?= e($dll['title']) ?></h2>
-    <p class="print-sheet__meta"><?= e(t('Prepared in Sibol from the lesson “:title”.', ['title' => $lesson['title']])) ?></p>
+    <p class="print-sheet__meta"><?= e(t('Prepared in B.E.S.T. Learning and Interactive Study System from the lesson “:title”.', ['title' => $lesson['title']])) ?></p>
     <table class="dll__head">
       <tr>
         <th scope="row"><?= e($dll['header']['school']) ?></th><td><?= e($info['school']) ?></td>

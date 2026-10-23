@@ -285,9 +285,9 @@ final class Companion
             $block = '(This message names no topic from the class materials, for example a greeting, thanks or a quick sum: reply briefly and ask what they would like to work on. Do not say that the class materials do not cover it.)';
         } elseif ($block === '') {
             $block = $conversation['mode'] === 'study_plan' ? '' : '(No class material passages matched this question.'
-                . ($noticeShown ? ' Sibol has already told the reader that the class materials do not cover it, so do not say that again.' : '') . ')';
+                . ($noticeShown ? ' The app has already told the reader that the class materials do not cover it, so do not say that again.' : '') . ')';
         } elseif ($noticeShown) {
-            $block .= "\n\n(These passages only partly match the question. Sibol has already told the reader so, so do not say that again: use the passages where they apply.)";
+            $block .= "\n\n(These passages only partly match the question. The app has already told the reader so, so do not say that again: use the passages where they apply.)";
         }
         $content = ($block !== '' ? $block . "\n\n" : '')
             . implode("\n", $context) . "\n\n"

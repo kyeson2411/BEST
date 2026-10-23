@@ -1,8 +1,8 @@
 <?php /** @var string|null $role @var array $privacy @var string $version */ ?>
 <div class="page-head">
   <div class="page-head__text">
-    <h1 class="page-title"><?= e(t('Rules for using Sibol')) ?></h1>
-    <p class="page-lead"><?= e(t('Using Sibol honestly and safely, and what the AI companion will and will not do for you.')) ?></p>
+    <h1 class="page-title"><?= e(t('Rules for using B.E.S.T. Learning and Interactive Study System')) ?></h1>
+    <p class="page-lead"><?= e(t('Using B.E.S.T. Learning and Interactive Study System honestly and safely, and what the AI companion will and will not do for you.')) ?></p>
   </div>
 </div>
 <?= partial('rules_of_use', ['role' => $role, 'privacy' => $privacy]) ?>

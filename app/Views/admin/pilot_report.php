@@ -27,7 +27,7 @@ $cell = static function (array $row, string $key): string {
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Weekly pilot report')) ?></h1>
-    <p class="page-lead"><?= e(t('How Sibol is used across the school, week by week from Monday to Sunday. Counts only: no rankings and no lists of students. A number that comes from fewer than :n people is hidden.', ['n' => PilotReport::MIN_GROUP])) ?></p>
+    <p class="page-lead"><?= e(t('How B.E.S.T. Learning and Interactive Study System is used across the school, week by week from Monday to Sunday. Counts only: no rankings and no lists of students. A number that comes from fewer than :n people is hidden.', ['n' => PilotReport::MIN_GROUP])) ?></p>
   </div>
   <div class="page-actions">
     <a class="btn btn--secondary" href="<?= e(url('/admin/pilot/export', ['weeks' => $weeks])) ?>"><?= icon('download', 'icon--sm') ?><?= e(t('Download CSV')) ?></a>
@@ -72,7 +72,7 @@ $cell = static function (array $row, string $key): string {
   <summary><?= e(t('How these numbers are calculated')) ?></summary>
   <div class="prose">
     <ul>
-      <li><?= e(t('Active: students or teachers who did anything Sibol records that week, such as signing in, opening a material, handing in work or asking the companion.')) ?></li>
+      <li><?= e(t('Active: students or teachers who did anything B.E.S.T. Learning and Interactive Study System records that week, such as signing in, opening a material, handing in work or asking the companion.')) ?></li>
       <li><?= e(t('Published: materials, assignments and quizzes first published that week, in every class (copies to other sections count separately).')) ?></li>
       <li><?= e(t('Online work due: each student and each assignment or quiz whose due date for that student (their own date if they have one) fell that week and has passed. Excused work and work done on paper are left out. Missing means not handed in yet.')) ?></li>
       <li><?= e(t('Companion and practice: questions students asked that got an answer, and practice sets they made. What they asked is never part of the report.')) ?></li>

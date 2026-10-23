@@ -1,6 +1,6 @@
 <?php /** The code step after the password (TwoStepController::showChallenge). */ ?>
 <h1 class="auth__title"><?= e(t('Enter your code')) ?></h1>
-<p class="auth__sub"><?= e(t('Open the authenticator app on your phone and type the 6-digit code it shows for Sibol.')) ?></p>
+<p class="auth__sub"><?= e(t('Open the authenticator app on your phone and type the 6-digit code it shows for B.E.S.T. Learning and Interactive Study System.')) ?></p>
 
 <form method="post" action="<?= e(url('/login/code')) ?>" novalidate>
   <?= csrf_field() ?>

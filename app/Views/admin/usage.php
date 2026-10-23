@@ -137,7 +137,7 @@ $y = static fn (float $v): float => $padT + ($h - $padT - $padB) * (1 - $v / $ni
       <h2 class="panel__title"><?= e(t('About the cost estimate')) ?></h2>
       <p class="meta" style="margin:0"><?= e($customPrices
           ? t('Calculated from the prices set in AI_PRICE_INPUT_PER_MTOK and AI_PRICE_OUTPUT_PER_MTOK. Your provider\'s invoice is the authority.')
-          : t('Calculated from the list prices built into Sibol for known models. Set AI_PRICE_INPUT_PER_MTOK and AI_PRICE_OUTPUT_PER_MTOK in .env to use your contract prices. Your provider\'s invoice is the authority.')) ?></p>
+          : t('Calculated from the list prices built into B.E.S.T. Learning and Interactive Study System for known models. Set AI_PRICE_INPUT_PER_MTOK and AI_PRICE_OUTPUT_PER_MTOK in .env to use your contract prices. Your provider\'s invoice is the authority.')) ?></p>
     </section>
   </aside>
 </div>

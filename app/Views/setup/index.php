@@ -1,5 +1,5 @@
 <?php /** @var bool $dbOk @var list<string> $pending @var bool $hasData @var string|null $error @var list<array> $checks @var string $dbName */ ?>
-<h1 class="page-title"><?= e(t('Set up Sibol on this computer')) ?></h1>
+<h1 class="page-title"><?= e(t('Set up B.E.S.T. Learning and Interactive Study System on this computer')) ?></h1>
 <p class="page-lead"><?= e(t('This page appears only in local mode and only on this computer. It prepares the MySQL database and can load a fictional demo school.')) ?></p>
 
 <section class="section" aria-labelledby="steps-title" style="margin-top: 32px">
@@ -11,7 +11,7 @@
         <strong><?= e(t('Create the database tables')) ?></strong>
         <p class="meta" style="margin:2px 0 8px">
           <?php if (!$dbOk): ?>
-            <?= e(t('The database ":name" does not exist yet. Sibol can create it with the account in .env.', ['name' => $dbName])) ?>
+            <?= e(t('The database ":name" does not exist yet. B.E.S.T. Learning and Interactive Study System can create it with the account in .env.', ['name' => $dbName])) ?>
           <?php elseif ($pending): ?>
             <?= e(t(':count migration file(s) are waiting.', ['count' => count($pending)])) ?>
           <?php else: ?>

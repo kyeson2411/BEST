@@ -19,14 +19,14 @@ test('a new student reads and accepts the privacy notice and the rules first', a
 
   const student = await browser.newPage();
   await student.goto(link);
-  await expect(student.getByText('Next, you will read the privacy notice and the rules for using Sibol and accept them.')).toBeVisible();
+  await expect(student.getByText('Next, you will read the privacy notice and the rules for using B.E.S.T. Learning and Interactive Study System and accept them.')).toBeVisible();
   await student.getByLabel('Create a password').fill('sunny carabao field');
   await student.getByLabel('Type the password again').fill('sunny carabao field');
   await student.getByRole('button', { name: 'Set up account' }).click();
   await expect(student).toHaveURL(/\/welcome$/);
   await expect(student.getByRole('heading', { name: 'Before you start' })).toBeVisible();
   await expect(student.getByRole('region', { name: /Privacy notice/ })).toContainText('Who is responsible');
-  await expect(student.getByRole('region', { name: /Rules for using Sibol/ })).toContainText('Hand in work that is your own.');
+  await expect(student.getByRole('region', { name: /Rules for using B.E.S.T. Learning and Interactive Study System/ })).toContainText('Hand in work that is your own.');
 
   // Nothing else opens until both are accepted.
   await student.goto('student/calendar');
@@ -35,7 +35,7 @@ test('a new student reads and accepts the privacy notice and the rules first', a
   expect(json.status()).toBe(403);
   await student.getByRole('button', { name: 'Accept and continue' }).click();
   await expect(student.getByText('Tick this to confirm you have read the privacy notice.')).toBeVisible();
-  await expect(student.getByText('Tick this to agree to the rules for using Sibol.')).toBeVisible();
+  await expect(student.getByText('Tick this to agree to the rules for using B.E.S.T. Learning and Interactive Study System.')).toBeVisible();
 
   // Reading them in Filipino first changes the student's language.
   await student.getByRole('button', { name: 'Read in Filipino' }).click();
@@ -46,7 +46,7 @@ test('a new student reads and accepts the privacy notice and the rules first', a
   // Accepting opens the page the student asked for.
   await acceptNotices(student);
   await expect(student).toHaveURL(/\/student\/calendar$/);
-  await expect(student.locator('.toast').first()).toContainText('Thank you. You can use Sibol now.');
+  await expect(student.locator('.toast').first()).toContainText('Thank you. You can use B.E.S.T. Learning and Interactive Study System now.');
   await student.context().clearCookies();
   await passwordLogin(student, 'kristine.mallari', 'sunny carabao field');
   await expect(student).toHaveURL(/\/student$/);
@@ -74,7 +74,7 @@ test('after the administrator asks again, students accept the new edition', asyn
     expect(poll.status()).toBe(200);
     await andrea.goto('student/assignments');
     await expect(andrea).toHaveURL(/\/welcome$/);
-    await expect(andrea.getByText(/has updated how it uses Sibol/)).toBeVisible();
+    await expect(andrea.getByText(/has updated how it uses B.E.S.T. Learning and Interactive Study System/)).toBeVisible();
     await acceptNotices(andrea);
     await expect(andrea).toHaveURL(/\/student\/assignments$/);
     await andrea.close();

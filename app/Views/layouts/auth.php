@@ -11,7 +11,7 @@ use Sibol\Core\Translator;
 $flashes = Session::takeFlashes();
 $locale = Translator::locale();
 $school = (array) Config::get('school', []);
-$schoolName = trim((string) ($school['name'] ?? '')) ?: (string) Config::get('app.name', 'Sibol');
+$schoolName = trim((string) ($school['name'] ?? '')) ?: (string) Config::get('app.name', 'B.E.S.T. Learning and Interactive Study System');
 $motto = trim((string) ($school['motto'] ?? ''));
 $founded = trim((string) ($school['founded'] ?? ''));
 $photoAlt = trim((string) ($school['photo_alt'] ?? ''))
@@ -21,8 +21,8 @@ $photoAlt = trim((string) ($school['photo_alt'] ?? ''))
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= e(($title ?? t('Sign in')) . ' – ' . Config::get('app.name', 'Sibol')) ?></title>
-  <meta name="description" content="<?= e(t('Sign in to Sibol, the learning companion of :school.', ['school' => $schoolName])) ?>">
+  <title><?= e(($title ?? t('Sign in')) . ' – ' . Config::get('app.name', 'B.E.S.T. Learning and Interactive Study System')) ?></title>
+  <meta name="description" content="<?= e(t('Sign in to B.E.S.T. Learning and Interactive Study System, the learning companion of :school.', ['school' => $schoolName])) ?>">
   <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
   <meta name="app-base" content="<?= e(base_path_url()) ?>">
   <meta name="theme-color" content="#1E3D31">

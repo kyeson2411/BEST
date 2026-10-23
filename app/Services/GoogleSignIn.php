@@ -194,7 +194,7 @@ final class GoogleSignIn
     {
         $user = Db::one('SELECT * FROM users WHERE email = :e AND anonymized_at IS NULL', ['e' => $email]);
         if (!$user) {
-            throw new GoogleSignInError(t('No Sibol account uses :email. Ask your school administrator, or sign in with your username and password.', ['email' => $email]), 'no account');
+            throw new GoogleSignInError(t('No B.E.S.T. Learning and Interactive Study System account uses :email. Ask your school administrator, or sign in with your username and password.', ['email' => $email]), 'no account');
         }
         if ($user['status'] === 'deactivated') {
             throw new GoogleSignInError(t('This account has been deactivated. Contact your school administrator if you need access.'), 'deactivated');

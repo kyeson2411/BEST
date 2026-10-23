@@ -25,7 +25,7 @@ final class AuditLabels
             'progress_report' => t('Progress reports'),
             'privacy' => t('Privacy'),
             'notices' => t('Privacy notice and rules'),
-            'feedback' => t('Feedback about Sibol'),
+            'feedback' => t('Feedback about B.E.S.T. Learning and Interactive Study System'),
             'pilot' => t('Pilot report'),
             'ai' => t('Companion and AI'),
             'access' => t('Denied access'),
@@ -164,8 +164,8 @@ final class AuditLabels
             case 'privacy.retention_purge':
                 return tp('Removed :count conversation past the retention period', 'Removed :count conversations past the retention period', $n('conversations'));
 
-            case 'feedback.sent': return t('Sent feedback about Sibol');
-            case 'feedback.updated': return !empty($meta['replied']) ? t('Replied to feedback about Sibol') : t('Changed the status of feedback about Sibol');
+            case 'feedback.sent': return t('Sent feedback about B.E.S.T. Learning and Interactive Study System');
+            case 'feedback.updated': return !empty($meta['replied']) ? t('Replied to feedback about B.E.S.T. Learning and Interactive Study System') : t('Changed the status of feedback about B.E.S.T. Learning and Interactive Study System');
             case 'pilot.report_exported': return t('Downloaded the weekly pilot report');
 
             case 'ai.conversation_deleted': return t('Deleted a companion conversation');

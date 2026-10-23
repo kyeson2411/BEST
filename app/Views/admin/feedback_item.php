@@ -28,7 +28,7 @@ $statusHints = [
       <dt><?= e(t('Page')) ?></dt><dd><?= $item['page_path'] ? '<span class="code-text">' . e((string) $item['page_path']) . '</span>' : e(t('Not included')) ?></dd>
       <?php if ($item['replied_at']): ?><dt><?= e(t('Replied')) ?></dt><dd><?= time_tag($item['replied_at'], 'datetime') ?></dd><?php endif; ?>
     </dl>
-    <p class="meta"><?= e(t('The page is where they were when they opened "Send feedback". Sibol keeps only its address, never what was on it.')) ?></p>
+    <p class="meta"><?= e(t('The page is where they were when they opened "Send feedback". B.E.S.T. Learning and Interactive Study System keeps only its address, never what was on it.')) ?></p>
   </section>
 
   <aside>

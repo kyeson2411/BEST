@@ -58,7 +58,7 @@ $printed = fmt_date(gmdate('Y-m-d H:i:s'), 'date_long');
         <?php if ($entry['adviser']): ?><div><dt><?= e(t('Adviser')) ?></dt><dd><?= e($entry['adviser']) ?></dd></div><?php endif; ?>
       </dl>
     </header>
-    <p class="report__notice"><?= icon('info', 'icon--sm') ?><span><?= e(t('Not an official report card (SF9). It lists only the results teachers have released in Sibol up to :date; the school\'s report card is the official record.', ['date' => $printed])) ?></span></p>
+    <p class="report__notice"><?= icon('info', 'icon--sm') ?><span><?= e(t('Not an official report card (SF9). It lists only the results teachers have released in B.E.S.T. Learning and Interactive Study System up to :date; the school\'s report card is the official record.', ['date' => $printed])) ?></span></p>
 
     <?php if (!$report['rows']): ?>
       <p class="meta"><?= e(t('No classes to report on in this school year.')) ?></p>
@@ -108,6 +108,6 @@ $printed = fmt_date(gmdate('Y-m-d H:i:s'), 'date_long');
         </ul>
       <?php endif; ?>
     </section>
-    <p class="meta report__printed"><?= e(t('Printed from Sibol on :date.', ['date' => $printed])) ?></p>
+    <p class="meta report__printed"><?= e(t('Printed from B.E.S.T. Learning and Interactive Study System on :date.', ['date' => $printed])) ?></p>
   </article>
 <?php endforeach; ?>

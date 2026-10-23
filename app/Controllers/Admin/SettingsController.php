@@ -150,7 +150,7 @@ final class SettingsController extends Controller
     {
         $admin = $this->user();
         $edition = Notices::askAgain($admin);
-        $this->flash('success', t('Done. People will read and accept the privacy notice and the rules again when they next open Sibol (edition :n).', ['n' => $edition]));
+        $this->flash('success', t('Done. People will read and accept the privacy notice and the rules again when they next open B.E.S.T. Learning and Interactive Study System (edition :n).', ['n' => $edition]));
         return $this->redirect('/admin/policies#notices');
     }
 
@@ -251,7 +251,7 @@ final class SettingsController extends Controller
     {
         $admin = $this->user();
         $to = (string) ($admin['email'] ?? '');
-        $sent = $to !== '' && Mailer::send($to, t('Sibol test email'), t('This test email from Sibol at :school arrived, so email is set up correctly.', ['school' => (string) ($admin['org_name'] ?? '')]));
+        $sent = $to !== '' && Mailer::send($to, t('B.E.S.T. Learning and Interactive Study System test email'), t('This test email from B.E.S.T. Learning and Interactive Study System at :school arrived, so email is set up correctly.', ['school' => (string) ($admin['org_name'] ?? '')]));
         Audit::log('settings.test_email', null, null, ['sent' => $sent]);
         $this->flash($sent ? 'success' : 'error', $sent
             ? t('Test email sent to :address. Check that it arrived, and look in the spam folder too.', ['address' => $to])

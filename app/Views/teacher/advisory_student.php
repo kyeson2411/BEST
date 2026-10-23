@@ -9,5 +9,5 @@ use Sibol\Services\Sections;
 </div>
 <div style="max-width: 640px">
   <?= partial('student_ai_panel', ['student' => $student, 'answers' => $answers, 'action' => $action]) ?>
-  <p class="meta" style="margin-top: 16px"><?= e(t('Changes are recorded in the audit log. Nothing about a student whose AI is off is sent to an AI service; the rest of their work in Sibol is unaffected.')) ?></p>
+  <p class="meta" style="margin-top: 16px"><?= e(t('Changes are recorded in the audit log. Nothing about a student whose AI is off is sent to an AI service; the rest of their work in B.E.S.T. Learning and Interactive Study System is unaffected.')) ?></p>
 </div>

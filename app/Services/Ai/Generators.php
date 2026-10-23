@@ -337,7 +337,7 @@ final class Generators
             $messages[] = ['role' => 'assistant', 'content' => mb_substr($result->text, 0, 2000)];
             $messages[] = ['role' => 'user', 'content' => 'That was not valid JSON. Reply again with only the JSON object, no other text.'];
         }
-        throw new AiException('invalid_output', t('The AI service returned something Sibol could not read. Try again.'), true);
+        throw new AiException('invalid_output', t('The AI service returned something B.E.S.T. Learning and Interactive Study System could not read. Try again.'), true);
     }
 
     /** @return array<string,mixed>|null */

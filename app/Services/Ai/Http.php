@@ -99,9 +99,9 @@ final class Http
             if ($errno === CURLE_OPERATION_TIMEDOUT) {
                 // Not tried again: the service already had the whole timeout, and three waits would outlast the
                 // request itself (the server stops it after 240 seconds) and leave the student with nothing.
-                throw new AiException('timeout', t('The AI service is taking too long to answer. Try again in a few minutes. Everything else in Sibol works as usual.'), false);
+                throw new AiException('timeout', t('The AI service is taking too long to answer. Try again in a few minutes. Everything else in B.E.S.T. Learning and Interactive Study System works as usual.'), false);
             }
-            throw new AiException('network', t('Sibol can\'t reach the AI service right now. Try again in a few minutes. Everything else in Sibol works as usual.'), true);
+            throw new AiException('network', t('B.E.S.T. Learning and Interactive Study System can\'t reach the AI service right now. Try again in a few minutes. Everything else in B.E.S.T. Learning and Interactive Study System works as usual.'), true);
         }
         return ['status' => $status, 'body' => $raw, 'retry_after' => $retryAfter, 'cancelled' => false, 'error' => $error, 'errno' => $errno];
     }

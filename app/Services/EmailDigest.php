@@ -59,11 +59,11 @@ final class EmailDigest
             }
             $ok = Translator::with((string) ($person['language'] ?? ''), static function () use ($person, $titles): bool {
                 $text = t('Hello :name,', ['name' => user_name($person)]) . "\n\n"
-                    . tp('You have :count new notification in Sibol:', 'You have :count new notifications in Sibol:', count($titles)) . "\n\n"
+                    . tp('You have :count new notification in B.E.S.T. Learning and Interactive Study System:', 'You have :count new notifications in B.E.S.T. Learning and Interactive Study System:', count($titles)) . "\n\n"
                     . implode("\n", array_map(static fn ($t): string => '- ' . $t, $titles)) . "\n\n"
-                    . t('Open them in Sibol: :url', ['url' => absolute_url('/notifications')]) . "\n\n"
-                    . t('You get this summary because you turned it on in your Sibol account settings. You can turn it off there.');
-                return Mailer::send((string) $person['email'], tp(':count new notification in Sibol', ':count new notifications in Sibol', count($titles)), $text);
+                    . t('Open them in B.E.S.T. Learning and Interactive Study System: :url', ['url' => absolute_url('/notifications')]) . "\n\n"
+                    . t('You get this summary because you turned it on in your B.E.S.T. Learning and Interactive Study System account settings. You can turn it off there.');
+                return Mailer::send((string) $person['email'], tp(':count new notification in B.E.S.T. Learning and Interactive Study System', ':count new notifications in B.E.S.T. Learning and Interactive Study System', count($titles)), $text);
             });
             if ($ok) {
                 $prefs['digest_sent_at'] = $utc->format('Y-m-d H:i:s');

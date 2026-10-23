@@ -53,7 +53,7 @@ final class Mailer
             'encryption' => self::encryption(),
             'username' => (string) Config::get('mail.username', ''),
             'has_password' => (string) Config::get('mail.password', '') !== '',
-            'from' => trim((string) Config::get('mail.from_name', 'Sibol') . ' <' . (string) Config::get('mail.from_address', '') . '>'),
+            'from' => trim((string) Config::get('mail.from_name', Config::get('app.name', 'B.E.S.T. Learning and Interactive Study System')) . ' <' . (string) Config::get('mail.from_address', '') . '>'),
         ];
     }
 
@@ -87,7 +87,7 @@ final class Mailer
             $mail->Timeout = 20;
             $mail->CharSet = PHPMailer::CHARSET_UTF8;
             $mail->XMailer = ' ';
-            $mail->setFrom((string) Config::get('mail.from_address'), (string) Config::get('mail.from_name', 'Sibol'));
+            $mail->setFrom((string) Config::get('mail.from_address'), (string) Config::get('mail.from_name', Config::get('app.name', 'B.E.S.T. Learning and Interactive Study System')));
             $mail->addAddress($to);
             $mail->Subject = $subject;
             $mail->isHTML(false);
@@ -113,16 +113,16 @@ final class Mailer
         return Translator::with((string) ($person['language'] ?? ''), static function () use ($person, $purpose, $url, $expires, $school, $email): bool {
             $name = user_name($person);
             if ($purpose === 'invitation') {
-                $subject = t('Your Sibol account at :school', ['school' => $school]);
+                $subject = t('Your B.E.S.T. Learning and Interactive Study System account at :school', ['school' => $school]);
                 $text = t('Hello :name,', ['name' => $name]) . "\n\n"
-                    . t(':school uses Sibol for learning. Choose a password to start:', ['school' => $school]) . "\n" . $url . "\n\n"
+                    . t(':school uses B.E.S.T. Learning and Interactive Study System for learning. Choose a password to start:', ['school' => $school]) . "\n" . $url . "\n\n"
                     . ($person['username'] ? t('Your username is :username.', ['username' => $person['username']]) . ' ' : '')
                     . t('The link works once and expires in :time.', ['time' => $expires]) . "\n\n"
                     . t('If you were not expecting this email, you can ignore it.');
             } else {
-                $subject = t('Choose a new Sibol password');
+                $subject = t('Choose a new B.E.S.T. Learning and Interactive Study System password');
                 $text = t('Hello :name,', ['name' => $name]) . "\n\n"
-                    . t('Your school created a link for you to choose a new Sibol password:') . "\n" . $url . "\n\n"
+                    . t('Your school created a link for you to choose a new B.E.S.T. Learning and Interactive Study System password:') . "\n" . $url . "\n\n"
                     . t('The link works once and expires in :time. Your current password keeps working until you use it.', ['time' => $expires]) . "\n\n"
                     . t('If you did not ask for this, tell your school\'s administrator.');
             }

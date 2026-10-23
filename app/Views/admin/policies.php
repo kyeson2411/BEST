@@ -81,7 +81,7 @@ $modes = (array) $ai['student_modes'];
 
   <section class="section" id="notices" aria-labelledby="notices-title">
     <div class="section__head"><h2 class="section__title" id="notices-title"><?= e(t('Privacy notice and rules')) ?></h2><a class="section__link" href="<?= e(url('/rules')) ?>"><?= e(t('See the rules')) ?></a></div>
-    <p class="section__intro"><?= e(t('People you choose read and accept the privacy notice and the rules for using Sibol when they first sign in and again whenever either changes. Sibol records who accepted which version and when.')) ?></p>
+    <p class="section__intro"><?= e(t('People you choose read and accept the privacy notice and the rules for using B.E.S.T. Learning and Interactive Study System when they first sign in and again whenever either changes. B.E.S.T. Learning and Interactive Study System records who accepted which version and when.')) ?></p>
     <div class="grid-2">
       <div>
         <?= checkbox('notices_students', t('Students must accept them'), (bool) $notices['students']) ?>
@@ -118,7 +118,7 @@ $modes = (array) $ai['student_modes'];
       </div>
       <?= field('number', 'deadline_reminder_hours', t('Deadline reminder'), ['value' => (string) $notify['deadline_reminder_hours'], 'required' => true, 'hint' => t('Hours before a due date that students get a reminder. 0 turns reminders off.'), 'attrs' => ['min' => 0, 'max' => 168]]) ?>
     </div>
-    <p class="meta"><?= e(t('Notifications appear inside Sibol. Each person can also mute types they do not want.')) ?></p>
+    <p class="meta"><?= e(t('Notifications appear inside B.E.S.T. Learning and Interactive Study System. Each person can also mute types they do not want.')) ?></p>
   </section>
 
   <div class="form-actions form-actions--sticky">
@@ -129,8 +129,8 @@ $modes = (array) $ai['student_modes'];
 
 <section class="panel panel--sunken" aria-labelledby="renew-title" style="margin-top: 32px; max-width: 760px">
   <h2 class="panel__title" id="renew-title"><?= e(t('Ask everyone to read them again')) ?></h2>
-  <p class="meta"><?= e(t('Use this after your school changes how it uses Sibol, for example a new privacy contact or a decision by your data protection officer. Everyone the policy names reads and accepts the notice and the rules again before they continue.')) ?></p>
-  <form method="post" action="<?= e(url('/admin/policies/notices')) ?>" data-confirm="<?= e(t('The next time they open Sibol, people will have to read and accept the privacy notice and the rules again.')) ?>" data-confirm-title="<?= e(t('Ask everyone again?')) ?>" data-confirm-action="<?= e(t('Ask again')) ?>">
+  <p class="meta"><?= e(t('Use this after your school changes how it uses B.E.S.T. Learning and Interactive Study System, for example a new privacy contact or a decision by your data protection officer. Everyone the policy names reads and accepts the notice and the rules again before they continue.')) ?></p>
+  <form method="post" action="<?= e(url('/admin/policies/notices')) ?>" data-confirm="<?= e(t('The next time they open B.E.S.T. Learning and Interactive Study System, people will have to read and accept the privacy notice and the rules again.')) ?>" data-confirm-title="<?= e(t('Ask everyone again?')) ?>" data-confirm-action="<?= e(t('Ask again')) ?>">
     <?= csrf_field() ?><button class="btn btn--secondary" type="submit"><?= icon('refresh-cw', 'icon--sm') ?><?= e(t('Ask everyone again')) ?></button>
   </form>
 </section>

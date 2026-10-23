@@ -44,7 +44,7 @@ final class InstallableAppTest extends IntegrationTestCase
         $manifest = json_decode($response->body, true);
         $base = base_path_url();
         self::assertSame(Config::get('app.name') . ' – Mataas na Paaralan ng Halimbawa', $manifest['name']);
-        self::assertSame(Config::get('app.name'), $manifest['short_name']);
+        self::assertSame(Config::get('app.short_name'), $manifest['short_name'], 'the short name sits under the icon');
         self::assertSame([$base . '/', $base . '/', $base . '/'], [$manifest['id'], $manifest['start_url'], $manifest['scope']]);
         self::assertSame(['standalone', '#F6F5EE', '#1E3D31'], [$manifest['display'], $manifest['background_color'], $manifest['theme_color']]);
         self::assertSame(['any', 'any', 'maskable', 'maskable'], array_column($manifest['icons'], 'purpose'));
@@ -62,7 +62,7 @@ final class InstallableAppTest extends IntegrationTestCase
         Translator::setLocale('fil');
         $manifest = json_decode((new PageController(new Request('GET', '/manifest.webmanifest')))->manifest()->body, true);
         self::assertSame('fil', $manifest['lang']);
-        self::assertStringStartsWith('Mag-sign in sa Sibol', $manifest['description']);
+        self::assertStringStartsWith('Mag-sign in sa B.E.S.T. Learning and Interactive Study System', $manifest['description']);
     }
 
     public function testTheOfflinePageCarriesNothingAboutThePersonWhoLoadedIt(): void

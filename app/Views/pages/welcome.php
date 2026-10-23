@@ -14,8 +14,8 @@ $school = $org['name'] ?? t('your school');
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Before you start')) ?></h1>
     <p class="page-lead"><?= e($renewed
-        ? t(':school has updated how it uses Sibol. Read the parts below again and accept them to continue.', ['school' => $school])
-        : t('Read how :school uses Sibol and the rules for using it, then accept them to continue. You only do this again when they change.', ['school' => $school])) ?></p>
+        ? t(':school has updated how it uses B.E.S.T. Learning and Interactive Study System. Read the parts below again and accept them to continue.', ['school' => $school])
+        : t('Read how :school uses B.E.S.T. Learning and Interactive Study System and the rules for using it, then accept them to continue. You only do this again when they change.', ['school' => $school])) ?></p>
   </div>
   <div class="page-actions">
     <?php foreach ((array) Config::get('app.locales') as $code => $label): if ($code === Translator::locale()) { continue; } ?>
@@ -41,17 +41,17 @@ $school = $org['name'] ?? t('your school');
   <?php endif; ?>
   <?php if (in_array('rules', $pending, true)): ?>
     <section class="welcome__part">
-      <h2 class="welcome__title" id="rules-title"><?= icon('book-open') ?> <?= e(t('Rules for using Sibol')) ?> <span class="meta"><?= e(t('Version :n', ['n' => $versions['rules']])) ?></span></h2>
+      <h2 class="welcome__title" id="rules-title"><?= icon('book-open') ?> <?= e(t('Rules for using B.E.S.T. Learning and Interactive Study System')) ?> <span class="meta"><?= e(t('Version :n', ['n' => $versions['rules']])) ?></span></h2>
       <div class="welcome__text" tabindex="0" role="region" aria-labelledby="rules-title"><?= partial('rules_of_use', ['role' => $role, 'privacy' => $privacy, 'headingTag' => 'h3']) ?></div>
       <div class="field<?= field_error('rules') ? ' field--error' : '' ?>">
-        <?= checkbox('rules', t('I will follow the rules for using Sibol'), false, null, '1', 'accept-rules') ?>
+        <?= checkbox('rules', t('I will follow the rules for using B.E.S.T. Learning and Interactive Study System'), false, null, '1', 'accept-rules') ?>
         <?php if (field_error('rules')): ?><p class="field__error"><?= icon('circle-alert', 'icon--xs') ?><?= e(field_error('rules')) ?></p><?php endif; ?>
       </div>
     </section>
   <?php endif; ?>
   <div class="form-actions">
     <button class="btn btn--primary" type="submit" data-busy="<?= e(t('Saving…')) ?>"><?= e(t('Accept and continue')) ?></button>
-    <span class="meta"><?= e(t('Sibol records which version you accepted and when.')) ?></span>
+    <span class="meta"><?= e(t('B.E.S.T. Learning and Interactive Study System records which version you accepted and when.')) ?></span>
   </div>
 </form>
 <form method="post" action="<?= e(url('/logout')) ?>" data-signout style="margin-top: 16px">

@@ -83,7 +83,7 @@ final class App
             if (Config::isLocal() && $request->path !== '/setup') {
                 return Response::redirect('/setup', 302);
             }
-            return $this->errorPage(503, t('Sibol cannot reach its database right now. An administrator needs to check the configuration.'));
+            return $this->errorPage(503, t('B.E.S.T. Learning and Interactive Study System cannot reach its database right now. An administrator needs to check the configuration.'));
         }
 
         $ref = strtoupper(bin2hex(random_bytes(4)));
@@ -145,7 +145,7 @@ final class App
             case 429:
                 return t('Too many attempts');
             case 503:
-                return t('Sibol is not available right now');
+                return t('B.E.S.T. Learning and Interactive Study System is not available right now');
             default:
                 return t('Something went wrong');
         }

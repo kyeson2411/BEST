@@ -42,7 +42,7 @@ final class EmailTest extends IntegrationTestCase
         self::assertTrue(Mailer::accountLink($person, 'invitation', 'https://sibol.school.test/invite/abc', '14 days', 'Test School'));
         $mail = Mailer::sent()[0];
         self::assertSame('maria.santos@school.test', $mail['to']);
-        self::assertSame('Your Sibol account at Test School', $mail['subject']);
+        self::assertSame('Your B.E.S.T. Learning and Interactive Study System account at Test School', $mail['subject']);
         self::assertStringContainsString('https://sibol.school.test/invite/abc', $mail['text']);
         self::assertStringContainsString('Your username is maria.santos.', $mail['text']);
 
@@ -51,7 +51,7 @@ final class EmailTest extends IntegrationTestCase
         self::assertTrue(Mailer::accountLink($person, 'password_reset', 'https://sibol.school.test/reset/xyz', '24 hours', 'Test School'));
         $reset = Mailer::sent()[1];
         self::assertStringContainsString('https://sibol.school.test/reset/xyz', $reset['text']);
-        self::assertNotSame('Choose a new Sibol password', $reset['subject'], 'written in Filipino for this person');
+        self::assertNotSame('Choose a new B.E.S.T. Learning and Interactive Study System password', $reset['subject'], 'written in Filipino for this person');
         self::assertSame($before, Translator::locale(), 'the page\'s own language comes back afterwards');
 
         unset($person['email']);

@@ -125,8 +125,8 @@ final class DemoSeeder
         // Named after the school in config (SCHOOL_NAME); the people and records stay fictional.
         $school = trim((string) Config::get('school.name', '')) ?: 'Sibol Demo School';
         $this->org = Db::insert('organizations', [
-            'name' => $school . ' (Demo)',
-            'short_name' => mb_substr((trim((string) Config::get('school.short_name', '')) ?: 'Sibol') . ' Demo', 0, 60),
+            'name' => $school,
+            'short_name' => mb_substr((trim((string) Config::get('school.short_name', '')) ?: 'Sibol'), 0, 60),
             'slug' => 'demo-school',
             'timezone' => self::TZ,
             'default_language' => 'en',

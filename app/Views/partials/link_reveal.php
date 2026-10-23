@@ -9,11 +9,11 @@ $email = $reveal['email'] ?? null;
 <section class="callout callout--leaf" aria-labelledby="reveal-title" style="margin-bottom: 24px; display:block">
   <h2 class="callout__title" id="reveal-title"><?= icon($invite ? 'mail' : 'key-round', 'icon--sm') ?> <?= e($invite ? t('Invitation link for :name', ['name' => user_name($person)]) : t('Password reset link for :name', ['name' => user_name($person)])) ?></h2>
   <?php if ($email && $email['sent']): ?>
-    <p><?= e(t('Sibol emailed this link to :address. If it does not arrive, copy the link now and send it through your school\'s usual channel; it will not be shown again.', ['address' => $email['to']])) ?></p>
+    <p><?= e(t('B.E.S.T. Learning and Interactive Study System emailed this link to :address. If it does not arrive, copy the link now and send it through your school\'s usual channel; it will not be shown again.', ['address' => $email['to']])) ?></p>
   <?php elseif ($email): ?>
-    <p><?= e(t('Sibol could not email this link to :address. Copy it now and send it through your school\'s usual channel; it will not be shown again.', ['address' => $email['to']])) ?></p>
+    <p><?= e(t('B.E.S.T. Learning and Interactive Study System could not email this link to :address. Copy it now and send it through your school\'s usual channel; it will not be shown again.', ['address' => $email['to']])) ?></p>
   <?php else: ?>
-    <p><?= e(t('Copy this link now and send it to them through your school\'s usual channel. Sibol does not send email, and this link will not be shown again.')) ?></p>
+    <p><?= e(t('Copy this link now and send it to them through your school\'s usual channel. B.E.S.T. Learning and Interactive Study System does not send email, and this link will not be shown again.')) ?></p>
   <?php endif; ?>
   <div class="copy-field">
     <label class="sr-only" for="reveal-url"><?= e(t('Link')) ?></label>

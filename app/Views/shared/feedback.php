@@ -8,13 +8,13 @@ use Sibol\Services\SiteFeedback;
 $hints = [
     'problem' => t('A page, a button or a file does not work as it should.'),
     'confusing' => t('You were not sure what to do, or something did not make sense.'),
-    'idea' => t('Something that would make Sibol more useful for you or your class.'),
+    'idea' => t('Something that would make B.E.S.T. Learning and Interactive Study System more useful for you or your class.'),
 ];
 ?>
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Send feedback')) ?></h1>
-    <p class="page-lead"><?= e(t('Tell your school when something in Sibol is not working or is confusing, or share an idea. Your school\'s administrators read every message and may reply. It is not a chat, and it is not watched all the time.')) ?></p>
+    <p class="page-lead"><?= e(t('Tell your school when something in B.E.S.T. Learning and Interactive Study System is not working or is confusing, or share an idea. Your school\'s administrators read every message and may reply. It is not a chat, and it is not watched all the time.')) ?></p>
   </div>
 </div>
 

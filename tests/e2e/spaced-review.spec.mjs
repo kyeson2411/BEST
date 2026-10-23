@@ -29,7 +29,7 @@ async function answerShownItem(page) {
   }
 }
 
-test('a student reviews quiz questions they missed, and Sibol checks the answer', async ({ page }) => {
+test('a student reviews quiz questions they missed, and B.E.S.T. Learning and Interactive Study System checks the answer', async ({ page }) => {
   await demoLogin(page, 'student');
   const card = page.locator('section', { has: page.getByRole('heading', { name: /^Review today/ }) });
   await expect(card).toContainText(/questions? you missed (is|are) back for review/);

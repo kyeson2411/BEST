@@ -192,7 +192,7 @@ final class AuthController extends Controller
         $user = Db::one('SELECT * FROM users WHERE id = :id', ['id' => (int) $row['id']]);
         Auth::login($user);
         Audit::log('auth.invitation_accepted', 'user', (int) $row['id'], [], $user);
-        $this->flash('success', t('Welcome to Sibol. Your account is ready.'));
+        $this->flash('success', t('Welcome to B.E.S.T. Learning and Interactive Study System. Your account is ready.'));
         return $this->redirect(home_path((string) $row['role']));
     }
 

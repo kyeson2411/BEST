@@ -50,7 +50,7 @@ final class AiFailuresTest extends IntegrationTestCase
         } catch (AiException $e) {
             self::assertSame('timeout', $e->errorCode);
             self::assertFalse($e->retryable, 'The provider does not wait for it twice more');
-            self::assertSame('The AI service is taking too long to answer. Try again in a few minutes. Everything else in Sibol works as usual.', $e->getMessage());
+            self::assertSame('The AI service is taking too long to answer. Try again in a few minutes. Everything else in B.E.S.T. Learning and Interactive Study System works as usual.', $e->getMessage());
         } finally {
             fclose($server);
         }
@@ -70,7 +70,7 @@ final class AiFailuresTest extends IntegrationTestCase
         } catch (AiException $e) {
             self::assertSame('network', $e->errorCode);
             self::assertTrue($e->retryable);
-            self::assertSame('Sibol can\'t reach the AI service right now. Try again in a few minutes. Everything else in Sibol works as usual.', $e->getMessage());
+            self::assertSame('B.E.S.T. Learning and Interactive Study System can\'t reach the AI service right now. Try again in a few minutes. Everything else in B.E.S.T. Learning and Interactive Study System works as usual.', $e->getMessage());
         }
     }
 

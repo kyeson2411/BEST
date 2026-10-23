@@ -38,7 +38,7 @@ $startUrl = (string) preg_replace('#^https?://#', '', absolute_url('/start'));
             <span class="slip__school"><?= e($school) ?></span>
             <?= icon('scissors', 'icon--sm slip__scissors') ?>
           </header>
-          <p class="slip__kind"><?= e($setup ? t('Set up your Sibol account') : t('Choose a new Sibol password')) ?></p>
+          <p class="slip__kind"><?= e($setup ? t('Set up your B.E.S.T. Learning and Interactive Study System account') : t('Choose a new B.E.S.T. Learning and Interactive Study System password')) ?></p>
           <p class="slip__name"><?= e($s['name']) ?></p>
           <div class="slip__body">
             <dl class="slip__fields">

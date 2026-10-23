@@ -2,7 +2,7 @@
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Help')) ?></h1>
-    <p class="page-lead"><?= e(t('How Sibol works and where to get help.')) ?></p>
+    <p class="page-lead"><?= e(t('How B.E.S.T. Learning and Interactive Study System works and where to get help.')) ?></p>
   </div>
 </div>
 
@@ -27,7 +27,7 @@
   <?php if ($role === 'admin' || $role === null): ?>
     <h2><?= e(t('For school administrators')) ?></h2>
     <ul>
-      <li><?= e(t('Invite people one at a time or import a CSV. Sibol shows each invitation link for you to share; no email is sent unless an email service is configured.')) ?></li>
+      <li><?= e(t('Invite people one at a time or import a CSV. B.E.S.T. Learning and Interactive Study System shows each invitation link for you to share; no email is sent unless an email service is configured.')) ?></li>
       <li><?= e(t('Policies control which companion modes are available, daily limits, and how long conversations are kept.')) ?></li>
     </ul>
   <?php endif; ?>
@@ -48,13 +48,13 @@
     <p><?= e(t('An AI provider is connected, so the companion writes new answers. They are still checked against your class materials when you ask about them.')) ?></p>
   <?php endif; ?>
 
-  <h2 id="offline"><?= e(t('Installing Sibol and reading offline')) ?></h2>
+  <h2 id="offline"><?= e(t('Installing B.E.S.T. Learning and Interactive Study System and reading offline')) ?></h2>
   <ul>
-    <li><?= e(t('On a phone or computer, choose Install app or Add to Home screen in the browser\'s menu. Sibol then opens like an app, with the school\'s seal as its icon.')) ?></li>
+    <li><?= e(t('On a phone or computer, choose Install app or Add to Home screen in the browser\'s menu. B.E.S.T. Learning and Interactive Study System then opens like an app, with the school\'s seal as its icon.')) ?></li>
     <?php if ($role === 'student' || $role === null): ?>
       <li><?= e(t('On a class\'s Materials tab, choose Keep offline beside a file to read it on that device without a connection. Kept files are removed when you sign out.')) ?></li>
     <?php endif; ?>
-    <li><?= e(t('Other pages, quizzes and the companion need a connection. Without one, Sibol says so and lists the files kept on that device.')) ?></li>
+    <li><?= e(t('Other pages, quizzes and the companion need a connection. Without one, B.E.S.T. Learning and Interactive Study System says so and lists the files kept on that device.')) ?></li>
   </ul>
 
   <h2><?= e(t('Keyboard and accessibility')) ?></h2>

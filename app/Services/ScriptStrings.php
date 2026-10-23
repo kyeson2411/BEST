@@ -55,10 +55,10 @@ final class ScriptStrings
     {
         return [
             'you' => t('You'),
-            'assistant' => t('Sibol'),
+            'assistant' => t('Assistant'),
             'thinking' => t('Thinking'),
             'reading' => [t('Reading :count passage from your materials'), t('Reading :count passages from your materials')],
-            'answering' => t(':name is answering.', ['name' => t('Sibol')]),
+            'answering' => t(':name is answering.', ['name' => t('Assistant')]),
             'ready' => t('Answer ready.'),
             'try_again' => t('Try again'),
             'failed' => t('Something went wrong. Try again.'),

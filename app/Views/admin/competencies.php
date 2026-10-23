@@ -17,7 +17,7 @@ use Sibol\Core\View;
   <section class="section" aria-labelledby="comp-list-title">
     <div class="section__head"><h2 class="section__title" id="comp-list-title"><?= e(t('Learning competencies')) ?> <span class="count"><?= (int) $all ?></span></h2></div>
     <?php if ($all === 0): ?>
-      <?= partial('empty', ['compact' => true, 'title' => t('No learning competencies yet'), 'body' => t('Import your school\'s list from a spreadsheet. Sibol does not come with codes of its own.')]) ?>
+      <?= partial('empty', ['compact' => true, 'title' => t('No learning competencies yet'), 'body' => t('Import your school\'s list from a spreadsheet. B.E.S.T. Learning and Interactive Study System does not come with codes of its own.')]) ?>
     <?php else: ?>
       <form class="toolbar" method="get" action="<?= e(url('/admin/competencies')) ?>" role="search">
         <div class="field"><label class="field__label" for="cf-subject"><?= e(t('Subject')) ?></label>

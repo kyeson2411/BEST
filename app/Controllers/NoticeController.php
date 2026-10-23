@@ -47,7 +47,7 @@ final class NoticeController extends Controller
             $errors['privacy'] = t('Tick this to confirm you have read the privacy notice.');
         }
         if (in_array('rules', $pending, true) && !$this->request->bool('rules')) {
-            $errors['rules'] = t('Tick this to agree to the rules for using Sibol.');
+            $errors['rules'] = t('Tick this to agree to the rules for using B.E.S.T. Learning and Interactive Study System.');
         }
         if ($errors) {
             throw new ValidationException($errors, $this->request->all(), '/welcome');
@@ -56,7 +56,7 @@ final class NoticeController extends Controller
         $intended = Session::pull('intended');
         $target = is_string($intended) && str_starts_with($intended, '/') && !str_starts_with($intended, '//') && !in_array($intended, ['/welcome', '/login'], true)
             ? $intended : home_path((string) $user['role']);
-        $this->flash('success', t('Thank you. You can use Sibol now.'));
+        $this->flash('success', t('Thank you. You can use B.E.S.T. Learning and Interactive Study System now.'));
         return $this->redirect($target);
     }
 

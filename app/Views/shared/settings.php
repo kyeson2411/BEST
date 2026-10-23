@@ -70,7 +70,7 @@ $typeLabel = ['export' => t('Copy of my data'), 'correction' => t('Correct my in
       </fieldset>
       <fieldset>
         <legend><?= e(t('Notifications')) ?></legend>
-        <p class="fieldset-hint"><?= e(t('Notifications appear inside Sibol. Choose which ones you want.')) ?></p>
+        <p class="fieldset-hint"><?= e(t('Notifications appear inside B.E.S.T. Learning and Interactive Study System. Choose which ones you want.')) ?></p>
         <?php foreach ($types as $key => $label): ?>
           <?= checkbox('notify[]', $label, !in_array($key, $muted, true), null, $key) ?>
         <?php endforeach; ?>
@@ -113,7 +113,7 @@ $typeLabel = ['export' => t('Copy of my data'), 'correction' => t('Correct my in
       <div class="section__head"><h2 class="section__title" id="two-step-title"><?= e(t('Two-step sign-in')) ?></h2></div>
       <?php if (\Sibol\Services\TwoStep::enabled($user)): ?>
         <?php $left = \Sibol\Services\TwoStep::recoveryCodesLeft((int) $user['id']); ?>
-        <p><?= badge(t('On'), 'leaf') ?> <?= e(t('Since :date, Sibol asks for a code from your authenticator app after your password.', ['date' => fmt_date($user['totp_enabled_at'], 'date_long')])) ?>
+        <p><?= badge(t('On'), 'leaf') ?> <?= e(t('Since :date, B.E.S.T. Learning and Interactive Study System asks for a code from your authenticator app after your password.', ['date' => fmt_date($user['totp_enabled_at'], 'date_long')])) ?>
           <?= e(tp(':count recovery code left.', ':count recovery codes left.', $left)) ?></p>
         <?php if (\Sibol\Services\TwoStep::available()): ?>
           <form method="post" action="<?= e(url('/settings/two-step/codes')) ?>" autocomplete="off">
@@ -126,7 +126,7 @@ $typeLabel = ['export' => t('Copy of my data'), 'correction' => t('Correct my in
           </form>
         <?php endif; ?>
       <?php else: ?>
-        <p><?= e(t('After your password, Sibol can also ask for a code from an app on your phone, so a password someone else learns is not enough to sign in as you. Recommended for administrators.')) ?></p>
+        <p><?= e(t('After your password, B.E.S.T. Learning and Interactive Study System can also ask for a code from an app on your phone, so a password someone else learns is not enough to sign in as you. Recommended for administrators.')) ?></p>
       <?php endif; ?>
       <?php if (!\Sibol\Services\TwoStep::available()): ?>
         <p class="meta"><?= e($user['role'] === 'admin'

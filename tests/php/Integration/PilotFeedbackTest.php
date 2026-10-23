@@ -40,7 +40,7 @@ final class PilotFeedbackTest extends IntegrationTestCase
         );
         $log = Db::one("SELECT * FROM audit_logs WHERE action = 'feedback.sent' AND target_id = :id", ['id' => $id]);
         self::assertSame(['category' => 'problem'], json_decode((string) $log['metadata'], true));
-        self::assertSame('Sent feedback about Sibol', AuditLabels::describe($log));
+        self::assertSame('Sent feedback about B.E.S.T. Learning and Interactive Study System', AuditLabels::describe($log));
         self::assertSame($id, (int) SiteFeedback::mine((int) $andrea['id'])[0]['id']);
 
         $this->expectException(\InvalidArgumentException::class);
@@ -70,7 +70,7 @@ final class PilotFeedbackTest extends IntegrationTestCase
             [['status' => 'looking', 'replied' => false], ['status' => 'fixed', 'replied' => true], ['status' => 'fixed', 'replied' => false]],
             array_map(static fn ($l) => json_decode((string) $l['metadata'], true), $logs)
         );
-        self::assertSame('Replied to feedback about Sibol', AuditLabels::describe($logs[1]));
+        self::assertSame('Replied to feedback about B.E.S.T. Learning and Interactive Study System', AuditLabels::describe($logs[1]));
         self::assertStringNotContainsString('Export', implode(' ', array_column($logs, 'metadata')), 'the reply text is not logged');
 
         $this->expectException(\InvalidArgumentException::class);

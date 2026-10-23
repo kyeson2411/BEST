@@ -27,7 +27,7 @@ $descriptions = [
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Grading')) ?></h1>
-    <p class="page-lead"><?= e(t('How grades are worked out at your school. Sibol does not assume a policy: the periods, weights and table here are your school\'s, and teachers still decide each score.')) ?></p>
+    <p class="page-lead"><?= e(t('How grades are worked out at your school. B.E.S.T. Learning and Interactive Study System does not assume a policy: the periods, weights and table here are your school\'s, and teachers still decide each score.')) ?></p>
   </div>
 </div>
 
@@ -191,7 +191,7 @@ $descriptions = [
 <section class="section" id="transmutation" aria-labelledby="tr-title">
   <div class="section__head"><h2 class="section__title" id="tr-title"><?= e(t('Transmutation table')) ?></h2>
     <span><?= $on ? badge(t('On'), 'leaf', 'circle-check') : (!empty($table['confirmed']) ? badge(t('Checked, switched off'), 'outline') : badge(t('Off'), 'neutral')) ?></span></div>
-  <p class="section__intro"><?= e(t('A transmutation table turns the initial grade of a grading period into the grade reported for it. Sibol uses a table only after someone has checked every line against the official order and switched it on. The final grade is then the average of the period grades, as a whole number.')) ?></p>
+  <p class="section__intro"><?= e(t('A transmutation table turns the initial grade of a grading period into the grade reported for it. B.E.S.T. Learning and Interactive Study System uses a table only after someone has checked every line against the official order and switched it on. The final grade is then the average of the period grades, as a whole number.')) ?></p>
   <?php if (!empty($table['confirmed']) && $checker): ?>
     <p class="meta"><?= e(t('Checked by :name on :date.', ['name' => user_name($checker), 'date' => fmt_date((string) ($table['checked_at'] ?? ''), 'date')])) ?></p>
   <?php endif; ?>
@@ -208,7 +208,7 @@ $descriptions = [
       <?php if ($rows): ?>
         <div class="table-frame">
           <table class="table table--compact">
-            <caption><?= e(t('As Sibol reads it')) ?></caption>
+            <caption><?= e(t('As B.E.S.T. Learning and Interactive Study System reads it')) ?></caption>
             <thead><tr><th scope="col"><?= e(t('Initial grade')) ?></th><th scope="col" class="num"><?= e(t('Reported grade')) ?></th></tr></thead>
             <tbody>
               <?php // Two decimals, as the orders print them, so each line can be compared with the official table.

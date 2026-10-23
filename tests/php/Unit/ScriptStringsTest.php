@@ -107,7 +107,7 @@ final class ScriptStringsTest extends TestCase
             $common = ScriptStrings::common();
             self::assertSame('Isara ang mensahe', $common['dismiss']);
             self::assertSame(':count karakter pa ang natitira', $common['chars_left'][1], 'placeholders stay for the script to fill');
-            self::assertSame('Sumasagot ang Sibol.', ScriptStrings::companion()['answering']);
+            self::assertSame('Sumasagot ang Katuwang.', ScriptStrings::companion()['answering']);
         } finally {
             Translator::setLocale('en');
         }

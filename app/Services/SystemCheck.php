@@ -60,7 +60,7 @@ final class SystemCheck
         $rows[] = $mail['enabled']
             ? ['label' => 'Email delivery', 'ok' => true, 'detail' => 'SMTP ' . $mail['host'] . ':' . $mail['port'] . ' (' . $mail['encryption'] . '), from ' . $mail['from']
                 . ($mail['has_password'] ? ', password set (hidden)' : ', no password') . '. Links are still shown to copy. Run "php bin/sibol.php mail:test you@school" to try it.']
-            : ['label' => 'Email delivery', 'ok' => false, 'detail' => 'Not configured (MAIL_HOST and MAIL_FROM_ADDRESS in .env). Sibol shows invitation and password links to administrators to share; it never claims an email was sent.'];
+            : ['label' => 'Email delivery', 'ok' => false, 'detail' => 'Not configured (MAIL_HOST and MAIL_FROM_ADDRESS in .env). The app shows invitation and password links to administrators to share; it never claims an email was sent.'];
         $rows[] = AppKey::available()
             ? ['label' => 'App key (APP_KEY)', 'ok' => true, 'detail' => 'Set (hidden). Staff can turn on two-step sign-in. Keep a copy apart from database backups.']
             : ['label' => 'App key (APP_KEY)', 'ok' => false, 'detail' => 'Missing, so two-step sign-in cannot be turned on. Run "php bin/sibol.php key:generate".'];

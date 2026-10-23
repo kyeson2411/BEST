@@ -7,7 +7,7 @@
   <div class="page-actions"><a class="btn btn--primary" href="<?= e(url('/teacher/lessons/new')) ?>"><?= icon('plus', 'icon--sm') ?><?= e(t('New lesson')) ?></a></div>
 </div>
 <?php if (!$rows): ?>
-  <?= partial('empty', ['title' => t('No lessons yet'), 'body' => t('Start with your learning objectives. Sibol can draft the structure from the materials you choose, and you edit everything before students see it.'), 'action' => [t('New lesson'), '/teacher/lessons/new']]) ?>
+  <?= partial('empty', ['title' => t('No lessons yet'), 'body' => t('Start with your learning objectives. B.E.S.T. Learning and Interactive Study System can draft the structure from the materials you choose, and you edit everything before students see it.'), 'action' => [t('New lesson'), '/teacher/lessons/new']]) ?>
 <?php else: ?>
   <ul class="rows" style="max-width: 900px">
     <?php foreach ($rows as $l): ?>

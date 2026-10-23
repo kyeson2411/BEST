@@ -18,7 +18,6 @@ $htmlClass = [];
 if (!empty($prefs['large_text'])) { $htmlClass[] = 'pref-large-text'; }
 if (!empty($prefs['reduce_motion'])) { $htmlClass[] = 'pref-reduce-motion'; }
 if (!empty($prefs['underline_links'])) { $htmlClass[] = 'pref-underline-links'; }
-$isDemoOrg = $user && !empty($user['org_is_demo']);
 // A logo uploaded in School settings replaces the default school seal.
 $schoolLogo = $user && !empty($user['org_logo_path']) ? url('/school-logo') : null;
 $aiDemo = Config::get('ai.provider', 'demo') === 'demo';
@@ -29,7 +28,7 @@ $bottomItems = array_slice($bottomItems, 0, 4);
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= e(($title ?? 'Sibol') . ' – ' . Config::get('app.name', 'Sibol')) ?></title>
+  <title><?= e(($title ?? Config::get('app.short_name', 'B.E.S.T.')) . ' – ' . Config::get('app.name', 'B.E.S.T. Learning and Interactive Study System')) ?></title>
   <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
   <meta name="app-base" content="<?= e(base_path_url()) ?>">
   <meta name="theme-color" content="#1E3D31">
@@ -40,13 +39,13 @@ $bottomItems = array_slice($bottomItems, 0, 4);
   <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
 </head>
 <?php /* Pages that can show maths name the KaTeX files here; app.js fetches them only once maths appears. */ ?>
-<body class="<?= e(trim(($page_class ?? '') . ($isDemoOrg || $aiDemo ? ' has-demo-band' : ''))) ?>" data-role="<?= e($user['role'] ?? '') ?>" data-i18n="<?= json_attr(ScriptStrings::common()) ?>"<?php if (!empty($katex)): ?> data-katex-css="<?= e(asset('vendor/katex/katex.min.css')) ?>" data-katex-js="<?= e(asset('vendor/katex/katex.min.js')) ?>" data-katex-render="<?= e(asset('vendor/katex/auto-render.min.js')) ?>"<?php endif; ?>>
+<body class="<?= e(trim(($page_class ?? '') . ($aiDemo ? ' has-demo-band' : ''))) ?>" data-role="<?= e($user['role'] ?? '') ?>" data-i18n="<?= json_attr(ScriptStrings::common()) ?>"<?php if (!empty($katex)): ?> data-katex-css="<?= e(asset('vendor/katex/katex.min.css')) ?>" data-katex-js="<?= e(asset('vendor/katex/katex.min.js')) ?>" data-katex-render="<?= e(asset('vendor/katex/auto-render.min.js')) ?>"<?php endif; ?>>
 <a class="skip-link" href="#main"><?= e(t('Skip to content')) ?></a>
 <div class="shell">
   <aside class="spine" id="spine" aria-label="<?= e(t('Main navigation')) ?>">
     <a class="brand" href="<?= e(url(home_path())) ?>">
       <?= partial('seal', ['size' => 40, 'class' => 'brand__mark', 'logo' => $schoolLogo]) ?>
-      <span class="brand__name"><?= e(Config::get('app.name', 'Sibol')) ?></span>
+      <span class="brand__name"><?= e(Config::get('app.short_name', 'B.E.S.T.')) ?></span>
     </a>
     <?php if ($user): ?>
       <p class="spine__school"><?= e($user['org_name']) ?></p>
@@ -85,7 +84,7 @@ $bottomItems = array_slice($bottomItems, 0, 4);
         <?= icon('menu') ?><span class="sr-only"><?= e(t('Open menu')) ?></span>
       </button>
       <a class="topbar__brand" href="<?= e(url(home_path())) ?>">
-        <?= partial('seal', ['size' => 30, 'class' => 'brand__mark', 'logo' => $schoolLogo]) ?><span class="brand__name display"><?= e(Config::get('app.name', 'Sibol')) ?></span>
+        <?= partial('seal', ['size' => 30, 'class' => 'brand__mark', 'logo' => $schoolLogo]) ?><span class="brand__name display"><?= e(Config::get('app.short_name', 'B.E.S.T.')) ?></span>
       </a>
       <form class="topbar__search" role="search" action="<?= e(url('/search')) ?>" method="get" id="global-search">
         <label class="sr-only" for="global-search-input"><?= e(t('Search')) ?></label>
@@ -134,12 +133,12 @@ $bottomItems = array_slice($bottomItems, 0, 4);
       </div>
     </header>
 
-    <?php if ($isDemoOrg || $aiDemo): ?>
+    <?php /* Only AI demo mode is labelled here: answers must never look as if a model wrote them. */ ?>
+    <?php if ($aiDemo): ?>
       <div class="demo-band" role="note">
         <?= icon('info', 'icon--sm') ?>
         <span>
-          <?php if ($isDemoOrg): ?><?= e(t('Demo school: every person and record here is fictional.')) ?><?php endif; ?>
-          <?php if ($aiDemo): ?> <?= e(t('AI is in demo mode, so answers are built from class materials without an AI model.')) ?><?php endif; ?>
+          <?= e(t('AI is in demo mode, so answers are built from class materials without an AI model.')) ?>
         </span>
         <a href="<?= e(url('/help#demo')) ?>"><?= e(t('What this means')) ?></a>
       </div>

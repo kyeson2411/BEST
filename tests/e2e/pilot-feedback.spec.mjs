@@ -40,7 +40,7 @@ test('a student sends feedback from the page they are on and reads the reply', a
   await admin.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(admin.locator('.toast').first()).toContainText('Saved. Your reply was sent to them as a notification.');
   await admin.goto('admin/audit');
-  await expect(admin.getByText('Replied to feedback about Sibol').first()).toBeVisible();
+  await expect(admin.getByText('Replied to feedback about B.E.S.T. Learning and Interactive Study System').first()).toBeVisible();
   await expect(admin.locator('main')).not.toContainText('which materials are new');
   await admin.close();
 

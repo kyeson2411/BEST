@@ -46,7 +46,7 @@
   <fieldset>
     <legend><?= e(t('When should students see it?')) ?></legend>
     <div class="choice-list">
-      <label class="choice"><input type="radio" name="release" value="now"<?= checked(old('release', 'now') === 'now') ?>><span><span class="choice__title"><?= e(t('Publish now')) ?></span><span class="choice__desc"><?= e(t('Students are notified in Sibol.')) ?></span></span></label>
+      <label class="choice"><input type="radio" name="release" value="now"<?= checked(old('release', 'now') === 'now') ?>><span><span class="choice__title"><?= e(t('Publish now')) ?></span><span class="choice__desc"><?= e(t('Students are notified in B.E.S.T. Learning and Interactive Study System.')) ?></span></span></label>
       <label class="choice"><input type="radio" name="release" value="schedule"<?= checked(old('release') === 'schedule') ?>><span><span class="choice__title"><?= e(t('Schedule')) ?></span><span class="choice__desc"><?= e(t('Hidden from students and the companion until the date below.')) ?></span></span></label>
       <label class="choice"><input type="radio" name="release" value="draft"<?= checked(old('release') === 'draft') ?>><span><span class="choice__title"><?= e(t('Save as draft')) ?></span><span class="choice__desc"><?= e(t('Only teachers of the class can see it.')) ?></span></span></label>
     </div>

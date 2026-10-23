@@ -2,7 +2,7 @@
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Set up two-step sign-in')) ?></h1>
-    <p class="page-lead"><?= e(t('After your password, Sibol will also ask for a code from an app on your phone. Someone who learns your password still cannot sign in as you.')) ?></p>
+    <p class="page-lead"><?= e(t('After your password, B.E.S.T. Learning and Interactive Study System will also ask for a code from an app on your phone. Someone who learns your password still cannot sign in as you.')) ?></p>
   </div>
 </div>
 
@@ -13,7 +13,7 @@
   </section>
 
   <section class="section" aria-labelledby="ts-scan">
-    <div class="section__head"><h2 class="section__title" id="ts-scan"><?= e(t('2. Add Sibol to the app')) ?></h2></div>
+    <div class="section__head"><h2 class="section__title" id="ts-scan"><?= e(t('2. Add B.E.S.T. Learning and Interactive Study System to the app')) ?></h2></div>
     <div class="two-step">
       <div class="two-step__code"><?= $qr ?></div>
       <div>

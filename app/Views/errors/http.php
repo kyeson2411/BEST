@@ -6,7 +6,7 @@
     <?php if ($message !== ''): ?>
       <?= e($message) ?>
     <?php elseif ($status === 404): ?>
-      <?= e(t('The page may have moved, or the address may be mistyped. If you followed a link inside Sibol, the item may have been archived or you may not have access to it.')) ?>
+      <?= e(t('The page may have moved, or the address may be mistyped. If you followed a link inside B.E.S.T. Learning and Interactive Study System, the item may have been archived or you may not have access to it.')) ?>
     <?php elseif ($status === 403): ?>
       <?= e(t('Your account does not include this area. If you think you should have access, ask your school administrator.')) ?>
     <?php else: ?>

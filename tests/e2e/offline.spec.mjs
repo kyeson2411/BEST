@@ -23,13 +23,13 @@ const storedOfflinePage = (page) => page.evaluate(async () => {
   return stored ? stored.headers.get('Content-Language') : null;
 });
 
-test('Sibol can be installed: a manifest with the seal icons and a service worker', async ({ page }) => {
+test('B.E.S.T. Learning and Interactive Study System can be installed: a manifest with the seal icons and a service worker', async ({ page }) => {
   const response = await page.goto('login');
   expect(response.headers()['content-language']).toBe('en');
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#1E3D31');
 
   const manifest = await (await page.request.get(await page.locator('link[rel="manifest"]').getAttribute('href'))).json();
-  expect([manifest.short_name, manifest.display]).toEqual(['Sibol', 'standalone']);
+  expect([manifest.short_name, manifest.display]).toEqual(['B.E.S.T.', 'standalone']);
   expect(manifest.icons.map((icon) => icon.purpose)).toEqual(['any', 'any', 'maskable', 'maskable']);
   for (const icon of manifest.icons) {
     const file = await page.request.get(icon.src);

@@ -9,7 +9,7 @@ $open = (int) ($byStatus['new'] ?? 0) + (int) ($byStatus['looking'] ?? 0);
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Feedback')) ?></h1>
-    <p class="page-lead"><?= e(t('What students and teachers tell the school about Sibol: problems, confusing parts and ideas. Give each a status; a short reply reaches the sender as a notification.')) ?></p>
+    <p class="page-lead"><?= e(t('What students and teachers tell the school about B.E.S.T. Learning and Interactive Study System: problems, confusing parts and ideas. Give each a status; a short reply reaches the sender as a notification.')) ?></p>
   </div>
 </div>
 <?= View::file('admin/_pilot_tabs', ['active' => 'feedback']) ?>

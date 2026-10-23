@@ -19,7 +19,7 @@ $grounding = [
 $isStudent = $user['role'] === 'student';
 ?>
 <article class="msg msg--assistant<?= $message['status'] === 'error' ? ' msg--error' : '' ?>" id="m-<?= $id ?>" data-message-id="<?= $id ?>">
-  <div class="msg__who"><?= icon('sprout', 'icon--sm') ?><span><?= e(t('Sibol')) ?></span></div>
+  <div class="msg__who"><?= icon('sprout', 'icon--sm') ?><span><?= e(t('Assistant')) ?></span></div>
   <div class="msg__body"><?= $message['status'] === 'error' ? '<p>' . e($message['content']) . '</p>' : markdown((string) $message['display'], ['citations' => $cites, 'heading_base' => 4]) ?></div>
 
   <?php if (!empty($message['plan']) && $isStudent && $message['status'] === 'complete'): ?>

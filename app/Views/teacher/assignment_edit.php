@@ -177,7 +177,7 @@ $base = '/teacher/assignments/' . (int) $a['id'];
     <?php if (!$locked): ?>
       <section class="panel" id="ai-draft" aria-labelledby="ai-title">
         <h2 class="panel__title" id="ai-title"><?= icon('square-pen', 'icon--sm') ?> <?= e(t('Draft questions from materials')) ?></h2>
-        <p style="font-size:.9375rem"><?= e(t('Sibol drafts questions from the materials you choose. Every drafted question waits for your review and cannot be published until you approve it.')) ?></p>
+        <p style="font-size:.9375rem"><?= e(t('B.E.S.T. Learning and Interactive Study System drafts questions from the materials you choose. Every drafted question waits for your review and cannot be published until you approve it.')) ?></p>
         <?php if (!$materials): ?>
           <p class="meta"><?= e(t('No readable materials in this class yet. Upload notes first.')) ?></p>
         <?php else: ?>

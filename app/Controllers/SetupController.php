@@ -36,7 +36,7 @@ final class SetupController extends Controller
             $error = $e->getMessage();
         }
         return $this->view('setup/index', [
-            'title' => t('Set up Sibol'),
+            'title' => t('Set up B.E.S.T. Learning and Interactive Study System'),
             'dbOk' => $dbOk,
             'pending' => $pending,
             'hasData' => $hasData,

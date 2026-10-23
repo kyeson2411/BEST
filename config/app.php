@@ -6,7 +6,8 @@ return [
     'app' => [
         'env' => Env::get('APP_ENV', 'production'),
         'url' => rtrim((string) Env::get('APP_URL', ''), '/'),
-        'name' => Env::get('APP_NAME', 'Sibol'),
+        'name' => Env::get('APP_NAME', 'B.E.S.T. Learning and Interactive Study System'),
+        'short_name' => Env::get('APP_SHORT_NAME', 'B.E.S.T.'),
         'timezone' => Env::get('APP_TIMEZONE', 'Asia/Manila'),
         'locale' => Env::get('APP_LOCALE', 'en'),
         'demo_login' => Env::bool('APP_DEMO_LOGIN', false),
@@ -65,7 +66,7 @@ return [
         'username' => Env::get('MAIL_USERNAME', ''),
         'password' => Env::get('MAIL_PASSWORD', ''),
         'from_address' => Env::get('MAIL_FROM_ADDRESS', ''),
-        'from_name' => Env::get('MAIL_FROM_NAME', 'Sibol'),
+        'from_name' => Env::get('MAIL_FROM_NAME', 'B.E.S.T. Learning and Interactive Study System'),
     ],
     'uploads' => [
         'max_mb' => Env::int('UPLOAD_MAX_MB', 20),

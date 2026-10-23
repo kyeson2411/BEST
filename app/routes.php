@@ -44,7 +44,7 @@ $router->guard('notices', static function (Request $request): ?Response {
         return null;
     }
     if ($request->wantsJson()) {
-        return Response::json(['error' => t('Read and accept the privacy notice and the rules for using Sibol first.')], 403);
+        return Response::json(['error' => t('Read and accept the privacy notice and the rules for using B.E.S.T. Learning and Interactive Study System first.')], 403);
     }
     Session::set('intended', $request->method === 'GET' ? $request->fullPath() : null);
     return Response::redirect('/welcome', 302);
@@ -54,7 +54,7 @@ $router->guard('notices', static function (Request $request): ?Response {
 $router->guard('ai-student', static function (): ?Response {
     $user = Auth::user();
     if ($user && $user['role'] === 'student' && !AiAccess::studentOn($user)) {
-        throw HttpException::forbidden(t('The companion and AI practice are switched off for your account. Everything else in Sibol works as usual. Ask your adviser if you have questions.'));
+        throw HttpException::forbidden(t('The companion and AI practice are switched off for your account. Everything else in B.E.S.T. Learning and Interactive Study System works as usual. Ask your adviser if you have questions.'));
     }
     return null;
 });

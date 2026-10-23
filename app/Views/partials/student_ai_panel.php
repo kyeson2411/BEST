@@ -35,7 +35,7 @@ $today = Dates::now()->format('Y-m-d');
   </form>
 
   <h3 class="section__title" style="margin-top: 20px"><?= e(t('Guardian\'s answer')) ?></h3>
-  <p class="meta"><?= e(t('Record what the parent or guardian said about the AI companion. A no switches it off; a yes switches it on. Keep any signed form in the school\'s own files; Sibol stores only the answer, its date and who entered it.')) ?></p>
+  <p class="meta"><?= e(t('Record what the parent or guardian said about the AI companion. A no switches it off; a yes switches it on. Keep any signed form in the school\'s own files; B.E.S.T. Learning and Interactive Study System stores only the answer, its date and who entered it.')) ?></p>
   <form method="post" action="<?= e(url($action . '/guardian')) ?>" class="stack-sm">
     <?= csrf_field() ?>
     <fieldset class="fieldset-plain<?= field_error('answer') ? ' field--error' : '' ?>">

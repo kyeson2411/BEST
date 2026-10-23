@@ -4,7 +4,7 @@ import { demoLogin, passwordLogin, statusOf } from './helpers.mjs';
 test.describe('The school landing page', () => {
   test('the site root shows the school photo, seal and sign-in form', async ({ page }) => {
     await page.goto('');
-    await expect(page.getByRole('heading', { level: 1, name: 'Sign in to Sibol' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Sign in to B.E.S.T. Learning and Interactive Study System' })).toBeVisible();
     await expect(page.locator('.auth__school-name')).toHaveText('B.E.S.T. College of Polomolok');
     const photo = page.getByRole('img', { name: /Students in green and white uniforms/ });
     await expect(photo).toBeVisible();
@@ -34,7 +34,8 @@ test.describe('Signing in and out', () => {
     test(`the ${role} demo account lands on its own home`, async ({ page }) => {
       await demoLogin(page, role);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-      await expect(page.locator('.demo-band')).toContainText('fictional');
+      await expect(page.locator('.demo-band')).not.toContainText('fictional');
+      await expect(page.locator('.demo-band')).toContainText('AI is in demo mode');
     });
   }
 

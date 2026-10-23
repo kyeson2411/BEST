@@ -23,7 +23,7 @@ final class Privacy
         $aiSetting = Db::value('SELECT ai_enabled FROM users WHERE id = :u', ['u' => $userId]);
         $data = [
             'generated_at' => gmdate('c'),
-            'about' => 'This file contains the information Sibol holds about you. Times are in UTC.',
+            'about' => 'This file contains the information B.E.S.T. Learning and Interactive Study System holds about you. Times are in UTC.',
             'account' => $user,
             'classes' => Db::all('SELECT c.name AS class, cm.role, cm.status, cm.joined_at, cm.withdrawn_at FROM class_memberships cm JOIN classes c ON c.id = cm.class_id WHERE cm.user_id = :u', ['u' => $userId]),
             'submissions' => array_map(static function (array $s): array {

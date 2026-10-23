@@ -180,7 +180,7 @@ $archived = $class['status'] !== 'active';
           <h2 class="panel__title" id="add-title"><?= e(t('Add a student')) ?></h2>
           <form method="post" action="<?= e(url($base . '/roster')) ?>">
             <?= csrf_field() ?>
-            <?= field('text', 'student', t('Student username or email'), ['required' => true, 'hint' => t('The student must already have a Sibol account at your school.'), 'attrs' => ['autocapitalize' => 'none', 'spellcheck' => 'false', 'maxlength' => 190]]) ?>
+            <?= field('text', 'student', t('Student username or email'), ['required' => true, 'hint' => t('The student must already have a B.E.S.T. Learning and Interactive Study System account at your school.'), 'attrs' => ['autocapitalize' => 'none', 'spellcheck' => 'false', 'maxlength' => 190]]) ?>
             <button class="btn btn--primary" type="submit"><?= e(t('Add to class')) ?></button>
           </form>
         </section>
@@ -263,7 +263,7 @@ $archived = $class['status'] !== 'active';
     <section aria-labelledby="ann-title">
       <h2 class="sr-only" id="ann-title"><?= e(t('Announcements')) ?></h2>
       <?php if (!$announcements): ?>
-        <?= partial('empty', ['compact' => true, 'title' => t('No announcements yet'), 'body' => t('Post reminders and news for the whole class. Students get a notification in Sibol.')]) ?>
+        <?= partial('empty', ['compact' => true, 'title' => t('No announcements yet'), 'body' => t('Post reminders and news for the whole class. Students get a notification in B.E.S.T. Learning and Interactive Study System.')]) ?>
       <?php else: ?>
         <ul class="entries">
           <?php foreach ($announcements as $a): ?>

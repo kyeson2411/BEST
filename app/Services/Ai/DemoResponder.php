@@ -107,7 +107,7 @@ final class DemoResponder
         }
         $lines[] = '';
         $lines[] = $user['role'] === 'teacher'
-            ? t('With an AI provider connected, Sibol would draft from these passages for you to review.')
+            ? t('With an AI provider connected, B.E.S.T. Learning and Interactive Study System would draft from these passages for you to review.')
             : t('Next step: read the passages, then explain the idea in your own words. Ask your teacher if something is still unclear.');
         return implode("\n", $lines);
     }

@@ -27,7 +27,7 @@
     <dl class="dl">
       <dt>given_name</dt><dd><?= e(t('Required.')) ?></dd>
       <dt>family_name</dt><dd><?= e(t('Required.')) ?></dd>
-      <dt>username</dt><dd><?= e(t('Optional. Leave empty and Sibol makes one from the name, such as juan.delacruz.')) ?></dd>
+      <dt>username</dt><dd><?= e(t('Optional. Leave empty and B.E.S.T. Learning and Interactive Study System makes one from the name, such as juan.delacruz.')) ?></dd>
       <dt>email</dt><dd><?= e(t('Optional and unique. Students without email sign in with their username.')) ?></dd>
       <dt>role</dt><dd><?= e(t('student, teacher or admin. Blank means student.')) ?></dd>
       <dt>grade_level</dt><dd><?= e(t('Optional, students only. Your list: :grades.', ['grades' => implode(', ', $grades) ?: t('none set')])) ?></dd>

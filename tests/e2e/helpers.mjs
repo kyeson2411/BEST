@@ -55,6 +55,6 @@ export function inDays(days, hour = 17) {
 export async function acceptNotices(page) {
   await expect(page).toHaveURL(/\/welcome$/);
   await page.getByLabel('I have read the privacy notice').check();
-  await page.getByLabel('I will follow the rules for using Sibol').check();
+  await page.getByLabel('I will follow the rules for using B.E.S.T. Learning and Interactive Study System').check();
   await page.getByRole('button', { name: 'Accept and continue' }).click();
 }

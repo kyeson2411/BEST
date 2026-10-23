@@ -15,7 +15,7 @@ $flashes = $personal ? Session::takeFlashes() : [];
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= e(($title ?? 'Sibol') . ' – ' . Config::get('app.name', 'Sibol')) ?></title>
+  <title><?= e(($title ?? Config::get('app.short_name', 'B.E.S.T.')) . ' – ' . Config::get('app.name', 'B.E.S.T. Learning and Interactive Study System')) ?></title>
   <?php if ($personal): ?><meta name="csrf-token" content="<?= e(csrf_token()) ?>"><?php endif; ?>
   <meta name="app-base" content="<?= e(base_path_url()) ?>">
   <meta name="theme-color" content="#1E3D31">
@@ -30,7 +30,7 @@ $flashes = $personal ? Session::takeFlashes() : [];
 <a class="skip-link" href="#main"><?= e(t('Skip to content')) ?></a>
 <div class="bare">
   <div class="bare__inner">
-    <a class="bare__brand" href="<?= e(url('/')) ?>"><?= partial('seal', ['size' => 36, 'class' => 'brand__mark', 'single' => !empty($offline_page)]) ?><span class="brand__name display"><?= e(Config::get('app.name', 'Sibol')) ?></span></a>
+    <a class="bare__brand" href="<?= e(url('/')) ?>"><?= partial('seal', ['size' => 36, 'class' => 'brand__mark', 'single' => !empty($offline_page)]) ?><span class="brand__name display"><?= e(Config::get('app.short_name', 'B.E.S.T.')) ?></span></a>
     <main id="main" tabindex="-1"><?= $content ?></main>
   </div>
 </div>

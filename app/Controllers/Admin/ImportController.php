@@ -284,7 +284,7 @@ final class ImportController extends Controller
             return $this->redirect('/admin/users');
         }
         if (!Mailer::enabled()) {
-            $this->flash('error', t('Email is not set up for this copy of Sibol. Print the slips or download the links instead.'));
+            $this->flash('error', t('Email is not set up for this copy of B.E.S.T. Learning and Interactive Study System. Print the slips or download the links instead.'));
             return $this->redirect('/admin/users?status=invited');
         }
         $sent = 0;

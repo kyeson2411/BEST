@@ -147,7 +147,7 @@ final class MaterialController extends Controller
             Materials::publish($id);
         }
         $this->flash('success', $data['kind'] === 'file'
-            ? t('Uploaded. Sibol is reading the file so the companion can use it.')
+            ? t('Uploaded. B.E.S.T. Learning and Interactive Study System is reading the file so the companion can use it.')
             : t('Link added.'));
         return $this->redirect('/teacher/materials/' . $id);
     }

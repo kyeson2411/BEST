@@ -4,7 +4,7 @@ $problems = count(array_filter($checks, static fn ($c) => !$c['ok']));
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Integrations and system checks')) ?></h1>
-    <p class="page-lead"><?= e(t('How this copy of Sibol is configured. Secrets such as API keys and database passwords are never shown; change them in the server\'s .env file.')) ?></p>
+    <p class="page-lead"><?= e(t('How this copy of B.E.S.T. Learning and Interactive Study System is configured. Secrets such as API keys and database passwords are never shown; change them in the server\'s .env file.')) ?></p>
   </div>
 </div>
 
@@ -62,7 +62,7 @@ $problems = count(array_filter($checks, static fn ($c) => !$c['ok']));
     <section class="panel" aria-labelledby="google-title">
       <h2 class="panel__title" id="google-title"><?= e(t('Google sign-in')) ?></h2>
       <dl class="dl dl--stack">
-        <dt><?= e(t('Status')) ?></dt><dd><?= e($google['configured'] ? t('On: people with a Sibol account on :domains can sign in with Google.', ['domains' => implode(', ', $google['domains'])]) : t('Off')) ?></dd>
+        <dt><?= e(t('Status')) ?></dt><dd><?= e($google['configured'] ? t('On: people with a B.E.S.T. Learning and Interactive Study System account on :domains can sign in with Google.', ['domains' => implode(', ', $google['domains'])]) : t('Off')) ?></dd>
         <dt>GOOGLE_CLIENT_ID</dt><dd style="overflow-wrap:anywhere"><?= $google['client_id'] !== '' ? '<code>' . e($google['client_id']) . '</code>' : e(t('Not set')) ?></dd>
         <dt>GOOGLE_CLIENT_SECRET</dt><dd><?= e($google['has_secret'] ? t('Set (hidden)') : t('Not set')) ?></dd>
         <dt>GOOGLE_WORKSPACE_DOMAINS</dt><dd><?= e($google['domains'] ? implode(', ', $google['domains']) : t('Not set')) ?></dd>

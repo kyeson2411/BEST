@@ -166,12 +166,12 @@ final class Backup
     private static function restoreNote(): string
     {
         return <<<'TXT'
-Sibol backup: database.sql (the whole database) and uploads/ (files people uploaded).
+B.E.S.T. Learning and Interactive Study System backup: database.sql (the whole database) and uploads/ (files people uploaded).
 It does not contain .env or APP_KEY. Keep those somewhere safe, apart from these archives:
 without the same APP_KEY, two-step sign-in has to be switched off and set up again.
 
 To restore (see README.md, "Backups and restoring"):
-1. Install the same or a newer version of Sibol and copy your .env (with APP_KEY) into it.
+1. Install the same or a newer version of B.E.S.T. Learning and Interactive Study System and copy your .env (with APP_KEY) into it.
 2. Create an empty database, then load the dump, for example
      C:\xampp\mysql\bin\mysql.exe -u root sibol < database.sql
 3. Copy the uploads folder's contents into storage/uploads.

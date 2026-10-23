@@ -2,7 +2,7 @@
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e(t('Invite someone')) ?></h1>
-    <p class="page-lead"><?= e(t('Sibol creates the account and a private invitation link or a printed sign-in slip. The person sets their own password.')) ?></p>
+    <p class="page-lead"><?= e(t('B.E.S.T. Learning and Interactive Study System creates the account and a private invitation link or a printed sign-in slip. The person sets their own password.')) ?></p>
   </div>
 </div>
 <div class="layout-split">
@@ -22,7 +22,7 @@
       <?= field('text', 'given_name', t('Given name'), ['required' => true, 'attrs' => ['maxlength' => 80, 'autocomplete' => 'off']]) ?>
       <?= field('text', 'family_name', t('Family name'), ['required' => true, 'attrs' => ['maxlength' => 80, 'autocomplete' => 'off']]) ?>
       <?= field('text', 'preferred_name', t('Preferred name'), ['optional_label' => true, 'hint' => t('Shown instead of the given name, if set.'), 'attrs' => ['maxlength' => 80]]) ?>
-      <?= field('text', 'username', t('Username'), ['optional_label' => true, 'hint' => t('Used to sign in. Leave empty and Sibol makes one from the name, such as juan.delacruz.'), 'class' => 'code-text', 'attrs' => ['maxlength' => 40, 'autocomplete' => 'off', 'autocapitalize' => 'none', 'spellcheck' => 'false']]) ?>
+      <?= field('text', 'username', t('Username'), ['optional_label' => true, 'hint' => t('Used to sign in. Leave empty and B.E.S.T. Learning and Interactive Study System makes one from the name, such as juan.delacruz.'), 'class' => 'code-text', 'attrs' => ['maxlength' => 40, 'autocomplete' => 'off', 'autocapitalize' => 'none', 'spellcheck' => 'false']]) ?>
       <?= field('email', 'email', t('Email address'), ['optional_label' => true, 'hint' => t('Optional. Teachers usually have one; students without email sign in with their username.'), 'attrs' => ['autocomplete' => 'off']]) ?>
       <?= field('select', 'grade_level', t('Grade level'), ['options' => ['' => t('Not set')] + array_combine($grades, $grades), 'hint' => t('Students only.')]) ?>
       <?= field('select', 'class_id', t('Add to a class'), ['options' => ['' => t('Not now')] + $classes, 'hint' => t('Optional. You can add classes later.')]) ?>
@@ -35,7 +35,7 @@
   <aside class="panel panel--sunken">
     <h2 class="panel__title"><?= e(t('What happens next')) ?></h2>
     <ol class="plain-steps">
-      <li><?= e(t('Sibol shows you a private link that works once and expires in :days days. You can print it as a sign-in slip instead.', ['days' => \Sibol\Services\Tokens::INVITE_DAYS])) ?></li>
+      <li><?= e(t('B.E.S.T. Learning and Interactive Study System shows you a private link that works once and expires in :days days. You can print it as a sign-in slip instead.', ['days' => \Sibol\Services\Tokens::INVITE_DAYS])) ?></li>
       <li><?= e(t('You give it to the person: in person on a slip, or by email or chat.')) ?></li>
       <li><?= e(t('They open it, read the privacy notice and set a password.')) ?></li>
     </ol>

@@ -7,7 +7,7 @@
 <section class="offline" data-offline>
   <p class="offline__mark" aria-hidden="true"><?= icon('wifi-off', 'icon--lg') ?></p>
   <h1 class="page-title"><?= e(t('You are offline')) ?></h1>
-  <p class="page-lead"><?= e(t('Sibol needs a connection to open this page. Check your mobile data or Wi-Fi, then try again.')) ?></p>
+  <p class="page-lead"><?= e(t('B.E.S.T. Learning and Interactive Study System needs a connection to open this page. Check your mobile data or Wi-Fi, then try again.')) ?></p>
   <p class="meta offline__note"><?= e(t('Quizzes open only with a connection. Answers you already gave in a quiz stay in its tab until the connection is back.')) ?></p>
   <div class="cluster" style="margin-top: 24px">
     <a class="btn btn--primary" href="<?= e(url('/')) ?>" data-offline-retry><?= icon('refresh-cw', 'icon--sm') ?><?= e(t('Try again')) ?></a>

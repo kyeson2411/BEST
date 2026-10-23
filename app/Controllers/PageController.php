@@ -46,7 +46,7 @@ final class PageController extends Controller
         $user = Auth::user();
         $privacy = $user ? Settings::get((int) $user['organization_id'], 'privacy') : Settings::defaults()['privacy'];
         return $this->view('pages/rules', [
-            'title' => t('Rules for using Sibol'),
+            'title' => t('Rules for using B.E.S.T. Learning and Interactive Study System'),
             'role' => $user['role'] ?? null,
             'privacy' => $privacy,
             'version' => $user ? \Sibol\Services\Notices::current((int) $user['organization_id'])['rules'] : \Sibol\Services\Notices::VERSIONS['rules'],
@@ -68,14 +68,14 @@ final class PageController extends Controller
     /** The web app manifest, so phones and computers can install Sibol with the school's seal as its icon. */
     public function manifest(): Response
     {
-        $app = (string) Config::get('app.name', 'Sibol');
+        $app = (string) Config::get('app.name', 'B.E.S.T. Learning and Interactive Study System');
         $school = trim((string) Config::get('school.name', ''));
         $base = base_path_url();
         $response = Response::json([
             'id' => $base . '/',
             'name' => $school !== '' ? $app . ' – ' . $school : $app,
-            'short_name' => $app,
-            'description' => t('Sign in to Sibol, the learning companion of :school.', ['school' => $school !== '' ? $school : $app]),
+            'short_name' => (string) Config::get('app.short_name', 'B.E.S.T.'),
+            'description' => t('Sign in to B.E.S.T. Learning and Interactive Study System, the learning companion of :school.', ['school' => $school !== '' ? $school : $app]),
             'lang' => Translator::locale() === 'fil' ? 'fil' : 'en',
             'start_url' => $base . '/',
             'scope' => $base . '/',

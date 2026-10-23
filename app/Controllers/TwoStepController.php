@@ -78,7 +78,7 @@ final class TwoStepController extends Controller
             return $stop;
         }
         $secret = TwoStep::setupSecret(time());
-        $issuer = trim((string) Config::get('app.name', 'Sibol') . ' ' . (string) Config::get('school.short_name', ''));
+        $issuer = trim((string) Config::get('app.short_name', 'B.E.S.T.') . ' ' . (string) Config::get('school.short_name', ''));
         $account = (string) (($user['username'] ?? '') ?: $user['email']);
         $uri = Totp::uri($secret, $account, $issuer);
         return $this->view('shared/two_step_setup', [

@@ -20,7 +20,7 @@ test('without MAIL_ settings, links are copied and no email is promised', async 
   await page.getByLabel(/^Email address/).fill('lorna.emailtest@school.test');
   await page.getByRole('button', { name: 'Create invitation' }).click();
   const reveal = page.locator('section', { has: page.locator('#reveal-title') });
-  await expect(reveal).toContainText('Sibol does not send email');
+  await expect(reveal).toContainText('B.E.S.T. Learning and Interactive Study System does not send email');
   await expect(reveal).not.toContainText('emailed');
   await expect(reveal.getByRole('button', { name: 'Copy link' })).toBeVisible();
 });
