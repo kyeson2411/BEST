@@ -40,7 +40,7 @@ foreach ((array) ($content['sources'] ?? []) as $s) {
       <ol>
         <?php foreach ($content['sources'] as $s): ?>
           <li id="lesson-source-<?= (int) $s['n'] ?>">
-            <?php if (!empty($s['material_id'])): ?><a href="<?= e(url('/materials/' . (int) $s['material_id'] . '/file')) ?>"><?= e($s['title']) ?></a><?php else: ?><?= e($s['title']) ?><?php endif; ?><?php if (!empty($s['where'])): ?>, <?= e($s['where']) ?><?php endif; ?>
+            <?php if (!empty($s['material_id'])): ?><a href="<?= e(url('/materials/' . (int) $s['material_id'] . '/read')) ?>"><?= e($s['title']) ?></a><?php else: ?><?= e($s['title']) ?><?php endif; ?><?php if (!empty($s['where'])): ?>, <?= e($s['where']) ?><?php endif; ?>
           </li>
         <?php endforeach; ?>
       </ol>

@@ -23,6 +23,8 @@ test.describe('A student', () => {
     expect(await statusOf(page, `materials/${ids().draftMaterial}/file`)).toBe(404);
     expect(await statusOf(page, `materials/${ids().scheduledMaterial}/file`)).toBe(404);
     expect(await statusOf(page, `materials/${ids().releasedMaterial}/file`)).toBe(200);
+    expect(await statusOf(page, `materials/${ids().draftMaterial}/read`)).toBe(404);
+    expect(await statusOf(page, `materials/${ids().releasedMaterial}/read`)).toBe(200);
   });
 
   test('cannot post without the form token', async ({ page }) => {

@@ -77,6 +77,6 @@ test('a lesson copy is a draft whose sources point to the section\'s own materia
   await expect(page.locator('.page-lead')).toContainText(MOLAVE);
   await expect(page.locator('.page-lead')).toContainText('Draft');
   const source = page.locator('section.panel', { has: page.locator('#src-title') }).getByRole('link', { name: 'Breathing and circulation notes' });
-  await expect(source).toHaveAttribute('href', /\/materials\/\d+\/file$/);
-  await expect(source).not.toHaveAttribute('href', new RegExp(`/materials/${ids().releasedMaterial}/file$`));
+  await expect(source).toHaveAttribute('href', /\/materials\/\d+\/read$/);
+  await expect(source).not.toHaveAttribute('href', new RegExp(`/materials/${ids().releasedMaterial}/read$`));
 });

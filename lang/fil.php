@@ -2045,6 +2045,7 @@ return [
     'Reactivate the account first.' => 'I-activate muna ulit ang account.',
     'Reactivated an account' => 'Nag-activate muli ng account',
     'Reactivated. Create an invitation link so :name can set a password.' => 'Na-activate muli. Gumawa ng link ng imbitasyon para makapagtakda ng password si :name.',
+    'Read' => 'Basahin',
     'Read and accept the privacy notice and the rules for using Sibol first.' => 'Basahin at tanggapin muna ang abiso sa privacy at ang mga patakaran sa paggamit ng Sibol.',
     'Read how :school uses Sibol and the rules for using it, then accept them to continue. You only do this again when they change.' => 'Basahin kung paano ginagamit ng :school ang Sibol at ang mga patakaran sa paggamit nito, saka tanggapin ang mga ito para magpatuloy. Gagawin mo lang ulit ito kapag nagbago ang mga ito.',
     'Read in :language' => 'Basahin sa :language',

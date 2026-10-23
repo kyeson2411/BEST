@@ -67,7 +67,7 @@ $isStudent = $user['role'] === 'student';
     <p class="notes__label"><?= e(tp(':count source', ':count sources', count($message['citations']))) ?></p>
     <?php foreach ($message['citations'] as $c):
         $where = Retrieval::location($c);
-        $fileUrl = url('/materials/' . (int) $c['material_id'] . '/file') . (!empty($c['page_from']) && ($c['extension'] ?? '') === 'pdf' ? '#page=' . (int) $c['page_from'] : '');
+        $fileUrl = url('/materials/' . (int) $c['material_id'] . '/read') . (!empty($c['page_from']) && ($c['extension'] ?? '') === 'pdf' ? '#page=' . (int) $c['page_from'] : '');
     ?>
       <div class="source-tag" id="cite-<?= $id ?>-<?= (int) $c['ref_no'] ?>" tabindex="-1">
         <div class="source-tag__head"><span class="source-tag__no"><?= (int) $c['ref_no'] ?></span><span class="source-tag__title"><?= e($c['title']) ?></span></div>

@@ -130,7 +130,7 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
           <?php foreach ($resources as $r): ?>
             <li class="row">
               <span class="row__lead"><?= icon($r['kind'] === 'link' ? 'link' : 'file-text') ?></span>
-              <div class="row__main"><a class="row__title" href="<?= e(url('/materials/' . (int) $r['id'] . '/file')) ?>"><?= e($r['title']) ?></a></div>
+              <div class="row__main"><a class="row__title" href="<?= e(url('/materials/' . (int) $r['id'] . '/read')) ?>"><?= e($r['title']) ?></a></div>
             </li>
           <?php endforeach; ?>
         </ul>

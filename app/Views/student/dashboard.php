@@ -61,7 +61,7 @@ $next = $upcoming[0] ?? null;
             <?php if ($continue['type'] === 'draft'): ?>
               <a class="btn btn--primary btn--sm" href="<?= e(url('/student/assignments/' . (int) $continue['id'])) ?>"><?= e(t('Continue draft')) ?></a>
             <?php else: ?>
-              <a class="btn btn--secondary btn--sm" href="<?= e(url('/materials/' . (int) $continue['content_id'] . '/file')) ?>"><?= e(t('Open')) ?><span class="sr-only">: <?= e($continue['title']) ?></span></a>
+              <a class="btn btn--secondary btn--sm" href="<?= e(url('/materials/' . (int) $continue['content_id'] . '/read')) ?>"><?= e(t('Open')) ?><span class="sr-only">: <?= e($continue['title']) ?></span></a>
               <?php if ($aiEnabled): ?>
                 <a class="btn btn--quiet btn--sm" href="<?= e(url('/companion/new', ['mode' => 'ask_materials', 'class_id' => (int) $continue['class_id'], 'material_id' => (int) $continue['content_id']])) ?>"><?= e(t('Ask about it')) ?></a>
               <?php endif; ?>

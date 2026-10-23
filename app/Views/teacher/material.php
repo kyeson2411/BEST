@@ -19,7 +19,7 @@ $working = in_array($status, ['uploaded', 'extracting', 'indexing'], true);
     <p class="page-lead"><?= e($material['class_name']) ?><?= $material['module_title'] ? ', ' . e($material['module_title']) : '' ?></p>
   </div>
   <div class="page-actions">
-    <?php if ($isFile): ?><a class="btn btn--secondary" href="<?= e(url('/materials/' . (int) $material['id'] . '/file')) ?>" target="_blank" rel="noopener"><?= icon('eye', 'icon--sm') ?><?= e(t('Open file')) ?></a>
+    <?php if ($isFile): ?><a class="btn btn--secondary" href="<?= e(url('/materials/' . (int) $material['id'] . '/read')) ?>" target="_blank" rel="noopener"><?= icon('eye', 'icon--sm') ?><?= e(t('Open file')) ?></a>
     <?php else: ?><a class="btn btn--secondary" href="<?= e((string) $material['url']) ?>" target="_blank" rel="noopener noreferrer"><?= icon('external-link', 'icon--sm') ?><?= e(t('Open link')) ?></a><?php endif; ?>
     <form method="post" action="<?= e(url('/teacher/materials/' . (int) $material['id'] . '/visibility')) ?>">
       <?= csrf_field() ?>

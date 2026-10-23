@@ -73,7 +73,7 @@ $published = $lesson['status'] === 'published';
           <p class="meta"><?= e(t('No cited sources.')) ?></p>
         <?php else: ?>
           <ol style="padding-left:1.2em; margin:0">
-            <?php foreach ($content['sources'] as $s): ?><li><?php if (!empty($s['material_id'])): ?><a href="<?= e(url('/materials/' . (int) $s['material_id'] . '/file')) ?>" target="_blank" rel="noopener"><?= e($s['title']) ?></a><?php else: ?><?= e($s['title']) ?><?php endif; ?><?= !empty($s['where']) ? ', ' . e($s['where']) : '' ?> <span class="meta">[<?= (int) $s['n'] ?>]</span></li><?php endforeach; ?>
+            <?php foreach ($content['sources'] as $s): ?><li><?php if (!empty($s['material_id'])): ?><a href="<?= e(url('/materials/' . (int) $s['material_id'] . '/read')) ?>" target="_blank" rel="noopener"><?= e($s['title']) ?></a><?php else: ?><?= e($s['title']) ?><?php endif; ?><?= !empty($s['where']) ? ', ' . e($s['where']) : '' ?> <span class="meta">[<?= (int) $s['n'] ?>]</span></li><?php endforeach; ?>
           </ol>
         <?php endif; ?>
       </section>

@@ -130,6 +130,15 @@ self.addEventListener('fetch', function (event) {
     return;
   }
 
+  // A material's reading page is never stored; with no connection it falls back to the kept file, if there is one.
+  var reading = /^(.*\/materials\/\d+)\/read$/.exec(url.pathname);
+  if (reading && request.mode === 'navigate') {
+    event.respondWith(fetch(request).catch(function () {
+      return caches.match(url.origin + reading[1] + '/file', { cacheName: KEPT }).then(function (hit) { return hit || offlinePage(); });
+    }));
+    return;
+  }
+
   // Any other page comes from the server, or is the offline page when there is no connection. A page in
   // another language than the stored offline page brings a fresh copy of it.
   if (request.mode === 'navigate') {

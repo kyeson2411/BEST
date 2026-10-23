@@ -14,17 +14,16 @@ use Sibol\Services\Materials;
 /** Every stored file is served through here, after an authorisation check. */
 final class FileController extends Controller
 {
+    /** Materials shown as a reading page, and the largest file shown that way (bigger ones open as files). */
+    private const READABLE = ['md', 'txt'];
+    private const READ_LIMIT = 1000000;
+
     public function material(int $id): Response
     {
         $user = $this->user();
+        $material = $this->accessibleMaterial($user, $id);
         if ($user['role'] === 'student') {
-            $material = Access::studentMaterial($user, $id);
             Materials::recordView((int) $user['id'], 'material', $id, (int) $material['class_id']);
-        } elseif ($user['role'] === 'teacher') {
-            $material = Access::teacherMaterial($user, $id);
-        } else {
-            // Administrators manage operations, not class content.
-            throw HttpException::notFound();
         }
         if ($material['kind'] === 'link') {
             return Response::redirect((string) $material['url'], 302);
@@ -39,6 +38,56 @@ final class FileController extends Controller
             throw HttpException::notFound();
         }
         return $this->serve((string) $version['stored_path'], (string) $version['original_filename'], (string) $version['extension']);
+    }
+
+    /**
+     * A text material (.md or .txt) as a page to read inside Sibol. Every other kind of material opens as the
+     * file itself, and the file stays at /file for downloads and offline copies.
+     */
+    public function read(int $id): Response
+    {
+        $user = $this->user();
+        $material = $this->accessibleMaterial($user, $id);
+        $version = $material['kind'] === 'file'
+            ? Db::one('SELECT * FROM material_versions WHERE id = :v', ['v' => (int) $material['current_version_id']])
+            : null;
+        $absolute = $version ? Uploads::absolute((string) $version['stored_path']) : '';
+        if (!$version || !in_array($version['extension'], self::READABLE, true) || !is_file($absolute) || filesize($absolute) > self::READ_LIMIT) {
+            return $this->redirect('/materials/' . $id . '/file');
+        }
+        if ($user['role'] === 'student') {
+            Materials::recordView((int) $user['id'], 'material', $id, (int) $material['class_id']);
+        }
+        $text = (string) file_get_contents($absolute);
+        if (!mb_check_encoding($text, 'UTF-8')) {
+            $text = mb_convert_encoding($text, 'UTF-8', 'Windows-1252');
+        }
+        $text = str_replace(["\r\n", "\r"], "\n", preg_replace('/^\xEF\xBB\xBF/', '', $text) ?? $text);
+        if ($version['extension'] === 'md') {
+            // The page title already names the material, so a first heading that repeats it is left out.
+            if (preg_match('/^\s*#\s+(.+)\n/u', $text, $m) && mb_strtolower(trim($m[1])) === mb_strtolower(trim((string) $material['title']))) {
+                $text = (string) mb_substr($text, mb_strlen($m[0]));
+            }
+            // With no top heading left, "##" sections become the page's second-level headings.
+            if (!preg_match('/^#\s/m', $text)) {
+                $text = (string) preg_replace('/^#(#+\s)/m', '$1', $text);
+            }
+        }
+        $class = Db::one('SELECT id, name FROM classes WHERE id = :c', ['c' => (int) $material['class_id']]);
+        $crumbs = $user['role'] === 'student'
+            ? [[t('Classes'), '/student/classes'], [$class['name'], '/student/classes/' . (int) $class['id'] . '?tab=materials'], [$material['title'], null]]
+            : [[t('Materials'), '/teacher/materials'], [$material['title'], '/teacher/materials/' . $id], [t('Read'), null]];
+        return $this->view('materials/read', [
+            'title' => $material['title'],
+            'crumbs' => $crumbs,
+            'material' => $material,
+            'version' => $version,
+            'class' => $class,
+            'text' => $text,
+            'isMarkdown' => $version['extension'] === 'md',
+            'isStudent' => $user['role'] === 'student',
+            'katex' => true,
+        ]);
     }
 
     public function submissionFile(int $id): Response
@@ -85,6 +134,19 @@ final class FileController extends Controller
         }
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
         return $this->serve($path, 'logo.' . $ext, $ext, true)->header('Cache-Control', 'private, max-age=3600');
+    }
+
+    /** @return array<string,mixed> */
+    private function accessibleMaterial(array $user, int $id): array
+    {
+        if ($user['role'] === 'student') {
+            return Access::studentMaterial($user, $id);
+        }
+        if ($user['role'] === 'teacher') {
+            return Access::teacherMaterial($user, $id);
+        }
+        // Administrators manage operations, not class content.
+        throw HttpException::notFound();
     }
 
     private function serve(string $relative, string $name, string $ext, bool $forceInline = false): Response

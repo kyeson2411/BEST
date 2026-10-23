@@ -128,6 +128,7 @@ $router->group('', ['auth', 'notices'], static function ($r): void {
     $r->get('/avatars/{id}', [FileController::class, 'avatar']);
     $r->get('/school-logo', [FileController::class, 'logo']);
     $r->get('/materials/{id}/file', [FileController::class, 'material']);
+    $r->get('/materials/{id}/read', [FileController::class, 'read']);
     $r->get('/submission-files/{id}', [FileController::class, 'submissionFile']);
 
     // The learning companion serves students and teachers with role-specific modes.

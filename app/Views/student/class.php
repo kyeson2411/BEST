@@ -32,7 +32,7 @@ $materialRow = static function (array $m) use ($aiEnabled, $class): string {
         <?php if ($m['kind'] === 'link'): ?>
           <a class="row__title" href="<?= e(url('/materials/' . (int) $m['id'] . '/file')) ?>" target="_blank" rel="noopener noreferrer"><?= e($m['title']) ?> <?= icon('external-link', 'icon--xs', t('opens a new tab')) ?></a>
         <?php else: ?>
-          <a class="row__title" href="<?= e(url('/materials/' . (int) $m['id'] . '/file')) ?>"><?= e($m['title']) ?></a>
+          <a class="row__title" href="<?= e(url('/materials/' . (int) $m['id'] . '/read')) ?>"><?= e($m['title']) ?></a>
         <?php endif; ?>
         <?php if ($m['description']): ?><p class="muted" style="margin:2px 0 0; font-size:.9375rem"><?= e($m['description']) ?></p><?php endif; ?>
         <div class="row__meta">
