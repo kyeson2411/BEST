@@ -16,6 +16,14 @@ use Sibol\Policies\Access;
  */
 final class Generators
 {
+    /** LaTeX commands that start with "\n" (\neq, \nu, \nabla, …): mendEscapes() never reads them as line breaks. */
+    private const LATEX_N = [
+        'nabla', 'natural', 'ncong', 'ne', 'nearrow', 'neg', 'neq', 'newline', 'nexists', 'ngeq', 'ngeqq', 'ngeqslant', 'ngtr', 'ni',
+        'nleftarrow', 'nLeftarrow', 'nleftrightarrow', 'nLeftrightarrow', 'nleq', 'nleqq', 'nleqslant', 'nless', 'nmid', 'nolimits',
+        'nonumber', 'not', 'notag', 'notin', 'notni', 'nparallel', 'nprec', 'npreceq', 'nrightarrow', 'nRightarrow', 'nsim',
+        'nsubseteq', 'nsucc', 'nsucceq', 'nsupseteq', 'ntriangleleft', 'ntriangleright', 'nu', 'nvdash', 'nVdash', 'nwarrow',
+    ];
+
     // ------------------------------------------------------------------ sources
 
     /**
@@ -340,7 +348,10 @@ final class Generators
         throw new AiException('invalid_output', t('The AI service returned something B.E.S.T. Learning and Interactive Study System could not read. Try again.'), true);
     }
 
-    /** @return array<string,mixed>|null */
+    /**
+     * The model's JSON answer, with twice-escaped text mended (see mendEscapes).
+     * @return array<string,mixed>|null
+     */
     public static function parseJson(string $text): ?array
     {
         $text = trim($text);
@@ -351,7 +362,59 @@ final class Generators
             return null;
         }
         $decoded = json_decode(substr($text, $start, $end - $start + 1), true);
-        return is_array($decoded) ? $decoded : null;
+        if (!is_array($decoded)) {
+            return null;
+        }
+        array_walk_recursive($decoded, static function (&$value): void {
+            if (is_string($value)) {
+                $value = self::mendEscapes($value);
+            }
+        });
+        return $decoded;
+    }
+
+    /**
+     * Some models escape their JSON twice (Groq's gpt-oss does at times), so a decoded string holds the two
+     * characters "\n" where a line break was meant, \" for a quote, or a stray "\" at the end of a line.
+     * Students and teachers would see those marks, so they are mended. Code and maths stay as written
+     * (\neq and \nu are LaTeX), and a string with no clearly broken line break keeps its "\n".
+     */
+    private static function mendEscapes(string $text): string
+    {
+        if (!str_contains($text, '\\')) {
+            return $text;
+        }
+        // Even parts are text; odd parts are code (fenced with real line breaks, or inline) and maths.
+        $parts = preg_split('/(```[^`\n]*\n.*?\n```|`[^`\n]+`|\\\\\(.*?\\\\\)|\\\\\[.*?\\\\\]|\$\$.*?\$\$)/s', $text, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$text];
+        // A "\n" that is not LaTeX and comes before a capital, a digit, a mark or nothing is a broken line break.
+        $broken = false;
+        foreach ($parts as $i => $part) {
+            if ($i % 2 === 1 && $part[0] === '`') {
+                continue;
+            }
+            preg_match_all('/(?<!\\\\)\\\\(n[a-zA-Z]*)/', $part, $m);
+            foreach ($m[1] as $word) {
+                if (!in_array($word, self::LATEX_N, true) && !ctype_lower(substr($word, 1, 1))) {
+                    $broken = true;
+                    break 2;
+                }
+            }
+        }
+        foreach ($parts as $i => $part) {
+            if ($i % 2 === 1) {
+                // Inside maths a "\n" before a letter is a LaTeX command; code is never changed.
+                if ($broken && $part[0] !== '`') {
+                    $parts[$i] = preg_replace('/(?<!\\\\)\\\\n(?![a-zA-Z])/', "\n", $part) ?? $part;
+                }
+                continue;
+            }
+            if ($broken) {
+                $part = preg_replace_callback('/(?<!\\\\)\\\\(n[a-zA-Z]*)/', static fn (array $m): string => in_array($m[1], self::LATEX_N, true) ? $m[0] : "\n" . substr($m[1], 1), $part) ?? $part;
+            }
+            // A lone "\" before a line break is a Markdown hard break; Sibol already breaks the line there.
+            $parts[$i] = preg_replace(['/(?<!\\\\)\\\\"/', '/(?<!\\\\)\\\\[ \t]*(?=\n)/'], ['"', ''], $part) ?? $part;
+        }
+        return implode('', $parts);
     }
 
     private static function sourceRef(array $sources, int $n): ?string
