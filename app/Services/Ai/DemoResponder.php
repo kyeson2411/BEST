@@ -90,6 +90,9 @@ final class DemoResponder
                 $lines[] = t('Try this: cover the list, then write the main idea of each part from memory.');
                 return implode("\n", $lines);
 
+            case 'explain_back':
+                return $label . "\n\n" . self::explainBack($question, $sources);
+
             case 'socratic':
                 $best = $sources[0];
                 $quote = Citations::excerpt((string) $best['content'], Retrieval::expandedQuery($question));
@@ -109,6 +112,56 @@ final class DemoResponder
         $lines[] = $user['role'] === 'teacher'
             ? t('With an AI provider connected, B.E.S.T. Learning and Interactive Study System would draft from these passages for you to review.')
             : t('Next step: read the passages, then explain the idea in your own words. Ask your teacher if something is still unclear.');
+        return implode("\n", $lines);
+    }
+
+    /**
+     * "Explain it back" without a model: which key terms of the closest passages the student's explanation uses and
+     * which it leaves out, each missing one quoted with its source. Key words only: it cannot judge whether the
+     * sentences are right, and says so.
+     */
+    private static function explainBack(string $explanation, array $sources): string
+    {
+        $said = Retrieval::keywords(Retrieval::cleanQuery($explanation));
+        if (count($said) < 4) {
+            return t('Now explain it in your own words, as if to a classmate: what is it, and how does it work? Then I will compare your explanation with your class materials.');
+        }
+        $counts = [];
+        $where = [];
+        foreach (array_slice($sources, 0, 2) as $s) {
+            foreach (array_slice(self::sentences((string) $s['content']), 0, 5) as $sentence) {
+                foreach (Retrieval::keywords($sentence) as $word) {
+                    if (mb_strlen($word) < 5 || in_array($word, self::STOP, true)) {
+                        continue;
+                    }
+                    $counts[$word] = ($counts[$word] ?? 0) + 1;
+                    $where[$word] = $where[$word] ?? ['sentence' => $sentence, 'n' => (int) $s['n']];
+                }
+            }
+        }
+        arsort($counts);
+        $terms = array_slice(array_keys($counts), 0, 6);
+        $used = array_values(array_filter($terms, static fn (string $t): bool => Retrieval::coverage($explanation, [$t]) > 0));
+        $missing = array_values(array_diff($terms, $used));
+
+        $lines = [];
+        $lines[] = $used
+            ? '**' . t('Matches your class materials:') . '** ' . t('you used :terms.', ['terms' => implode(', ', array_map(static fn ($t) => '*' . $t . '*', $used))])
+            : '**' . t('Matches your class materials:') . '** ' . t('none of the main terms of the closest passages appear in your explanation yet.');
+        if ($missing) {
+            $lines[] = '';
+            $lines[] = '**' . t('Not in your explanation yet:') . '**';
+            foreach (array_slice($missing, 0, 3) as $term) {
+                $lines[] = '- *' . $term . '*: “' . Citations::excerpt($where[$term]['sentence'], $term) . '” [' . $where[$term]['n'] . ']';
+            }
+            $lines[] = '';
+            $lines[] = t('Try again: explain how :term fits into your explanation, in your own words. What does it change?', ['term' => '*' . $missing[0] . '*']);
+        } else {
+            $lines[] = '';
+            $lines[] = t('Your explanation uses the main terms of the passages. Can you add an example from everyday life?');
+        }
+        $lines[] = '';
+        $lines[] = '*' . t('Demo mode compares key words only, so it cannot tell whether your sentences are correct. Check them against the passages.') . '*';
         return implode("\n", $lines);
     }
 

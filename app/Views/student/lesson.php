@@ -19,14 +19,15 @@ foreach ((array) ($content['sources'] ?? []) as $s) {
     <h1 class="page-title"><?= e($lesson['title']) ?></h1>
     <p class="page-lead"><?= e($class['name']) ?><?php if ($lesson['duration_minutes']): ?>, <?= e(t(':n minutes', ['n' => (int) $lesson['duration_minutes']])) ?><?php endif; ?></p>
   </div>
-  <?php if (my_ai_on()): ?>
-    <div class="page-actions">
+  <div class="page-actions">
+    <?= listen_button('#lesson-text', implode("\n", array_map('strval', array_intersect_key($content, $sections))), 'btn btn--secondary') ?>
+    <?php if (my_ai_on()): ?>
       <a class="btn btn--secondary" href="<?= e(url('/companion/new', ['class_id' => (int) $class['id'], 'mode' => 'explain', 'topic' => $lesson['title']])) ?>"><?= icon('messages-square') ?><?= e(t('Ask the companion about this lesson')) ?></a>
-    </div>
-  <?php endif; ?>
+    <?php endif; ?>
+  </div>
 </div>
 
-<article class="prose">
+<article class="prose" id="lesson-text">
   <?php foreach ($sections as $key => $heading): if (trim((string) ($content[$key] ?? '')) === '') { continue; } ?>
     <section>
       <h2><?= e($heading) ?></h2>

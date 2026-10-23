@@ -83,7 +83,8 @@ final class ClassController extends Controller
         $materials = Db::all(
             "SELECT m.*, mv.extension, mv.size_bytes, mv.processing_status, mv.page_count,
                     u.given_name AS by_given, u.family_name AS by_family, u.preferred_name AS by_preferred,
-                    (SELECT COUNT(*) FROM content_views v WHERE v.user_id = :u AND v.content_type = 'material' AND v.content_id = m.id) AS seen
+                    (SELECT COUNT(*) FROM content_views v WHERE v.user_id = :u AND v.content_type = 'material' AND v.content_id = m.id) AS seen,
+                    (SELECT GROUP_CONCAT(rv.kind) FROM reading_versions rv WHERE rv.material_id = m.id AND rv.status = 'approved') AS reading_kinds
              FROM learning_materials m
              LEFT JOIN material_versions mv ON mv.id = m.current_version_id
              LEFT JOIN users u ON u.id = m.created_by

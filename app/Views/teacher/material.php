@@ -115,6 +115,21 @@ $working = in_array($status, ['uploaded', 'extracting', 'indexing'], true);
     </section>
     <?= partial('copy_to_sections', $copyPanel) ?>
     <?php if ($isFile): ?>
+      <section class="panel" aria-labelledby="rv-title">
+        <h2 class="panel__title" id="rv-title"><?= e(t('Other reading versions')) ?></h2>
+        <p class="meta"><?= e(t('Students who need it can open the same material in simpler English or in Filipino, beside the original. You check each version before they see it.')) ?></p>
+        <ul class="rows">
+          <?php foreach (\Sibol\Services\ReadingVersions::KINDS as $kind): $rv = $readingVersions[$kind] ?? null; ?>
+            <li class="row" style="padding:8px 0">
+              <div class="row__main">
+                <a class="row__title" href="<?= e(url('/teacher/materials/' . (int) $material['id'] . '/reading/' . $kind)) ?>"><?= e(\Sibol\Services\ReadingVersions::label($kind)) ?></a>
+                <div class="row__meta"><span><?= e($rv === null ? t('Not made yet') : ($rv['status'] === 'approved' ? t('Shown to students') : t('Draft'))) ?></span></div>
+              </div>
+              <?php if ($rv !== null && $rv['status'] === 'approved'): ?><span class="row__aside"><?= badge(t('Shown'), 'leaf') ?></span><?php endif; ?>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      </section>
       <section class="panel" aria-labelledby="ver-title">
         <h2 class="panel__title" id="ver-title"><?= e(t('Versions')) ?></h2>
         <ul class="rows">

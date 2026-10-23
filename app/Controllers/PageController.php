@@ -101,7 +101,7 @@ final class PageController extends Controller
      */
     public function offline(): Response
     {
-        return $this->view('pages/offline', ['title' => t('You are offline'), 'offline_page' => true, 'scripts' => ['offline.js']], 'layouts/bare');
+        return $this->view('pages/offline', ['title' => t('You are offline'), 'offline_page' => true, 'scripts' => ['offline.js', 'practice-offline.js']], 'layouts/bare');
     }
 
     /** Full navigation for small screens without JavaScript. */

@@ -19,6 +19,7 @@ $h = $headingTag ?? 'h2';
     <li><?= e(t('Changes your teachers make to your deadlines: your own due date, extra time on a quiz, being excused, or being marked absent for work done in class. No reason is recorded.')) ?></li>
     <li><?= e(t('While you take a quiz, answers that have not reached B.E.S.T. Learning and Interactive Study System yet are kept in that browser tab only, and removed once they arrive, when you submit, or when you sign out.')) ?></li>
     <li><?= e(t('Your own study activity: which materials you opened, practice sets, flashcards and study sessions you planned.')) ?></li>
+    <li><?= e(t('Practice sets you keep for offline practice, with their answers and any results not sent yet, stay in that browser on that device until you sign out.')) ?></li>
     <li><?= e(t('Your companion conversations: the questions you ask and the answers, with the sources they cite.')) ?></li>
     <li><?= e(t('When you read and accepted this notice and the rules for using B.E.S.T. Learning and Interactive Study System; whether the AI companion is switched on for you; and, if your school recorded one, your parent\'s or guardian\'s yes or no about the AI companion with its date. No signed forms are stored in B.E.S.T. Learning and Interactive Study System.')) ?></li>
     <li><?= e(t('Security records: when you signed in and important changes, with a scrambled network identifier. Passwords are stored only as one-way hashes.')) ?></li>

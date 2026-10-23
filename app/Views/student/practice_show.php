@@ -19,6 +19,9 @@ $sourceLine = static function (?array $ref): string {
     <form method="post" action="<?= e(url('/student/learning/' . (int) $set['id'] . '/delete')) ?>" data-confirm="<?= e(t('This practice set and its results will be removed.')) ?>" data-confirm-title="<?= e(t('Delete practice set?')) ?>" data-confirm-action="<?= e(t('Delete')) ?>" data-confirm-tone="danger">
       <?= csrf_field() ?><button class="btn btn--danger-quiet" type="submit"><?= icon('trash-2', 'icon--sm') ?><?= e(t('Delete')) ?></button>
     </form>
+    <?php /* Shown by practice-offline.js where the browser can keep it. */ ?>
+    <button type="button" class="btn btn--secondary" hidden aria-pressed="false" data-pack-save="<?= e(url('/student/learning/' . (int) $set['id'] . '/pack')) ?>" data-pack-id="<?= (int) $set['id'] ?>"
+            data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::practiceOffline()) ?>"><?= icon('wifi-off', 'icon--sm') ?><span data-pack-label><?= e(t('Keep for offline practice')) ?></span></button>
   </div>
 </div>
 

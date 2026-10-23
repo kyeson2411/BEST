@@ -16,6 +16,7 @@ use Sibol\Policies\Access;
 use Sibol\Repositories\TeacherRepo;
 use Sibol\Services\Ingestion;
 use Sibol\Services\Materials;
+use Sibol\Services\ReadingVersions;
 use Sibol\Services\SectionCopies;
 
 final class MaterialController extends Controller
@@ -170,6 +171,7 @@ final class MaterialController extends Controller
             'students' => (int) Db::value("SELECT COUNT(*) FROM class_memberships WHERE class_id = :c AND role = 'student' AND status = 'active'", ['c' => (int) $material['class_id']]),
             'maxMb' => (int) round(Uploads::maxBytes() / 1048576),
             'copyPanel' => SectionCopies::panel($user, 'material', $material),
+            'readingVersions' => ReadingVersions::forMaterial($id),
             'scripts' => ['materials.js'],
         ]);
     }

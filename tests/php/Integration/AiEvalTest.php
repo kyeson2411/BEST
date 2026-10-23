@@ -56,7 +56,7 @@ final class AiEvalTest extends IntegrationTestCase
 
         $failures = array_map(static fn ($r) => $r['id'] . ': ' . implode('; ', $r['failures']), array_filter($summary['results'], static fn ($r) => !$r['passed']));
         self::assertSame([], array_values($failures));
-        self::assertCount(34, $summary['results']);
+        self::assertCount(35, $summary['results']);
         self::assertSame(count(Cases::all()), $summary['passed']);
         self::assertTrue($summary['demo']);
         self::assertSame(0, $summary['input'] + $summary['output']);
@@ -74,7 +74,7 @@ final class AiEvalTest extends IntegrationTestCase
         self::assertSame($auditBefore + 1, (int) Db::value("SELECT COUNT(*) FROM audit_logs WHERE action = 'ai.eval_run'"));
         $meta = json_decode((string) Db::value("SELECT metadata FROM audit_logs WHERE action = 'ai.eval_run' ORDER BY id DESC LIMIT 1"), true);
         self::assertSame(['organization_id', 'provider', 'model', 'cases', 'passed', 'failed', 'input', 'output', 'cost_usd'], array_keys($meta));
-        self::assertSame(34, $meta['passed']);
+        self::assertSame(35, $meta['passed']);
     }
 
     public function testAModelThatBreaksTheRulesFailsAndItsTokensAreCosted(): void
@@ -115,12 +115,12 @@ final class AiEvalTest extends IntegrationTestCase
         foreach (['E01', 'E02', 'E03', 'E04'] as $id) {
             self::assertTrue($results[$id]['passed'], $id . ': ' . implode('; ', $results[$id]['failures']));
         }
-        self::assertSame(30, $summary['failed']);
+        self::assertSame(31, $summary['failed']);
 
-        // 30 cases reach the provider; the limit and refusal cases do not.
-        self::assertSame(30000, $summary['input']);
-        self::assertSame(6000, $summary['output']);
-        self::assertEqualsWithDelta(30 * (1000 * 4.00 + 200 * 20.00) / 1000000, $summary['cost'], 0.000001);
+        // 31 cases reach the provider; the limit and refusal cases do not.
+        self::assertSame(31000, $summary['input']);
+        self::assertSame(6200, $summary['output']);
+        self::assertEqualsWithDelta(31 * (1000 * 4.00 + 200 * 20.00) / 1000000, $summary['cost'], 0.000001);
         self::assertSame(0, (int) Db::value("SELECT COUNT(*) FROM ai_conversations WHERE title LIKE 'AI check %'"));
     }
 

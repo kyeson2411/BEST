@@ -24,7 +24,7 @@ foreach ($conversations as $c) {
     $key = $showArchived ? t('Archived') : ($c['last_message_at'] >= $todayStart ? t('Today') : ($c['last_message_at'] >= $weekStart ? t('This week') : t('Earlier')));
     $groups[$key][] = $c;
 }
-$modeIcons = ['explain' => 'lightbulb', 'socratic' => 'list-ordered', 'practice' => 'list-checks', 'flashcards' => 'layers', 'summarize' => 'file-text', 'study_plan' => 'calendar-plus', 'vocabulary' => 'languages', 'ask_materials' => 'quote',
+$modeIcons = ['explain' => 'lightbulb', 'explain_back' => 'message-square-quote', 'socratic' => 'list-ordered', 'practice' => 'list-checks', 'flashcards' => 'layers', 'summarize' => 'file-text', 'study_plan' => 'calendar-plus', 'vocabulary' => 'languages', 'ask_materials' => 'quote',
     'lesson_ideas' => 'notebook-pen', 'explain_for_class' => 'school', 'examples' => 'list-ordered', 'differentiate' => 'shuffle', 'feedback_helper' => 'message-circle'];
 ?>
 <div class="companion" data-companion data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::companion()) ?>">

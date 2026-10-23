@@ -29,6 +29,10 @@ final class ScriptStrings
             'notifications_failed' => t('Notifications could not load. Open the full list instead.'),
             'notifications' => t('Notifications'),
             'notifications_unread' => [t('Notifications, :count unread'), t('Notifications, :count unread')],
+            'read_listen' => t('Listen'),
+            'read_stop' => t('Stop'),
+            'read_no_filipino' => t('This device has no Filipino voice, so it reads with its default voice.'),
+            'pack_sent' => [t('Your offline practice result was sent.'), t(':count offline practice results were sent.')],
         ];
     }
 
@@ -47,6 +51,34 @@ final class ScriptStrings
             'restored' => t('Answers you gave earlier on this device were restored and are being sent.'),
             'submit_offline' => t('You are offline, so the quiz was not submitted yet. Your answers are kept on this device. Submit again when you are back online.'),
             'time_up_offline' => t('Time is up. Reconnect to finish: the quiz will be submitted with the answers that reached the server in time.'),
+        ];
+    }
+
+    /** practice-offline.js: practice sets kept on the device, and practising them on the offline page. */
+    public static function practiceOffline(): array
+    {
+        return [
+            'keep' => t('Keep for offline practice'),
+            'kept' => t('Kept on this device'),
+            'keep_failed' => t('This practice set could not be kept. Try again with a connection.'),
+            'kept_done' => t('Kept. Open it from the offline page when there is no connection.'),
+            'released' => t('Removed from this device.'),
+            'start' => t('Practise'),
+            'quiz' => t('Quiz'),
+            'cards' => t('Flashcards'),
+            'waiting' => t('Result waiting to be sent'),
+            'items' => [t(':count item'), t(':count items')],
+            'check' => t('Check my answers'),
+            'your_answer' => t('Your answer'),
+            'correct' => t('Correct'),
+            'wrong' => t('Not quite'),
+            'answer' => t('Answer: :a'),
+            'score' => t('You got :score of :total. Your result is sent when you are back online.'),
+            'show_back' => t('Show the answer'),
+            'knew' => t('I knew this card'),
+            'save_cards' => t('Save my results'),
+            'cards_saved' => t('You knew :score of :total cards. Your result is sent when you are back online.'),
+            'back' => t('Back to the list'),
         ];
     }
 

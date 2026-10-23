@@ -46,6 +46,12 @@ $materialRow = static function (array $m) use ($aiEnabled, $class): string {
             <span class="status-line"><?= icon('quote', 'icon--xs') ?><?= e(t('The companion can cite this')) ?></span>
           <?php endif; ?>
         </div>
+        <?php $readingKinds = array_values(array_intersect(\Sibol\Services\ReadingVersions::KINDS, explode(',', (string) ($m['reading_kinds'] ?? '')))); ?>
+        <?php if ($readingKinds): ?>
+          <div class="row__meta"><span><?= icon('languages', 'icon--xs') ?> <?= e(t('Also in:')) ?>
+            <?php foreach ($readingKinds as $i => $k): ?><?= $i ? ' · ' : '' ?><a href="<?= e(url('/materials/' . (int) $m['id'] . '/read', ['v' => $k])) ?>"><?= e(\Sibol\Services\ReadingVersions::label($k)) ?></a><?php endforeach; ?>
+          </span></div>
+        <?php endif; ?>
       </div>
       <div class="row__aside">
         <?php if (!(int) $m['seen']): ?><?= badge(t('New'), 'leaf') ?><?php endif; ?>

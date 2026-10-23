@@ -44,6 +44,7 @@ $isStudent = $user['role'] === 'student';
   <div class="msg__actions">
     <?php if ($message['status'] !== 'error'): ?>
       <button type="button" class="btn btn--quiet" data-copy-message="#m-<?= $id ?> .msg__body"><?= icon('copy', 'icon--xs') ?><?= e(t('Copy')) ?></button>
+      <?= listen_button('#m-' . $id . ' .msg__body', (string) $message['display']) ?>
     <?php endif; ?>
     <?php if ($isLast): ?>
       <button type="button" class="btn btn--quiet" data-regenerate><?= icon('refresh-cw', 'icon--xs') ?><?= e($message['status'] === 'complete' ? t('Try again') : t('Retry')) ?></button>

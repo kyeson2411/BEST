@@ -48,7 +48,7 @@ const icons = [
   'copy', 'flag', 'share-2', 'lightbulb', 'list-ordered', 'quote', 'key-round', 'mail', 'gauge', 'activity',
   'bookmark', 'ellipsis', 'megaphone', 'inbox', 'history', 'languages', 'pen-line', 'square-pen', 'circle-dot',
   'play', 'panel-right', 'sliders-horizontal', 'database', 'plug', 'file-spreadsheet', 'table', 'target',
-  'book-marked', 'layout-dashboard', 'hand-helping', 'repeat', 'shuffle', 'circle-x', 'list', 'type', 'pause',
+  'book-marked', 'layout-dashboard', 'hand-helping', 'repeat', 'shuffle', 'message-square-quote', 'volume-2', 'circle-x', 'list', 'type', 'pause',
   'chevrons-up-down', 'move-up', 'move-down', 'paperclip', 'save', 'send-horizontal', 'undo-2', 'wifi-off',
   'printer', 'scissors', 'book-user', 'clipboard-pen', 'message-square-text', 'message-square-reply',
 ];

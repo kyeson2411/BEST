@@ -60,6 +60,8 @@ final class Prompts
         switch ($mode) {
             case 'explain':
                 return 'Mode: explain. Explain the topic clearly with one everyday example or analogy.' . $levelText . ' End with one short question that checks understanding.';
+            case 'explain_back':
+                return 'Mode: explain it back. The student is explaining a topic in their own words to check their understanding; this is practice, never a grade. Judge the explanation only against the provided sources. Reply in three short parts: what the student got right (in a few of their own words), what is missing or incorrect, each point with the citation [n] of the passage that shows it, and one question inviting them to explain the missing part. Do not rewrite the whole explanation for them and do not give a score. If the message names only a topic and explains nothing yet, ask them to explain it in their own words first. If the sources do not cover the topic, say so.';
             case 'socratic':
                 return 'Mode: guided steps. Ask one question at a time and wait for the answer. If the student is stuck, give a small hint, then a bigger hint. Show a complete worked solution only after the student has made at least two genuine attempts, or asks for it after trying, and then explain each step. If the problem looks like graded work, guide with a similar example instead.';
             case 'practice':

@@ -153,8 +153,29 @@ final class PracticeController extends Controller
             'items' => json_decode((string) $set['items'], true) ?: [],
             'results' => json_decode((string) ($set['results'] ?? ''), true) ?: null,
             'katex' => true,
-            'scripts' => ['practice.js'],
+            'scripts' => ['practice.js', 'practice-offline.js'],
         ]);
+    }
+
+    /**
+     * The set as a pack to practise on this device without a connection (practice-offline.js): questions with
+     * their answers, or cards. Results come back later through saveResults(), like answers given online.
+     */
+    public function pack(int $id): Response
+    {
+        $set = $this->own($this->user(), $id);
+        $items = [];
+        foreach (json_decode((string) $set['items'], true) ?: [] as $item) {
+            $items[] = $set['kind'] === 'quiz'
+                ? ['type' => ($item['type'] ?? 'mcq') === 'mcq' ? 'mcq' : 'short', 'question' => (string) $item['question'],
+                   'choices' => array_values(array_map('strval', (array) ($item['choices'] ?? []))), 'answer' => (int) ($item['answer'] ?? 0),
+                   'answer_text' => (string) ($item['answer_text'] ?? ''), 'explanation' => (string) ($item['explanation'] ?? '')]
+                : ['front' => (string) $item['front'], 'back' => (string) $item['back']];
+        }
+        return $this->json([
+            'id' => (int) $set['id'], 'kind' => $set['kind'], 'title' => (string) $set['title'],
+            'place' => (string) ($set['class_name'] ?? ''), 'items' => $items,
+        ])->header('Cache-Control', 'no-store');
     }
 
     public function saveResults(int $id): Response

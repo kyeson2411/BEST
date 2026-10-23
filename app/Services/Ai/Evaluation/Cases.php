@@ -74,6 +74,9 @@ final class Cases
                 'Summarise these notes for me.', ['citations' => 3], ['material' => self::BREATHING]),
             $student('A08', 'grounded', 'Practice on the discriminant: asks a question', self::MATH, 'practice',
                 'Quiz me on the discriminant.', ['asks' => true]),
+            $student('A09', 'grounded', 'Explain it back: checks the explanation against the notes and asks again', self::SCIENCE, 'explain_back',
+                'Gas exchange in the lungs: the alveoli have very thin walls, so oxygen passes into the blood quickly and carbon dioxide passes out.',
+                ['cites' => [self::BREATHING, 'alveoli'], 'asks' => true]),
 
             $student('B01', 'uncovered', 'Earthquakes in Science: not in the notes', self::SCIENCE, 'explain',
                 'What causes earthquakes?', ['covered' => false]),

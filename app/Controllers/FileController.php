@@ -10,6 +10,7 @@ use Sibol\Core\Response;
 use Sibol\Core\Uploads;
 use Sibol\Policies\Access;
 use Sibol\Services\Materials;
+use Sibol\Services\ReadingVersions;
 
 /** Every stored file is served through here, after an authorisation check. */
 final class FileController extends Controller
@@ -41,8 +42,9 @@ final class FileController extends Controller
     }
 
     /**
-     * A text material (.md or .txt) as a page to read inside Sibol. Every other kind of material opens as the
-     * file itself, and the file stays at /file for downloads and offline copies.
+     * A text material (.md or .txt) as a page to read inside Sibol, or one of its other reading versions (?v=simpler,
+     * ?v=filipino) for any material: approved ones for students, drafts too for teachers, as a preview. Without
+     * either, the material opens as the file itself; the file stays at /file for downloads and offline copies.
      */
     public function read(int $id): Response
     {
@@ -52,18 +54,23 @@ final class FileController extends Controller
             ? Db::one('SELECT * FROM material_versions WHERE id = :v', ['v' => (int) $material['current_version_id']])
             : null;
         $absolute = $version ? Uploads::absolute((string) $version['stored_path']) : '';
-        if (!$version || !in_array($version['extension'], self::READABLE, true) || !is_file($absolute) || filesize($absolute) > self::READ_LIMIT) {
+        $readableOriginal = $version && in_array($version['extension'], self::READABLE, true) && is_file($absolute) && filesize($absolute) <= self::READ_LIMIT;
+        $isStudent = $user['role'] === 'student';
+        $kinds = $version ? ($isStudent ? ReadingVersions::approvedKinds($id) : array_values(array_intersect(ReadingVersions::KINDS, array_keys(ReadingVersions::forMaterial($id))))) : [];
+        $asked = $this->request->str('v');
+        $reading = in_array($asked, $kinds, true) ? ReadingVersions::forMaterial($id)[$asked] : null;
+        if ($reading === null && !$readableOriginal) {
             return $this->redirect('/materials/' . $id . '/file');
         }
-        if ($user['role'] === 'student') {
+        if ($isStudent) {
             Materials::recordView((int) $user['id'], 'material', $id, (int) $material['class_id']);
         }
-        $text = (string) file_get_contents($absolute);
+        $text = $reading !== null ? (string) $reading['content'] : (string) file_get_contents($absolute);
         if (!mb_check_encoding($text, 'UTF-8')) {
             $text = mb_convert_encoding($text, 'UTF-8', 'Windows-1252');
         }
         $text = str_replace(["\r\n", "\r"], "\n", preg_replace('/^\xEF\xBB\xBF/', '', $text) ?? $text);
-        if ($version['extension'] === 'md') {
+        if ($reading !== null || $version['extension'] === 'md') {
             // The page title already names the material, so a first heading that repeats it is left out.
             if (preg_match('/^\s*#\s+(.+)\n/u', $text, $m) && mb_strtolower(trim($m[1])) === mb_strtolower(trim((string) $material['title']))) {
                 $text = (string) mb_substr($text, mb_strlen($m[0]));
@@ -84,8 +91,11 @@ final class FileController extends Controller
             'version' => $version,
             'class' => $class,
             'text' => $text,
-            'isMarkdown' => $version['extension'] === 'md',
-            'isStudent' => $user['role'] === 'student',
+            'isMarkdown' => $reading !== null || $version['extension'] === 'md',
+            'isStudent' => $isStudent,
+            'kinds' => $kinds,
+            'reading' => $reading,
+            'readableOriginal' => $readableOriginal,
             'katex' => true,
         ]);
     }

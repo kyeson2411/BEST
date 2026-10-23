@@ -63,10 +63,10 @@ test('after the administrator asks again, students accept the new edition', asyn
     await demoLogin(andrea, 'student'); // signed in before the change
     await demoLogin(page, 'admin');
     await page.goto('admin/policies');
-    await expect(page.locator('#notices')).toContainText('Privacy notice 2026.10.2-1, rules 2026.10-1');
+    await expect(page.locator('#notices')).toContainText('Privacy notice 2026.10.3-1, rules 2026.10-1');
     await confirmClick(page, page.getByRole('button', { name: 'Ask everyone again' }));
     await expect(page.locator('.toast').first()).toContainText('edition 2');
-    await expect(page.locator('#notices')).toContainText('Privacy notice 2026.10.2-2, rules 2026.10-2');
+    await expect(page.locator('#notices')).toContainText('Privacy notice 2026.10.3-2, rules 2026.10-2');
     await expect(page.locator('#notices dd').filter({ hasText: 'active accounts' })).toHaveText(/^0 of \d+ active accounts that must accept$/);
 
     // Work under way is not interrupted (background requests still answer); the next page asks again.

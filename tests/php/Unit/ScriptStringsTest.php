@@ -23,6 +23,7 @@ final class ScriptStringsTest extends TestCase
         'materials.js' => ['material', 'common'],
         'offline.js' => ['offline', 'common'],
         'practice.js' => ['flashcards', 'common'],
+        'practice-offline.js' => ['practiceOffline', 'common'],
         'quiz.js' => ['quiz', 'common'],
     ];
 

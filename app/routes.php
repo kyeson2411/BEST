@@ -179,6 +179,7 @@ $router->group('/student', ['role:student', 'notices'], static function ($r): vo
         $l->post('', [Student\PracticeController::class, 'store']);
         $l->get('/{id}', [Student\PracticeController::class, 'show']);
         $l->post('/{id}/results', [Student\PracticeController::class, 'saveResults']);
+        $l->get('/{id}/pack', [Student\PracticeController::class, 'pack']);
         $l->post('/{id}/delete', [Student\PracticeController::class, 'destroy']);
     });
 
@@ -233,6 +234,11 @@ $router->group('/teacher', ['role:teacher', 'notices'], static function ($r): vo
     $r->post('/materials/{id}/process', [Teacher\MaterialController::class, 'process']);
     $r->post('/materials/{id}/copy', [Teacher\MaterialController::class, 'copy']);
     $r->get('/materials/{id}/status', [Teacher\MaterialController::class, 'status']);
+    $r->get('/materials/{id}/reading/{kind}', [Teacher\ReadingVersionController::class, 'edit']);
+    $r->post('/materials/{id}/reading/{kind}', [Teacher\ReadingVersionController::class, 'save']);
+    $r->post('/materials/{id}/reading/{kind}/draft', [Teacher\ReadingVersionController::class, 'draft']);
+    $r->post('/materials/{id}/reading/{kind}/withdraw', [Teacher\ReadingVersionController::class, 'withdraw']);
+    $r->post('/materials/{id}/reading/{kind}/delete', [Teacher\ReadingVersionController::class, 'destroy']);
 
     $r->get('/assignments', [Teacher\AssignmentController::class, 'index']);
     $r->get('/assessments', [Teacher\AssignmentController::class, 'assessments']);

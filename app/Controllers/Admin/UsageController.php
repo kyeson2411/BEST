@@ -78,6 +78,7 @@ final class UsageController extends Controller
             'lesson_draft' => t('Lesson drafts'),
             'grading_suggestion' => t('Grading suggestions'),
             'insights' => t('Reteaching ideas'),
+            'reading_version' => t('Simpler and Filipino versions of materials'),
         ];
         return $labels[$feature] ?? $feature;
     }

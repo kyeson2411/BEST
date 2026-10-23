@@ -127,6 +127,17 @@ function icon(string $name, string $class = '', ?string $label = null): string
     return '<svg class="icon ' . e($class) . '" ' . $a11y . '><use href="' . e(asset('icons/sprite.svg')) . '#i-' . e($name) . '"></use></svg>';
 }
 
+/**
+ * A "Listen" button that reads $target's text aloud with the device's own voice (app.js). $text decides the voice:
+ * Filipino or English. Hidden where the browser cannot speak.
+ */
+function listen_button(string $target, string $text, string $class = 'btn btn--quiet'): string
+{
+    $lang = \Sibol\Services\Ai\Language::isFilipino($text) ? 'fil' : 'en';
+    return '<button type="button" class="' . e($class) . ' read-aloud" data-read-aloud="' . e($target) . '" data-lang="' . $lang . '" aria-pressed="false">'
+        . icon('volume-2', 'icon--xs') . '<span data-read-aloud-label>' . e(t('Listen')) . '</span></button>';
+}
+
 function fmt_date(?string $utc, string $style = 'date'): string
 {
     return Dates::format($utc, $style);

@@ -16,7 +16,7 @@ final class Settings
     /** @var array<int,array<string,mixed>> */
     private static array $cache = [];
 
-    public const STUDENT_MODES = ['explain', 'socratic', 'practice', 'flashcards', 'summarize', 'study_plan', 'vocabulary', 'ask_materials'];
+    public const STUDENT_MODES = ['explain', 'explain_back', 'socratic', 'practice', 'flashcards', 'summarize', 'study_plan', 'vocabulary', 'ask_materials'];
     public const TEACHER_MODES = ['lesson_ideas', 'explain_for_class', 'examples', 'differentiate', 'feedback_helper'];
 
     /** @return array<string,mixed> */
@@ -246,6 +246,7 @@ final class Settings
     {
         $labels = [
             'explain' => t('Explain a topic'),
+            'explain_back' => t('Explain it back'),
             'socratic' => t('Guide me step by step'),
             'practice' => t('Practice quiz'),
             'flashcards' => t('Flashcards'),
@@ -266,6 +267,7 @@ final class Settings
     {
         $descriptions = [
             'explain' => t('A clear explanation at the level you choose, with an example.'),
+            'explain_back' => t('You put what you learned into your own words; it checks your explanation against your class materials.'),
             'socratic' => t('One question at a time and hints first, so you work it out yourself.'),
             'practice' => t('A few questions on a topic, with explanations after you answer.'),
             'flashcards' => t('Opens Practice, where you flip cards made from your class materials.'),
@@ -287,6 +289,7 @@ final class Settings
     {
         $questions = [
             'explain' => t('What should it explain?'),
+            'explain_back' => t('Name the topic, then explain it in your own words, as if to a classmate.'),
             'socratic' => t('What problem are you working on?'),
             'practice' => t('What topic should it quiz you on?'),
             'summarize' => t('Choose the material to summarise above. Anything the summary should focus on?'),
@@ -307,6 +310,7 @@ final class Settings
     {
         $examples = [
             'explain' => t('For example: How does the heart pump blood?'),
+            'explain_back' => t('For example: Gas exchange. The alveoli have thin walls, so oxygen moves into the blood quickly.'),
             'socratic' => t('For example: Solve 2x + 3 = 11'),
             'practice' => t('For example: Punnett squares'),
             'summarize' => t('For example: Just the main ideas, in short points'),

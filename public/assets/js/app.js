@@ -411,16 +411,52 @@
   /* Answers a quiz kept in this tab for sending later, and materials kept on this device for reading
      offline (offline.js), are removed on sign-out and on the sign-in pages (an idle sign-out ends there too). */
   function forgetKept() {
-    try {
-      for (var i = sessionStorage.length - 1; i >= 0; i--) {
-        var k = sessionStorage.key(i);
-        if (k && k.indexOf('sibol.') === 0) sessionStorage.removeItem(k);
-      }
-    } catch (e) { /* storage blocked: nothing was kept */ }
+    [window.sessionStorage, window.localStorage].forEach(function (store) {
+      try {
+        for (var i = store.length - 1; i >= 0; i--) {
+          var k = store.key(i);
+          if (k && k.indexOf('sibol.') === 0) store.removeItem(k);
+        }
+      } catch (e) { /* storage blocked: nothing was kept */ }
+    });
     if (window.caches) window.caches.delete('sibol-offline-materials').catch(function () {});
   }
   $all('form[data-signout]').forEach(function (f) { f.addEventListener('submit', forgetKept); });
   if (doc.body.hasAttribute('data-signed-out')) forgetKept();
+
+  /* Practice done offline (practice-offline.js keeps sibol.packdone.<set id>) is sent once a signed-in page
+     loads with a connection, as the same form the practice page sends. */
+  (function sendOfflinePractice() {
+    if (!csrf || !navigator.onLine || doc.body.getAttribute('data-role') !== 'student') return;
+    var base = (doc.querySelector('meta[name="app-base"]') || {}).content || '';
+    var waiting = [];
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf('sibol.packdone.') === 0) waiting.push(k);
+      }
+    } catch (e) { return; }
+    var sent = 0;
+    var next = function () {
+      var key = waiting.shift();
+      if (!key) { if (sent) window.Sibol.toast(S('pack_sent', { count: sent }), 'success'); return; }
+      var done;
+      try { done = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { done = null; }
+      var id = key.slice('sibol.packdone.'.length);
+      if (!done || !/^\d+$/.test(id)) { localStorage.removeItem(key); next(); return; }
+      var body = new URLSearchParams();
+      body.append('_token', csrf);
+      Object.keys(done.answers || {}).forEach(function (q) { body.append('answers[' + q + ']', String(done.answers[q])); });
+      (done.known || []).forEach(function (c) { body.append('known[]', String(c)); });
+      fetch(base + '/student/learning/' + id + '/results', { method: 'POST', body: body, credentials: 'same-origin', headers: { 'X-Requested-With': 'fetch' } })
+        .then(function (r) {
+          // Sent, or the set is gone: either way nothing is left to send. Anything else is tried again later.
+          if (r.ok || r.status === 404) { localStorage.removeItem(key); if (r.ok) sent++; }
+          next();
+        }, function () { /* still offline */ });
+    };
+    next();
+  })();
 
   /* The installable app: a service worker keeps the stylesheet, scripts and an offline page (public/sw.js).
      Browsers run one only over HTTPS, or on this computer (localhost). It starts after the page has loaded,
@@ -526,6 +562,73 @@
       }
     });
   });
+
+  /* Read aloud: [data-read-aloud="#selector"] reads that element's text with the device's own voice, in
+     data-lang (en or fil). Buttons show only where the browser can speak (html.can-speak). */
+  var synth = window.speechSynthesis;
+  if (synth && window.SpeechSynthesisUtterance) {
+    doc.documentElement.classList.add('can-speak');
+    var speaking = null;
+    var label = function (btn, on) {
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      var text = btn.querySelector('[data-read-aloud-label]');
+      if (text) text.textContent = on ? S('read_stop') : S('read_listen');
+    };
+    var stop = function () {
+      if (speaking) label(speaking, false);
+      speaking = null;
+      synth.cancel();
+    };
+    var voiceFor = function (lang) {
+      var voices = synth.getVoices() || [];
+      var wanted = lang === 'fil' ? ['fil', 'tl'] : ['en-ph', 'en'];
+      for (var w = 0; w < wanted.length; w++) {
+        for (var v = 0; v < voices.length; v++) {
+          if (String(voices[v].lang).toLowerCase().replace('_', '-').indexOf(wanted[w]) === 0) return voices[v];
+        }
+      }
+      return null;
+    };
+    // Short pieces, so long texts are not cut off by browsers that stop a single utterance early.
+    var pieces = function (text) {
+      var out = [];
+      (String(text).replace(/\s+/g, ' ').match(/[^.!?]+[.!?]*\s*/g) || []).forEach(function (sentence) {
+        while (sentence.length > 220) {
+          var cut = sentence.lastIndexOf(' ', 220);
+          if (cut < 60) cut = 220;
+          out.push(sentence.slice(0, cut));
+          sentence = sentence.slice(cut);
+        }
+        if (sentence.trim()) out.push(sentence);
+      });
+      return out;
+    };
+    doc.addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('[data-read-aloud]');
+      if (!btn) return;
+      if (speaking === btn) { stop(); return; }
+      stop();
+      var target = $(btn.getAttribute('data-read-aloud'));
+      if (!target) return;
+      var lang = btn.getAttribute('data-lang') === 'fil' ? 'fil' : 'en';
+      var voice = voiceFor(lang);
+      if (lang === 'fil' && (!voice || String(voice.lang).toLowerCase().indexOf('en') === 0)) {
+        window.Sibol.toast(S('read_no_filipino'), 'info');
+      }
+      var parts = pieces(target.innerText);
+      if (!parts.length) return;
+      speaking = btn;
+      label(btn, true);
+      parts.forEach(function (part, i) {
+        var u = new window.SpeechSynthesisUtterance(part);
+        if (voice) { u.voice = voice; u.lang = voice.lang; } else { u.lang = lang === 'fil' ? 'fil-PH' : 'en-PH'; }
+        u.rate = 0.95;
+        if (i === parts.length - 1) u.onend = function () { if (speaking === btn) { label(btn, false); speaking = null; } };
+        synth.speak(u);
+      });
+    });
+    window.addEventListener('pagehide', function () { synth.cancel(); });
+  }
 
   /* Native dialog openers: [data-dialog-open="#id"] */
   $all('[data-dialog-open]').forEach(function (btn) {
