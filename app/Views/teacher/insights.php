@@ -1,5 +1,6 @@
-<?php /** @var array $class @var list<array> $topics @var list<array> $competencies @var list<array> $completion @var list<array> $questions @var int $enrolled @var string|null $ideas @var int|null $aiRemaining */
+<?php /** @var array $class @var list<array> $topics @var list<array> $competencies @var list<array> $completion @var list<array> $questions @var int $enrolled @var list<array> $gaps @var string|null $ideas @var int|null $aiRemaining */
 use Sibol\Services\Insights;
+use Sibol\Services\MaterialGaps;
 
 $flagged = array_values(array_filter($topics, static fn ($t) => $t['students'] >= Insights::MIN_STUDENTS && $t['correct_pct'] < Insights::WEAK_PCT));
 $past = array_values(array_filter($completion, static fn ($c) => $c['due_at'] !== null && $c['due_at'] <= \Sibol\Core\Db::now()));
@@ -7,7 +8,7 @@ $past = array_values(array_filter($completion, static fn ($c) => $c['due_at'] !=
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e($class['name']) ?></h1>
-    <p class="page-lead"><?= e(t('From submitted work only. These describe questions and topics, not students, and small groups can swing a lot.')) ?></p>
+    <p class="page-lead"><?= e(t('From submitted work, and from companion questions your materials did not cover. These describe questions and topics, not students, and small groups can swing a lot.')) ?></p>
   </div>
   <div class="page-actions"><a class="btn btn--secondary" href="<?= e(url('/teacher/gradebook/' . (int) $class['id'])) ?>"><?= icon('table', 'icon--sm') ?><?= e(t('Gradebook')) ?></a></div>
 </div>
@@ -124,6 +125,38 @@ $past = array_values(array_filter($completion, static fn ($c) => $c['due_at'] !=
           <?php endforeach; ?>
         </ul>
       <?php endif; ?>
+    </section>
+
+    <section class="section" id="gaps" aria-labelledby="gaps-title">
+      <div class="section__head"><h2 class="section__title" id="gaps-title"><?= e(t('What your materials don\'t cover')) ?></h2></div>
+      <p class="meta" style="margin-top:0"><?= e(tp('Topics students asked the companion about in the last :count day that your class materials did not answer.', 'Topics students asked the companion about in the last :count days that your class materials did not answer.', MaterialGaps::DAYS)) ?></p>
+      <?php if (!$gaps): ?>
+        <p class="meta"><?= e(tp('Nothing to show yet. A topic appears once at least :count student asks about it.', 'Nothing to show yet. A topic appears once at least :count different students ask about it.', MaterialGaps::MIN_STUDENTS)) ?></p>
+      <?php else: ?>
+        <ul class="rows">
+          <?php foreach ($gaps as $g): $label = implode(', ', $g['words']); ?>
+            <li class="row">
+              <span class="row__lead"><?= icon('circle-help', 'icon--lg') ?></span>
+              <div class="row__main">
+                <span class="row__title"><?= e($label) ?></span>
+                <div class="row__meta">
+                  <span><?= e(tp(':count student asked', ':count students asked', $g['students'])) ?></span>
+                  <span><?= e(tp(':count question', ':count questions', $g['questions'])) ?></span>
+                  <span><?= e(t('Last asked :when', ['when' => fmt_rel($g['last_at'])])) ?></span>
+                </div>
+              </div>
+              <div class="row__aside">
+                <a class="btn btn--secondary btn--sm" href="<?= e(url('/teacher/materials/new', ['class_id' => (int) $class['id']])) ?>"><?= icon('upload', 'icon--sm') ?><?= e(t('Add a material')) ?></a>
+                <a class="btn btn--quiet btn--sm" href="<?= e(url('/companion/new', ['mode' => 'explain_for_class', 'class_id' => (int) $class['id'], 'topic' => $label])) ?>"><?= e(t('Plan how to explain it')) ?></a>
+              </div>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      <?php endif; ?>
+      <details class="how"><summary><?= e(t('What is counted, and what is not')) ?></summary><div>
+        <p><?= e(t('When a student\'s companion question finds nothing in this class\'s materials, or only passages that partly match, the key words of the question are counted. The question itself, the answer and the conversation are not kept for this, and you never see who asked.')) ?></p>
+        <p><?= e(tp('A topic is shown only once at least :count different student asked about it. Counts are removed after :days days.', 'A topic is shown only once at least :count different students asked about it. Counts are removed after :days days.', MaterialGaps::MIN_STUDENTS, ['days' => MaterialGaps::KEEP_DAYS])) ?></p>
+      </div></details>
     </section>
   </div>
 

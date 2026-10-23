@@ -12,6 +12,7 @@ use Sibol\Core\Markdown;
 use Sibol\Core\Translator;
 use Sibol\Core\View;
 use Sibol\Repositories\StudentRepo;
+use Sibol\Services\MaterialGaps;
 use Sibol\Services\Settings;
 
 /**
@@ -174,6 +175,9 @@ final class Companion
         });
         Usage::record($user, 'companion', $provider, $status === 'cancelled' ? 'cancelled' : ($status === 'error' ? 'error' : 'ok'), $result->inputTokens, $result->outputTokens, $result->latencyMs, $errorCode, $result->model ?: null);
         self::touch($conversation, $question);
+        if ($status === 'complete' && !$result->refused && !$regenerate) {
+            MaterialGaps::record($user, $conversation, $question, $sources);
+        }
 
         $message = self::loadMessages($conversationId, $messageId)[0] ?? null;
         $remaining = Usage::remainingToday($user);

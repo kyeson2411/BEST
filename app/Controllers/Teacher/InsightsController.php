@@ -16,6 +16,7 @@ use Sibol\Services\Ai\AiException;
 use Sibol\Services\Ai\Generators;
 use Sibol\Services\Ai\Usage;
 use Sibol\Services\Insights;
+use Sibol\Services\MaterialGaps;
 
 final class InsightsController extends Controller
 {
@@ -49,6 +50,7 @@ final class InsightsController extends Controller
             'competencies' => Insights::competencies($id),
             'completion' => Insights::completion($id),
             'questions' => Insights::questions($id),
+            'gaps' => MaterialGaps::forClass($id),
             'enrolled' => (int) Db::value("SELECT COUNT(*) FROM class_memberships WHERE class_id = :c AND role = 'student' AND status = 'active'", ['c' => $id]),
             'ideas' => $ideasText,
             'aiRemaining' => Usage::remainingToday($user),

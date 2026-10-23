@@ -31,6 +31,7 @@ $h = $headingTag ?? 'h2';
     <li><?= e(t('Your section\'s adviser and your teachers can print a sign-in slip for you if you forget your password. Nobody at school ever sees your password.')) ?></li>
     <li><?= e(t('School administrators see accounts, classes, and school-wide totals that do not identify individual students. Normal administrator tools do not show companion conversations.')) ?></li>
     <li><?= e(t('If you report a companion answer, that answer and your note are shown to administrators so they can look into it.')) ?></li>
+    <li><?= e(tp('When your class materials do not answer a question you ask the companion, its key words are counted for your class (not your question, not your name). Your teachers see a topic only after at least :count different student asked about it, so they know what to add or reteach. These counts are removed after :days days.', 'When your class materials do not answer a question you ask the companion, its key words are counted for your class (not your question, not your name). Your teachers see a topic only after at least :count different students asked about it, so they know what to add or reteach. These counts are removed after :days days.', \Sibol\Services\MaterialGaps::MIN_STUDENTS, ['days' => \Sibol\Services\MaterialGaps::KEEP_DAYS])) ?></li>
   </ul>
 
   <<?= $h ?>><?= e(t('How the AI companion uses your information')) ?></<?= $h ?>>

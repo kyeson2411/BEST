@@ -16,7 +16,7 @@ use Sibol\Core\Db;
 final class Notices
 {
     /** Raise when the wording of a notice changes in the code. */
-    public const VERSIONS = ['privacy' => '2026.10', 'rules' => '2026.10'];
+    public const VERSIONS = ['privacy' => '2026.10.2', 'rules' => '2026.10'];
 
     /** @var array<int,list<string>> user id => notices already accepted at their current version (this request) */
     private static array $cache = [];

@@ -80,6 +80,7 @@ final class DemoSeeder
             $this->notifications();
             $this->auditTrail();
             $this->feedback();
+            $this->materialGaps();
         });
         Auth::actingAs(null);
         Auth::refresh();
@@ -966,6 +967,29 @@ final class DemoSeeder
     }
 
     /** Feedback about Sibol from a few students and teachers, one in each status (fictional). */
+    /**
+     * Key words of Science 9 – Narra questions the class materials did not cover, so "What your materials don't
+     * cover" in Insights has something to show. Two topics reach the five-student minimum; one does not.
+     */
+    private function materialGaps(): void
+    {
+        $narra = $this->sections['narra'];
+        $asked = [
+            ['punnett probability', array_slice($narra, 0, 6), ['-2 days', '-3 days', '-5 days', '-6 days', '-9 days', '-12 days']],
+            ['punnett probability dihybrid', array_slice($narra, 0, 2), ['-1 days', '-4 days']],
+            ['blood types inheritance', array_slice($narra, 3, 5), ['-1 days', '-2 days', '-7 days', '-8 days', '-15 days']],
+            ['mitosis meiosis', array_slice($narra, 8, 2), ['-3 days', '-10 days']],
+        ];
+        foreach ($asked as [$keywords, $students, $when]) {
+            foreach ($students as $i => $student) {
+                Db::insert('material_gaps', [
+                    'organization_id' => $this->org, 'class_id' => $this->c['sci_narra'], 'student_id' => $this->u[$student],
+                    'keywords' => $keywords, 'created_at' => $this->ago($when[$i] . ' -' . (2 + $i) . ' hours'),
+                ]);
+            }
+        }
+    }
+
     private function feedback(): void
     {
         $items = [

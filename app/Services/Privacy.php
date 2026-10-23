@@ -48,6 +48,7 @@ final class Privacy
             }, Db::all('SELECT source, content AS item, step, reviews, lapses, due_on, last_reviewed_on, done_at, created_at FROM review_items WHERE user_id = :u ORDER BY id', ['u' => $userId])),
             'study_sessions' => Db::all('SELECT title, notes, starts_at, duration_minutes, completed_at FROM study_sessions WHERE user_id = :u', ['u' => $userId]),
             'shared_with_teachers' => Db::all('SELECT kind, content, student_note, created_at FROM shared_excerpts WHERE student_id = :u', ['u' => $userId]),
+            'uncovered_topic_words' => Db::all('SELECT c.name AS class, g.keywords, g.created_at FROM material_gaps g JOIN classes c ON c.id = g.class_id WHERE g.student_id = :u ORDER BY g.created_at', ['u' => $userId]),
             'notifications' => Db::all('SELECT title, body, created_at, read_at FROM notifications WHERE user_id = :u ORDER BY created_at DESC LIMIT 500', ['u' => $userId]),
             'privacy_requests' => Db::all('SELECT request_type, status, created_at, resolved_at FROM privacy_requests WHERE user_id = :u', ['u' => $userId]),
             'feedback_sent' => Db::all('SELECT category, body, page_path, status, reply, replied_at, created_at FROM site_feedback WHERE user_id = :u ORDER BY created_at', ['u' => $userId]),
@@ -80,6 +81,7 @@ final class Privacy
             $counts['practice_sets'] = Db::exec('DELETE FROM practice_sets WHERE user_id = :u', ['u' => $userId]);
             $counts['study_sessions'] = Db::exec('DELETE FROM study_sessions WHERE user_id = :u', ['u' => $userId]);
             $counts['shared_excerpts'] = Db::exec('DELETE FROM shared_excerpts WHERE student_id = :u', ['u' => $userId]);
+            $counts['material_gaps'] = Db::exec('DELETE FROM material_gaps WHERE student_id = :u', ['u' => $userId]);
             $counts['notifications'] = Db::exec('DELETE FROM notifications WHERE user_id = :u', ['u' => $userId]);
             Db::exec('DELETE FROM content_views WHERE user_id = :u', ['u' => $userId]);
             Db::exec('DELETE FROM notice_acknowledgments WHERE user_id = :u', ['u' => $userId]);
@@ -145,6 +147,8 @@ final class Privacy
                 Db::update('privacy_requests', ['export_path' => null], ['id' => (int) $r['id']]);
             }
         }
+        // Counts of what class materials did not cover are kept for a fixed, shorter time.
+        MaterialGaps::purge();
         return sprintf('Removed %d conversation(s) past their retention period.', $total);
     }
 
