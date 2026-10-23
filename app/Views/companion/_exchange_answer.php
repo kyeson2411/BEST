@@ -53,6 +53,12 @@ $isStudent = $user['role'] === 'student';
       <?php if ($isStudent && !empty($conversation['class_id']) && (bool) setting('features.share_with_teacher', true)): ?>
         <button type="button" class="btn btn--quiet" data-share="<?= $id ?>"><?= icon('share-2', 'icon--xs') ?><?= e(t('Share with teacher')) ?></button>
       <?php endif; ?>
+      <?php if (!$isStudent && $conversation['mode'] === 'lesson_ideas' && !empty($conversation['class_id'])): ?>
+        <form method="post" action="<?= e(url('/companion/messages/' . $id . '/lesson')) ?>">
+          <?= csrf_field() ?>
+          <button type="submit" class="btn btn--quiet"><?= icon('notebook-pen', 'icon--xs') ?><?= e(t('Save as lesson draft')) ?></button>
+        </form>
+      <?php endif; ?>
     <?php endif; ?>
   </div>
 </article>

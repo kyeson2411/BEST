@@ -13,6 +13,7 @@ use Sibol\Policies\Access;
 use Sibol\Services\Ai\Companion;
 use Sibol\Services\Ai\Providers;
 use Sibol\Services\Ai\Usage;
+use Sibol\Services\LessonDrafts;
 use Sibol\Services\Notifier;
 use Sibol\Services\Settings;
 
@@ -331,6 +332,20 @@ final class CompanionController extends Controller
         }
         $this->flash($added ? 'success' : 'info', $added ? tp('Added :count study session to your calendar.', 'Added :count study sessions to your calendar.', $added) : t('Those sessions are already on your calendar or are in the past.'));
         return $this->redirect('/student/calendar');
+    }
+
+    /** A teacher's "Plan a lesson" answer becomes a lesson draft in the conversation's class, for review. */
+    public function saveAsLesson(int $id): Response
+    {
+        $user = $this->user();
+        $message = $this->ownMessage($user, $id);
+        $conversation = $this->conversation($user, (int) $message['conversation_id']);
+        if ($user['role'] !== 'teacher' || $conversation['mode'] !== 'lesson_ideas' || $message['status'] !== 'complete' || $conversation['class_id'] === null) {
+            throw HttpException::notFound();
+        }
+        $lessonId = LessonDrafts::fromCompanion($user, $conversation, $message);
+        $this->flash('success', t('Saved as a lesson draft. Read and edit every section before publishing; students see nothing until you do.'));
+        return $this->redirect('/teacher/lessons/' . $lessonId);
     }
 
     // ---------------------------------------------------------------- helpers

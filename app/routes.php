@@ -152,6 +152,7 @@ $router->group('', ['auth', 'notices'], static function ($r): void {
         $c->post('/messages/{id}/report', [CompanionController::class, 'report']);
         $c->post('/messages/{id}/share', [CompanionController::class, 'share']);
         $c->post('/messages/{id}/plan', [CompanionController::class, 'addPlanToCalendar']);
+        $c->post('/messages/{id}/lesson', [CompanionController::class, 'saveAsLesson']);
     });
 });
 
