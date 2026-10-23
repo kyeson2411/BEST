@@ -1,0 +1,231 @@
+{
+    "generated_at": "2026-10-21T07:25:52+00:00",
+    "about": "This file contains the information Sibol holds about you. Times are in UTC.",
+    "account": {
+        "id": 12,
+        "role": "student",
+        "username": "nicole.tan",
+        "email": null,
+        "given_name": "Nicole",
+        "family_name": "Tan",
+        "preferred_name": null,
+        "grade_level": "Grade 9",
+        "language": null,
+        "timezone": null,
+        "status": "active",
+        "created_at": "2026-07-02 23:24:15",
+        "last_login_at": "2026-10-20 10:24:15"
+    },
+    "classes": [
+        {
+            "class": "Science 9 – Narra",
+            "role": "student",
+            "status": "active",
+            "joined_at": "2026-07-07 23:24:15",
+            "withdrawn_at": null
+        },
+        {
+            "class": "Mathematics 9 – Narra",
+            "role": "student",
+            "status": "active",
+            "joined_at": "2026-07-07 23:24:15",
+            "withdrawn_at": null
+        },
+        {
+            "class": "English 9 – Narra",
+            "role": "student",
+            "status": "active",
+            "joined_at": "2026-07-07 23:24:15",
+            "withdrawn_at": null
+        }
+    ],
+    "submissions": [
+        {
+            "assignment": "Respiratory and circulatory systems check",
+            "attempt_no": 1,
+            "status": "submitted",
+            "body": null,
+            "submitted_at": "2026-10-18 07:28:00",
+            "is_late": 0,
+            "score": "6.00",
+            "points_possible": "7.00",
+            "feedback": null,
+            "feedback_status": "released",
+            "receipt_code": "WECGJN32ZX",
+            "answers": [
+                {
+                    "question": "Where does gas exchange between the air and the blood take place?",
+                    "response": "C",
+                    "points_awarded": "1.00",
+                    "teacher_comment": null
+                },
+                {
+                    "question": "Which chamber of the heart pumps oxygen-rich blood to the rest of the body?",
+                    "response": "D",
+                    "points_awarded": "1.00",
+                    "teacher_comment": null
+                },
+                {
+                    "question": "Veins carry blood away from the heart.",
+                    "response": "false",
+                    "points_awarded": "1.00",
+                    "teacher_comment": null
+                },
+                {
+                    "question": "Why do oxygen and carbon dioxide move across the walls of the alveoli so easily?",
+                    "response": "B",
+                    "points_awarded": "2.00",
+                    "teacher_comment": null
+                },
+                {
+                    "question": "When you inhale, the diaphragm contracts and moves down.",
+                    "response": "false",
+                    "points_awarded": "0.00",
+                    "teacher_comment": null
+                },
+                {
+                    "question": "Name the tiny blood vessels where substances pass between the blood and the body's cells.",
+                    "response": "capillaries",
+                    "points_awarded": "1.00",
+                    "teacher_comment": null
+                }
+            ],
+            "files": []
+        },
+        {
+            "assignment": "Lab report: breathing rate before and after exercise",
+            "attempt_no": 1,
+            "status": "submitted",
+            "body": "At rest 15, after exercise 31, after rest 18 breaths per minute.\n\nBreathing went up because the muscles needed more energy. The circulatory system moved blood faster too. Next I would test if holding your breath first changes the results.",
+            "submitted_at": "2026-10-20 11:12:00",
+            "is_late": 0,
+            "points_possible": "10.00",
+            "feedback_status": "none",
+            "receipt_code": "6RKHDZWAX9",
+            "answers": [],
+            "files": []
+        },
+        {
+            "assignment": "Solving quadratic equations by factoring",
+            "attempt_no": 1,
+            "status": "submitted",
+            "body": null,
+            "submitted_at": "2026-10-17 11:29:00",
+            "is_late": 0,
+            "score": "7.00",
+            "points_possible": "7.00",
+            "feedback": null,
+            "feedback_status": "released",
+            "receipt_code": "RCWF345WWR",
+            "answers": [
+                {
+                    "question": "Which equation is quadratic?",
+                    "response": "B",
+                    "points_awarded": "1.00",
+                    "teacher_comment": null
+                },
+                {
+                    "question": "Solve by factoring: x^2 + 5x + 6 = 0",
+                    "response": "B",
+                    "points_awarded": "2.00",
+                    "teacher_comment": null
+                },
+                {
+                    "question": "Solve by factoring: x^2 - 7x + 10 = 0",
+                    "response": "A",
+                    "points_awarded": "2.00",
+                    "teacher_comment": null
+                },
+                {
+                    "question": "If (x - 4)(x + 1) = 0, then x = 4 or x = -1.",
+                    "response": "true",
+                    "points_awarded": "1.00",
+                    "teacher_comment": null
+                },
+                {
+                    "question": "What is the positive solution of x^2 - 49 = 0?",
+                    "response": "7",
+                    "points_awarded": "1.00",
+                    "teacher_comment": null
+                }
+            ],
+            "files": []
+        },
+        {
+            "assignment": "Reading response: The jeepney stop",
+            "attempt_no": 1,
+            "status": "submitted",
+            "body": "Mara is worried about being late because she keeps looking at her watch and tapping her foot. She has waited many times this week.",
+            "submitted_at": "2026-10-15 13:30:00",
+            "is_late": 0,
+            "score": "9.00",
+            "points_possible": "10.00",
+            "feedback": "Strong inference. Add one more sentence explaining how the second clue supports your idea.",
+            "feedback_status": "released",
+            "receipt_code": "VA7SWU6FNF",
+            "answers": [],
+            "files": []
+        },
+        {
+            "assignment": "Inference journal: three clues",
+            "attempt_no": 1,
+            "status": "submitted",
+            "body": "Story: \"The Mango Tree\". Clue 1: the grandmother waters the tree every evening. Inference: the tree is important to her family history. Clue 2: ... Clue 3: ...",
+            "submitted_at": "2026-10-20 15:24:16",
+            "is_late": 0,
+            "points_possible": "10.00",
+            "feedback_status": "none",
+            "receipt_code": "JPNFYJDBHK",
+            "answers": [],
+            "files": []
+        },
+        {
+            "assignment": "Short test on paper: breathing and circulation",
+            "attempt_no": 1,
+            "status": "submitted",
+            "body": null,
+            "submitted_at": "2026-10-18 02:00:00",
+            "is_late": 0,
+            "score": "16.00",
+            "points_possible": "20.00",
+            "feedback": null,
+            "feedback_status": "released",
+            "receipt_code": null,
+            "answers": [],
+            "files": []
+        }
+    ],
+    "due_date_changes": [],
+    "companion_conversations": [],
+    "practice": [],
+    "review_queue": [],
+    "study_sessions": [],
+    "shared_with_teachers": [],
+    "notifications": [],
+    "privacy_requests": [
+        {
+            "request_type": "export",
+            "status": "submitted",
+            "created_at": "2026-10-19 23:24:17",
+            "resolved_at": null
+        }
+    ],
+    "feedback_sent": [],
+    "comment_bank": [],
+    "notices_accepted": [
+        {
+            "notice": "privacy",
+            "version": "2026.10-1",
+            "acknowledged_at": "2026-07-12 23:24:15"
+        },
+        {
+            "notice": "rules",
+            "version": "2026.10-1",
+            "acknowledged_at": "2026-07-12 23:24:15"
+        }
+    ],
+    "ai_companion": {
+        "setting": "school default",
+        "guardian_answers": []
+    }
+}

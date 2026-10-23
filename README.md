@@ -102,6 +102,10 @@ returns "not found" in production and from other computers.
 4. Load the demo school with `bin\sibol.php db:seed` or the setup page (the seed creates files and indexes
    materials, so it is not a plain SQL file).
 
+**D. Ready-made sample.** `database/sample/sibol-demo.sql` is the demo school already filled in (import it
+instead of `schema.sql`), and `database/sample/uploads` holds its files for `storage/uploads`. Steps in
+`database/sample/README.md`.
+
 ## Demo accounts
 
 All demo accounts share the password **`Sibol-demo-2026`**. On a local install the sign-in page also has
