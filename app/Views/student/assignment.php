@@ -36,7 +36,7 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e($assignment['title']) ?></h1>
-    <p class="page-lead"><?= e($assignment['class_name']) ?>, <?= e(work_kind((string) $assignment['kind'], true)) ?></p>
+    <p class="page-lead"><?= kind_tag((string) $assignment['kind']) ?> <?= e($assignment['class_name']) ?></p>
   </div>
 </div>
 

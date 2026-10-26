@@ -247,10 +247,11 @@ final class OverridesTest extends IntegrationTestCase
         return Grades::classBook($this->classId(self::NARRA), (int) $student['organization_id'])['overall'][(int) $student['id']];
     }
 
+    /** The due count on the Quizzes menu item: the work in these tests is a quiz. */
     private function navCount(array $student): int
     {
         foreach (Navigation::items($student) as $item) {
-            if ($item['url'] === '/student/assignments') {
+            if ($item['url'] === '/student/quizzes') {
                 return (int) ($item['count'] ?? 0);
             }
         }

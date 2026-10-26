@@ -72,7 +72,8 @@ final class ClassController extends Controller
     {
         $user = $this->user();
         $class = Access::studentClass($user, $id);
-        $tab = in_array($this->request->str('tab'), ['materials', 'work', 'announcements'], true) ? $this->request->str('tab') : 'overview';
+        // "work" is the class's assignments (the tab kept its old key so links to it still work); quizzes have their own tab.
+        $tab = in_array($this->request->str('tab'), ['materials', 'work', 'quizzes', 'announcements'], true) ? $this->request->str('tab') : 'overview';
 
         $teachers = Db::all(
             "SELECT u.id, u.given_name, u.family_name, u.preferred_name, u.avatar_path FROM class_memberships cm JOIN users u ON u.id = cm.user_id

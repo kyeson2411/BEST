@@ -29,7 +29,29 @@ final class AssignmentController extends Controller
 {
     use CopiesToSections;
 
+    /** Assignments and work in class or on paper. Quizzes have their own page (quizzes()). */
     public function index(): Response
+    {
+        if ($this->request->str('kind') === 'quiz') {
+            // The old "Type: Quizzes" filter: quizzes now have their own page.
+            return $this->redirect('/teacher/quizzes' . $this->listQuery());
+        }
+        return $this->list(false);
+    }
+
+    public function quizzes(): Response
+    {
+        return $this->list(true);
+    }
+
+    /** The class and status filters, kept when moving between the two lists. */
+    private function listQuery(): string
+    {
+        $query = array_filter(['class_id' => $this->request->int('class_id'), 'status' => $this->request->str('status')], static fn ($v) => $v !== null && $v !== '');
+        return $query ? '?' . http_build_query($query) : '';
+    }
+
+    private function list(bool $quizzes): Response
     {
         $user = $this->user();
         $classes = TeacherRepo::classes($user, true);
@@ -38,12 +60,12 @@ final class AssignmentController extends Controller
         if ($classId !== null && !in_array($classId, $ids, true)) {
             $classId = null;
         }
-        $kind = in_array($this->request->str('kind'), ['assignment', 'quiz', 'paper'], true) ? $this->request->str('kind') : '';
+        $kind = $quizzes ? 'quiz' : (in_array($this->request->str('kind'), ['assignment', 'paper'], true) ? $this->request->str('kind') : '');
         $status = in_array($this->request->str('status'), ['draft', 'published', 'closed', 'archived'], true) ? $this->request->str('status') : '';
         $rows = [];
         if ($ids) {
             [$in, $p] = Db::in($classId !== null ? [$classId] : $ids, 'c');
-            $where = "a.class_id IN $in" . ($status !== '' ? ' AND a.status = :st' : " AND a.status <> 'archived'") . ($kind !== '' ? ' AND a.kind = :k' : '');
+            $where = "a.class_id IN $in" . ($status !== '' ? ' AND a.status = :st' : " AND a.status <> 'archived'") . ($kind !== '' ? ' AND a.kind = :k' : " AND a.kind <> 'quiz'");
             if ($status !== '') {
                 $p['st'] = $status;
             }
@@ -62,14 +84,15 @@ final class AssignmentController extends Controller
             );
         }
         return $this->view('teacher/assignments', [
-            'title' => ['quiz' => t('Quizzes'), 'paper' => t('In class and on paper')][$kind] ?? t('Assignments'),
+            'title' => $quizzes ? t('Quizzes') : t('Assignments'),
+            'quizzes' => $quizzes,
             'rows' => $rows, 'classes' => $classes, 'classId' => $classId, 'kind' => $kind, 'status' => $status,
         ]);
     }
 
     public function assessments(): Response
     {
-        return $this->redirect('/teacher/assignments?kind=quiz');
+        return $this->redirect('/teacher/quizzes');
     }
 
     public function create(): Response
@@ -80,7 +103,8 @@ final class AssignmentController extends Controller
         $heading = ['quiz' => t('New quiz'), 'paper' => t('New work in class or on paper')][$kind] ?? t('New assignment');
         return $this->view('teacher/assignment_form', [
             'title' => $heading,
-            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$heading, null]],
+            'crumbs' => [work_list($kind, 'teacher'), [$heading, null]],
+            'navActive' => work_list($kind, 'teacher')[1],
             'assignment' => null,
             'kind' => $kind,
             'classes' => $classes,
@@ -135,7 +159,8 @@ final class AssignmentController extends Controller
         $grading = (array) Settings::get((int) $user['organization_id'], 'grading', []);
         return $this->view('teacher/assignment', [
             'title' => $a['title'],
-            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], null]],
+            'crumbs' => [work_list((string) $a['kind'], 'teacher'), [$a['title'], null]],
+            'navActive' => work_list((string) $a['kind'], 'teacher')[1],
             'a' => $a,
             'counted' => Grades::counts($a, $grading),
             'categoryLabel' => Grades::categoryLabel($a['category'], $grading),
@@ -167,7 +192,8 @@ final class AssignmentController extends Controller
         $questions = Assessments::questions($id);
         return $this->view('teacher/assignment_edit', [
             'title' => t('Edit :title', ['title' => $a['title']]),
-            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], '/teacher/assignments/' . $id], [t('Edit'), null]],
+            'crumbs' => [work_list((string) $a['kind'], 'teacher'), [$a['title'], '/teacher/assignments/' . $id], [t('Edit'), null]],
+            'navActive' => work_list((string) $a['kind'], 'teacher')[1],
             'assignment' => $a,
             'kind' => $a['kind'],
             'classes' => $classes,
@@ -429,7 +455,8 @@ final class AssignmentController extends Controller
         $a = Access::teacherAssignment($user, $id);
         return $this->view('teacher/assignment_preview', [
             'title' => t('Preview: :title', ['title' => $a['title']]),
-            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], '/teacher/assignments/' . $id], [t('Student preview'), null]],
+            'crumbs' => [work_list((string) $a['kind'], 'teacher'), [$a['title'], '/teacher/assignments/' . $id], [t('Student preview'), null]],
+            'navActive' => work_list((string) $a['kind'], 'teacher')[1],
             'assignment' => $a,
             'questions' => array_map(static fn ($q) => Assessments::publicQuestion($q, false), Assessments::questions($id)),
             'rubric' => json_decode((string) ($a['rubric'] ?? ''), true) ?: [],
@@ -451,7 +478,8 @@ final class AssignmentController extends Controller
         Audit::log('assignment.printed', 'assignment', $id, ['copy' => $key ? 'key' : 'blank']);
         return $this->view('teacher/assignment_print', [
             'title' => $key ? t('Answer key: :title', ['title' => $a['title']]) : t('Print: :title', ['title' => $a['title']]),
-            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], '/teacher/assignments/' . $id], [t('Print'), null]],
+            'crumbs' => [work_list((string) $a['kind'], 'teacher'), [$a['title'], '/teacher/assignments/' . $id], [t('Print'), null]],
+            'navActive' => work_list((string) $a['kind'], 'teacher')[1],
             'a' => $a,
             'withKey' => $key,
             'questions' => $printable['questions'],

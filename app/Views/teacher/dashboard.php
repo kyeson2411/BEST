@@ -95,7 +95,10 @@ $accuracy = percent($overview['correct'], $overview['answers']);
     <section class="section" aria-labelledby="up-title">
       <div class="section__head">
         <h2 class="section__title" id="up-title"><?= e(t('Upcoming')) ?></h2>
-        <a class="section__link" href="<?= e(url('/teacher/assignments')) ?>"><?= e(t('All assignments')) ?></a>
+        <span class="section__links">
+          <a class="section__link" href="<?= e(url('/teacher/assignments')) ?>"><?= e(t('All assignments')) ?></a>
+          <a class="section__link" href="<?= e(url('/teacher/quizzes')) ?>"><?= e(t('All quizzes')) ?></a>
+        </span>
       </div>
       <?php if (!$upcoming): ?>
         <p class="meta"><?= e(t('Nothing is due in the next two weeks.')) ?></p>
@@ -106,7 +109,7 @@ $accuracy = percent($overview['correct'], $overview['answers']);
               <?= partial('entry_date', ['at' => $a['due_at']]) ?>
               <div class="entry__main">
                 <a class="row__title" href="<?= e(url('/teacher/assignments/' . (int) $a['id'])) ?>"><?= e($a['title']) ?></a>
-                <div class="row__meta"><span><?= e($a['class_name']) ?></span><span><?= e(work_kind((string) $a['kind'])) ?></span><span><?= e(fmt_date($a['due_at'], 'time')) ?></span></div>
+                <div class="row__meta"><?= kind_tag((string) $a['kind']) ?><span><?= e($a['class_name']) ?></span><span><?= e(fmt_date($a['due_at'], 'time')) ?></span></div>
               </div>
               <div class="entry__aside" style="min-width: 160px"><?= partial('meter', ['value' => percent($a['submitted'], $a['enrolled']), 'label' => t(':n of :m in', ['n' => (int) $a['submitted'], 'm' => (int) $a['enrolled']])]) ?></div>
             </li>
@@ -125,7 +128,7 @@ $accuracy = percent($overview['correct'], $overview['answers']);
             <li class="row">
               <div class="row__main">
                 <a class="row__title" href="<?= e(url('/teacher/assignments/' . (int) $a['id'] . '/submissions')) ?>"><?= e($a['title']) ?></a>
-                <div class="row__meta"><span><?= e($a['class_name']) ?></span><span><?= e(t('Due :date', ['date' => fmt_date($a['due_at'])])) ?></span>
+                <div class="row__meta"><?= kind_tag((string) $a['kind']) ?><span><?= e($a['class_name']) ?></span><span><?= e(t('Due :date', ['date' => fmt_date($a['due_at'])])) ?></span>
                   <span><?= e(t(':n of :m submitted', ['n' => (int) $a['submitted'], 'm' => (int) $a['enrolled']])) ?></span></div>
               </div>
               <div class="row__aside">

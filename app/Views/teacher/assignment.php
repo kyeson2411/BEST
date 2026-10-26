@@ -11,7 +11,7 @@ foreach ($questionStats as $qs) {
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e($a['title']) ?></h1>
-    <p class="page-lead"><?= e($a['class_name']) ?>, <?= e(work_kind((string) $a['kind'], true)) ?> <?= badge($sl, $st) ?></p>
+    <p class="page-lead"><?= kind_tag((string) $a['kind']) ?> <?= e($a['class_name']) ?> <?= badge($sl, $st) ?></p>
   </div>
   <div class="page-actions">
     <a class="btn btn--secondary" href="<?= e(url($base . '/edit')) ?>"><?= icon('pencil', 'icon--sm') ?><?= e(t('Edit')) ?></a>

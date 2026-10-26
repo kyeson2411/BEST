@@ -15,7 +15,7 @@ $base = '/teacher/assignments/' . (int) $a['id'];
 <div class="page-head">
   <div class="page-head__text">
     <h1 class="page-title"><?= e($a['title']) ?></h1>
-    <p class="page-lead"><?= e($a['class_name']) ?>, <?= e(work_kind($kind, true)) ?> <?= badge($statusLabel, $statusTone) ?></p>
+    <p class="page-lead"><?= kind_tag($kind) ?> <?= e($a['class_name']) ?> <?= badge($statusLabel, $statusTone) ?></p>
   </div>
   <div class="page-actions">
     <a class="btn btn--secondary" href="<?= e(url($base . '/preview')) ?>"><?= icon('eye', 'icon--sm') ?><?= e(t('Preview as a student')) ?></a>

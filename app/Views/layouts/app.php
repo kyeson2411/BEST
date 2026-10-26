@@ -1,7 +1,8 @@
 <?php
 /**
  * Signed-in application shell.
- * Expects: $title, $content. Optional: $crumbs (list of [label, url|null]), $page_class, $scripts (list of js files), $katex (bool)
+ * Expects: $title, $content. Optional: $crumbs (list of [label, url|null]), $page_class, $scripts (list of js files), $katex (bool),
+ * $navActive (the menu URL to light up when the page's own URL does not say it, e.g. a quiz under /student/assignments)
  */
 use Sibol\Core\Config;
 use Sibol\Core\Session;
@@ -52,7 +53,7 @@ $bottomItems = array_slice($bottomItems, 0, 4);
     <?php endif; ?>
     <nav aria-label="<?= e(t('Main')) ?>">
       <ul class="nav">
-        <?php foreach ($items as $item): $active = Navigation::isActive($item); ?>
+        <?php foreach ($items as $item): $active = Navigation::isActive($item, $navActive ?? null); ?>
           <li>
             <a class="nav-link" href="<?= e(url($item['url'])) ?>"<?= $active ? ' aria-current="page"' : '' ?> title="<?= e($item['label']) ?>">
               <?= icon($item['icon']) ?>
@@ -164,7 +165,7 @@ $bottomItems = array_slice($bottomItems, 0, 4);
 
 <?php if ($bottomItems): ?>
 <nav class="bottombar" aria-label="<?= e(t('Quick navigation')) ?>">
-  <?php foreach ($bottomItems as $item): $active = Navigation::isActive($item); ?>
+  <?php foreach ($bottomItems as $item): $active = Navigation::isActive($item, $navActive ?? null); ?>
     <a href="<?= e(url($item['url'])) ?>"<?= $active ? ' aria-current="page"' : '' ?>><?= icon($item['icon']) ?><span><?= e($item['short'] ?? $item['label']) ?></span></a>
   <?php endforeach; ?>
   <a href="<?= e(url('/menu', ['from' => \Sibol\Services\SiteFeedback::cleanPath(current_path())])) ?>" data-drawer-toggle aria-controls="spine" aria-expanded="false"><?= icon('menu') ?><span><?= e(t('More')) ?></span></a>

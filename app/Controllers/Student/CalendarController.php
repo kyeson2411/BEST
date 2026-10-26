@@ -44,16 +44,16 @@ final class CalendarController extends Controller
              WHERE a.status IN ('published','closed') AND " . Overrides::notExcusedSql() . " AND $due >= :f AND $due < :t",
             ['u1' => $uid, 'u2' => $uid, 'u3' => $uid, 'f' => $from, 't' => $to]
         ) as $a) {
-            $events[] = ['type' => 'due', 'at' => $a['due_at'], 'title' => $a['title'], 'meta' => $a['class_name'], 'done' => (bool) $a['done'], 'url' => '/student/assignments/' . (int) $a['id'], 'id' => (int) $a['id']];
+            $events[] = ['type' => 'due', 'at' => $a['due_at'], 'title' => $a['title'], 'meta' => $a['class_name'], 'done' => (bool) $a['done'], 'url' => '/student/assignments/' . (int) $a['id'], 'id' => (int) $a['id'], 'kind' => $a['kind']];
         }
         foreach (Db::all(
-            "SELECT a.id, a.title, a.opens_at, c.name AS class_name FROM assignments a
+            "SELECT a.id, a.title, a.kind, a.opens_at, c.name AS class_name FROM assignments a
              JOIN class_memberships cm ON cm.class_id = a.class_id AND cm.user_id = :u AND cm.role = 'student' AND cm.status = 'active'
              JOIN classes c ON c.id = a.class_id AND c.status = 'active'
              WHERE a.status = 'published' AND a.opens_at > UTC_TIMESTAMP() AND a.opens_at >= :f AND a.opens_at < :t",
             ['u' => $uid, 'f' => $from, 't' => $to]
         ) as $a) {
-            $events[] = ['type' => 'opens', 'at' => $a['opens_at'], 'title' => t('Opens: :t', ['t' => $a['title']]), 'meta' => $a['class_name'], 'done' => false, 'url' => '/student/assignments/' . (int) $a['id'], 'id' => (int) $a['id']];
+            $events[] = ['type' => 'opens', 'at' => $a['opens_at'], 'title' => t('Opens: :t', ['t' => $a['title']]), 'meta' => $a['class_name'], 'done' => false, 'url' => '/student/assignments/' . (int) $a['id'], 'id' => (int) $a['id'], 'kind' => $a['kind']];
         }
         foreach (Db::all(
             'SELECT ss.*, c.name AS class_name FROM study_sessions ss LEFT JOIN classes c ON c.id = ss.class_id

@@ -5,8 +5,8 @@ import { confirmClick, passwordLogin } from './helpers.mjs';
 test('the companion pauses while a student takes a quiz and comes back when it is submitted', async ({ page }) => {
   await passwordLogin(page, 'patricia.lim');
   await expect(page).toHaveURL(/\/student$/);
-  await page.goto('student/assignments');
-  await page.getByRole('link', { name: /Heredity basics/ }).first().click();
+  await page.goto('student/quizzes');
+  await page.getByRole('link', { name: 'Heredity basics', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Study this topic' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Get a hint' })).toHaveCount(0);
 

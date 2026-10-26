@@ -886,6 +886,14 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   too), and **Explanation level** shows only for **Explain a topic**, the one kind it changes. An empty chat shows
   the same question and example. The material lists on the companion and in **Practice** offer only the chosen
   class's materials; with no class chosen, the companion's list is switched off ("Choose a class first").
+- **Quizzes have their own page.** Students and teachers have **Assignments** (work handed in online, and work done
+  in class or on paper) and **Quizzes** (quizzes taken online) as separate menu items, each with its own due count,
+  and a student's class page has an **Assignments** tab and a **Quizzes** tab. An open quiz in the list has a
+  **Start quiz** (or **Resume quiz**) button. Every list tags each piece of work **Quiz**, **Assignment** or **In
+  class / on paper** (`kind_tag()`), and a quiz's own pages, which keep their `/assignments/{id}` URLs so old links
+  and notifications still work, light up **Quizzes** in the menu and in the breadcrumb (`work_list()`). The
+  teacher's **Quizzes** page has **New quiz**, and so does each class page; `/teacher/assignments?kind=quiz` and
+  `/teacher/assessments` lead there.
 - **Comment bank.** Teachers save feedback they write often (**Comment bank**, linked from **To review** and
   the grading page), optionally tied to a rubric criterion by its title. On the grading page the bank lists the
   comments for this rubric's criteria first. A click inserts a comment into the comment box the teacher was

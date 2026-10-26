@@ -72,7 +72,8 @@ final class SubmissionController extends Controller
         $selected = $this->request->int('student');
         return $this->view('teacher/submissions', [
             'title' => t('Submissions: :title', ['title' => $a['title']]),
-            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], '/teacher/assignments/' . $id], [t('Submissions'), null]],
+            'crumbs' => [work_list((string) $a['kind'], 'teacher'), [$a['title'], '/teacher/assignments/' . $id], [t('Submissions'), null]],
+            'navActive' => work_list((string) $a['kind'], 'teacher')[1],
             'a' => $a,
             'rows' => $rows,
             'counts' => $counts,
@@ -100,7 +101,8 @@ final class SubmissionController extends Controller
         $selected = $this->request->int('student');
         return $this->view('teacher/scores', [
             'title' => t('Scores: :title', ['title' => $a['title']]),
-            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], '/teacher/assignments/' . $id], [t('Scores'), null]],
+            'crumbs' => [work_list((string) $a['kind'], 'teacher'), [$a['title'], '/teacher/assignments/' . $id], [t('Scores'), null]],
+            'navActive' => work_list((string) $a['kind'], 'teacher')[1],
             'a' => $a,
             'rows' => $rows,
             'students' => $students,
@@ -206,7 +208,8 @@ final class SubmissionController extends Controller
         $pos = array_search($id, $ids, true);
         return $this->view('teacher/submission', [
             'title' => t(':name: :title', ['name' => user_name($student), 'title' => $a['title']]),
-            'crumbs' => [[t('Assignments'), '/teacher/assignments'], [$a['title'], '/teacher/assignments/' . (int) $a['id']], [t('Submissions'), '/teacher/assignments/' . (int) $a['id'] . '/submissions'], [user_name($student), null]],
+            'crumbs' => [work_list((string) $a['kind'], 'teacher'), [$a['title'], '/teacher/assignments/' . (int) $a['id']], [t('Submissions'), '/teacher/assignments/' . (int) $a['id'] . '/submissions'], [user_name($student), null]],
+            'navActive' => work_list((string) $a['kind'], 'teacher')[1],
             'sub' => $sub,
             'a' => $a,
             'student' => $student,

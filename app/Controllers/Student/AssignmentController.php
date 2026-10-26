@@ -23,7 +23,18 @@ final class AssignmentController extends Controller
     private const MAX_FILES = 5;
     private const MAX_FILE_MB = 10;
 
+    /** Assignments and work done in class or on paper. Quizzes have their own page. */
     public function index(): Response
+    {
+        return $this->list(false);
+    }
+
+    public function quizzes(): Response
+    {
+        return $this->list(true);
+    }
+
+    private function list(bool $quizzes): Response
     {
         $user = $this->user();
         $filters = ['upcoming', 'overdue', 'submitted', 'graded', 'excused', 'all'];
@@ -33,7 +44,7 @@ final class AssignmentController extends Controller
         if ($classId !== null && !in_array($classId, array_map(static fn ($c) => (int) $c['id'], $classes), true)) {
             $classId = null;
         }
-        $all = StudentRepo::assignments($user, 'all', $classId);
+        $all = array_values(array_filter(StudentRepo::assignments($user, 'all', $classId), static fn ($r) => ($r['kind'] === 'quiz') === $quizzes));
         $counts = array_fill_keys($filters, 0);
         foreach ($all as $row) {
             $counts[$row['bucket']]++;
@@ -44,7 +55,8 @@ final class AssignmentController extends Controller
             usort($rows, static fn ($a, $b) => strcmp((string) $b['due_at'], (string) $a['due_at']));
         }
         return $this->view('student/assignments', [
-            'title' => t('Assignments'),
+            'title' => $quizzes ? t('Quizzes') : t('Assignments'),
+            'quizzes' => $quizzes,
             'filter' => $filter,
             'classId' => $classId,
             'classes' => $classes,
@@ -57,9 +69,10 @@ final class AssignmentController extends Controller
     {
         $user = $this->user();
         $assignment = Assessments::forStudent((int) $user['id'], $id, true);
-        $crumbs = [[t('Assignments'), '/student/assignments'], [$assignment['title'], null]];
+        $list = work_list((string) $assignment['kind'], 'student');
+        $crumbs = [$list, [$assignment['title'], null]];
         if ($assignment['not_open']) {
-            return $this->view('student/assignment_scheduled', ['title' => $assignment['title'], 'crumbs' => $crumbs, 'assignment' => $assignment]);
+            return $this->view('student/assignment_scheduled', ['title' => $assignment['title'], 'crumbs' => $crumbs, 'navActive' => $list[1], 'assignment' => $assignment]);
         }
         $state = Assessments::studentState($assignment, (int) $user['id']);
         $latest = $state['latest'];
@@ -92,6 +105,7 @@ final class AssignmentController extends Controller
         return $this->view('student/assignment', [
             'title' => $assignment['title'],
             'crumbs' => $crumbs,
+            'navActive' => $list[1],
             'assignment' => $assignment,
             'state' => $state,
             'latest' => $latest,
@@ -254,6 +268,7 @@ final class AssignmentController extends Controller
         $questions = array_map(static fn ($q) => Assessments::publicQuestion($q, false), $snapshot['questions'] ?? []);
         return $this->view('student/quiz_attempt', [
             'title' => $assignment['title'],
+            'navActive' => '/student/quizzes',
             'assignment' => $assignment,
             'submission' => $sub,
             'questions' => $questions,
@@ -308,7 +323,8 @@ final class AssignmentController extends Controller
         $assignment = Assessments::forStudent((int) $user['id'], (int) $sub['assignment_id']);
         return $this->view('student/receipt', [
             'title' => t('Submission receipt'),
-            'crumbs' => [[t('Assignments'), '/student/assignments'], [$assignment['title'], '/student/assignments/' . (int) $assignment['id']], [t('Receipt'), null]],
+            'crumbs' => [work_list((string) $assignment['kind'], 'student'), [$assignment['title'], '/student/assignments/' . (int) $assignment['id']], [t('Receipt'), null]],
+            'navActive' => work_list((string) $assignment['kind'], 'student')[1],
             'assignment' => $assignment,
             'submission' => $sub,
             'files' => Db::all('SELECT * FROM submission_files WHERE submission_id = :s ORDER BY id', ['s' => $id]),

@@ -51,8 +51,8 @@ test('a teacher builds and publishes a quiz with reviewed AI drafts', async ({ p
 
 test('a student takes the quiz and gets a receipt', async ({ page }) => {
   await demoLogin(page, 'student');
-  await page.goto('student/assignments');
-  await page.getByRole('link', { name: TITLE }).click();
+  await page.goto('student/quizzes');
+  await page.getByRole('link', { name: TITLE, exact: true }).click();
   await confirmClick(page, page.getByRole('button', { name: 'Start quiz' }));
   await expect(page.locator('#quiz-form')).toBeVisible();
 

@@ -186,6 +186,25 @@ function work_kind(string $kind, bool $lower = false): string
     }
 }
 
+/**
+ * The kind of work as a small tag with its icon, so a quiz, an assignment and work done in class are told apart at a
+ * glance in any list ("Quiz" reads the same everywhere: the Quizzes menu, lists, the calendar).
+ */
+function kind_tag(string $kind): string
+{
+    $icon = ['quiz' => 'list-checks', 'paper' => 'clipboard-pen'][$kind] ?? 'clipboard-list';
+    return '<span class="tag tag--kind tag--' . e(in_array($kind, ['quiz', 'paper'], true) ? $kind : 'assignment') . '">' . icon($icon, 'icon--xs') . e(work_kind($kind)) . '</span>';
+}
+
+/**
+ * The menu page a piece of work belongs to, as a breadcrumb: quizzes have their own page, everything else is under
+ * Assignments. $role is 'student' or 'teacher'. @return array{0:string,1:string}
+ */
+function work_list(string $kind, string $role): array
+{
+    return $kind === 'quiz' ? [t('Quizzes'), '/' . $role . '/quizzes'] : [t('Assignments'), '/' . $role . '/assignments'];
+}
+
 /** Plain-language assignment status ("Scheduled" when published but not yet open). @return array{0:string,1:string} */
 function assignment_status(array $a): array
 {

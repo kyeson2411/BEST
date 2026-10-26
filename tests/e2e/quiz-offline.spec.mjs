@@ -21,8 +21,8 @@ const kept = (page) => page.evaluate(() => {
 const moveDeadline = (username, seconds) => execFileSync(php, ['tests/e2e/quiz-deadline.php', username, QUIZ, String(seconds)], { encoding: 'utf8' });
 
 async function openQuiz(page) {
-  await page.goto('student/assignments?filter=all');
-  await page.getByRole('link', { name: QUIZ }).click();
+  await page.goto('student/quizzes?filter=all');
+  await page.getByRole('link', { name: QUIZ, exact: true }).click();
 }
 
 test('answers given offline stay on the device and are sent on reconnect', async ({ page, context }) => {

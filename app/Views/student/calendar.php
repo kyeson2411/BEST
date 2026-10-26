@@ -82,7 +82,7 @@ $eventLabel = static function (array $ev): string {
           <?= partial('entry_date', ['at' => $ev['at']]) ?>
           <div class="entry__main">
             <?php if ($ev['url']): ?><a class="row__title" href="<?= e(url($ev['url'])) ?>"><?= e($ev['title']) ?></a><?php else: ?><span class="row__title"><?= e($ev['title']) ?></span><?php endif; ?>
-            <div class="row__meta"><span><?= e($eventLabel($ev)) ?></span><span><?= e($ev['meta']) ?></span><?php if (!empty($ev['notes'])): ?><span><?= e(str_limit($ev['notes'], 80)) ?></span><?php endif; ?></div>
+            <div class="row__meta"><?php if (!empty($ev['kind'])): ?><?= kind_tag((string) $ev['kind']) ?><?php endif; ?><span><?= e($eventLabel($ev)) ?></span><span><?= e($ev['meta']) ?></span><?php if (!empty($ev['notes'])): ?><span><?= e(str_limit($ev['notes'], 80)) ?></span><?php endif; ?></div>
           </div>
           <div class="entry__aside">
             <?php if ($ev['type'] === 'due'): ?>

@@ -76,6 +76,14 @@ Scale (classic typographic progression, 16px base):
 - **Specimen tags.** Source citations: a small bordered label with document title, page or section, and a quoted line.
   Numbered markers appear only where they match a source.
 - **Leaf tab.** The active navigation item has a lime tab on the notebook spine (sidebar edge). It marks location, not decoration.
+  A page whose URL sits under another menu item names its own (`$navActive`): a quiz opens at `/student/assignments/{id}`
+  but lights up **Quizzes**, and its breadcrumb starts at Quizzes (`work_list()`).
+- **Kind tags.** Every piece of work says what it is with a small bordered tag (`kind_tag()`, `.tag.tag--kind`): an
+  icon and the word **Quiz** (list-checks), **Assignment** (clipboard-list) or **In class / on paper** (clipboard-pen),
+  in ink on paper-raised. It comes first in the meta line of every list (Home, Assignments, Quizzes, class pages, the
+  calendar, the teacher's tables) and beside the class name on the work's own page. Kind is never a colour: colour
+  stays for status. Quizzes also have their own menu item and class tab, so no list makes a student pick a quiz out
+  of everything else.
 - **Rules.** Hairline rules separate rows of a list. Panels are used only when a group is a real object (a class, a
   conversation, a dialog). Most of a page is plain sections on the canvas.
 

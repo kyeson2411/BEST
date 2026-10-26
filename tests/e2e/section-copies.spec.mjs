@@ -57,7 +57,7 @@ test('Molave students see the copy only once it is published there', async ({ pa
 
 test('a quiz copy keeps its questions and links the section\'s own copy of its notes', async ({ page }) => {
   await demoLogin(page, 'teacher');
-  await page.goto(`teacher/assignments?class_id=${ids().classes.sciNarra}`);
+  await page.goto(`teacher/quizzes?class_id=${ids().classes.sciNarra}`);
   await page.getByRole('link', { name: 'Heredity basics' }).click();
   const panel = await copyTo(page, MOLAVE);
   // The notes it links to were copied to Molave in the first test, so nothing else is copied now.

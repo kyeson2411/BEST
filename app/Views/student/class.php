@@ -10,7 +10,8 @@ $base = '/student/classes/' . (int) $class['id'];
 $tabs = [
     'overview' => t('Overview'),
     'materials' => t('Materials'),
-    'work' => t('Work'),
+    'work' => t('Assignments'),
+    'quizzes' => t('Quizzes'),
     'announcements' => t('Announcements'),
 ];
 $byModule = [];
@@ -23,6 +24,13 @@ foreach ($lessons as $l) {
 }
 $teacherNames = implode(', ', array_map(static fn ($t) => user_name($t), $teachers));
 $openWork = array_values(array_filter($work, static fn ($w) => in_array($w['bucket'], ['upcoming', 'overdue'], true)));
+// Quizzes have their own tab, as they have their own page in the menu.
+$quizzes = array_values(array_filter($work, static fn ($w) => $w['kind'] === 'quiz'));
+$assignments = array_values(array_filter($work, static fn ($w) => $w['kind'] !== 'quiz'));
+$openCount = [
+    'work' => count(array_filter($openWork, static fn ($w) => $w['kind'] !== 'quiz')),
+    'quizzes' => count(array_filter($openWork, static fn ($w) => $w['kind'] === 'quiz')),
+];
 
 $materialRow = static function (array $m) use ($aiEnabled, $class): string {
     ob_start(); ?>
@@ -87,7 +95,7 @@ $materialRow = static function (array $m) use ($aiEnabled, $class): string {
   <?php foreach ($tabs as $key => $label): ?>
     <a class="tab" href="<?= e(url($base, $key === 'overview' ? [] : ['tab' => $key])) ?>"<?= $tab === $key ? ' aria-current="page"' : '' ?>>
       <?= e($label) ?>
-      <?php if ($key === 'work' && $openWork): ?><span class="badge badge--amber"><?= count($openWork) ?></span><?php endif; ?>
+      <?php if (!empty($openCount[$key])): ?><span class="badge badge--amber"><?= (int) $openCount[$key] ?></span><?php endif; ?>
     </a>
   <?php endforeach; ?>
 </nav>
@@ -98,7 +106,10 @@ $materialRow = static function (array $m) use ($aiEnabled, $class): string {
       <section class="section" aria-labelledby="ov-work">
         <div class="section__head">
           <h2 class="section__title" id="ov-work"><?= e(t('Open work')) ?></h2>
-          <a class="section__link" href="<?= e(url($base, ['tab' => 'work'])) ?>"><?= e(t('All work')) ?></a>
+          <span class="section__links">
+            <a class="section__link" href="<?= e(url($base, ['tab' => 'work'])) ?>"><?= e(t('All assignments')) ?></a>
+            <a class="section__link" href="<?= e(url($base, ['tab' => 'quizzes'])) ?>"><?= e(t('All quizzes')) ?></a>
+          </span>
         </div>
         <?php if (!$openWork): ?>
           <p class="meta"><?= e(t('Nothing open in this class right now.')) ?></p>
@@ -109,7 +120,7 @@ $materialRow = static function (array $m) use ($aiEnabled, $class): string {
                 <?= partial('entry_date', ['at' => $w['due_at']]) ?>
                 <div class="entry__main">
                   <a class="row__title" href="<?= e(url('/student/assignments/' . (int) $w['id'])) ?>"><?= e($w['title']) ?></a>
-                  <div class="row__meta"><span><?= e(work_kind((string) $w['kind'])) ?></span></div>
+                  <div class="row__meta"><?= kind_tag((string) $w['kind']) ?></div>
                 </div>
                 <div class="entry__aside"><?= (int) $w['not_open'] ? badge(t('Opens :when', ['when' => fmt_date($w['opens_at'], 'datetime_short')]), 'neutral') : badge($d['label'], $d['tone']) ?></div>
               </li>
@@ -214,10 +225,17 @@ $materialRow = static function (array $m) use ($aiEnabled, $class): string {
   <?php endif; ?>
 
 <?php elseif ($tab === 'work'): ?>
-  <?php if (!$work): ?>
-    <?= partial('empty', ['title' => t('No work assigned yet'), 'body' => t('Assignments and quizzes for this class will appear here.')]) ?>
+  <?php if (!$assignments): ?>
+    <?= partial('empty', ['title' => t('No assignments yet'), 'body' => t('Assignments and work done in class will appear here. Quizzes have their own tab.')]) ?>
   <?php else: ?>
-    <?= partial('student_work_list', ['work' => $work, 'showClass' => false]) ?>
+    <?= partial('student_work_list', ['work' => $assignments, 'showClass' => false]) ?>
+  <?php endif; ?>
+
+<?php elseif ($tab === 'quizzes'): ?>
+  <?php if (!$quizzes): ?>
+    <?= partial('empty', ['title' => t('No quizzes yet'), 'body' => t('Quizzes for this class will appear here as soon as your teacher publishes them.')]) ?>
+  <?php else: ?>
+    <?= partial('student_work_list', ['work' => $quizzes, 'showClass' => false]) ?>
   <?php endif; ?>
 
 <?php else: ?>

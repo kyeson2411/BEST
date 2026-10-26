@@ -172,6 +172,7 @@ $router->group('/student', ['role:student', 'notices'], static function ($r): vo
     $r->get('/classes/{classId}/lessons/{id}', [Student\ClassController::class, 'lesson']);
 
     $r->get('/assignments', [Student\AssignmentController::class, 'index']);
+    $r->get('/quizzes', [Student\AssignmentController::class, 'quizzes']);
     $r->get('/assignments/{id}', [Student\AssignmentController::class, 'show']);
     $r->post('/assignments/{id}/draft', [Student\AssignmentController::class, 'saveDraft']);
     $r->post('/assignments/{id}/submit', [Student\AssignmentController::class, 'submit']);
@@ -247,6 +248,7 @@ $router->group('/teacher', ['role:teacher', 'notices'], static function ($r): vo
     $r->post('/materials/{id}/reading/{kind}/delete', [Teacher\ReadingVersionController::class, 'destroy']);
 
     $r->get('/assignments', [Teacher\AssignmentController::class, 'index']);
+    $r->get('/quizzes', [Teacher\AssignmentController::class, 'quizzes']);
     $r->get('/assessments', [Teacher\AssignmentController::class, 'assessments']);
     $r->get('/assignments/new', [Teacher\AssignmentController::class, 'create']);
     $r->post('/assignments', [Teacher\AssignmentController::class, 'store']);

@@ -58,7 +58,7 @@ test('the excused student sees the work as excused', async ({ page }) => {
   await expect(page).toHaveURL(/\/student$/);
   await page.goto(`student/assignments/${ids().sciPastQuiz}`);
   await expect(page.getByText('You are excused from this work')).toBeVisible();
-  await page.goto('student/assignments?filter=excused');
+  await page.goto('student/quizzes?filter=excused');
   await expect(page.getByRole('link', { name: QUIZ })).toBeVisible();
 });
 

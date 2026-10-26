@@ -28,7 +28,10 @@ $archived = $class['status'] !== 'active';
     <a class="btn btn--secondary" href="<?= e(url('/teacher/materials', ['class_id' => (int) $class['id']])) ?>"><?= icon('folder-open', 'icon--sm') ?><?= e(t('Materials')) ?></a>
     <a class="btn btn--secondary" href="<?= e(url('/teacher/gradebook/' . (int) $class['id'])) ?>"><?= icon('table', 'icon--sm') ?><?= e(t('Gradebook')) ?></a>
     <a class="btn btn--secondary" href="<?= e(url('/teacher/insights/' . (int) $class['id'])) ?>"><?= icon('chart-column', 'icon--sm') ?><?= e(t('Insights')) ?></a>
-    <?php if (!$archived): ?><a class="btn btn--primary" href="<?= e(url('/teacher/assignments/new', ['class_id' => (int) $class['id']])) ?>"><?= icon('plus', 'icon--sm') ?><?= e(t('New assignment')) ?></a><?php endif; ?>
+    <?php if (!$archived): ?>
+      <a class="btn btn--secondary" href="<?= e(url('/teacher/assignments/new', ['kind' => 'quiz', 'class_id' => (int) $class['id']])) ?>"><?= icon('list-checks', 'icon--sm') ?><?= e(t('New quiz')) ?></a>
+      <a class="btn btn--primary" href="<?= e(url('/teacher/assignments/new', ['class_id' => (int) $class['id']])) ?>"><?= icon('plus', 'icon--sm') ?><?= e(t('New assignment')) ?></a>
+    <?php endif; ?>
   </div>
 </div>
 
@@ -42,7 +45,11 @@ $archived = $class['status'] !== 'active';
   <div class="layout-split">
     <div class="stack">
     <section class="section" aria-labelledby="work-title">
-      <div class="section__head"><h2 class="section__title" id="work-title"><?= e(t('Recent and upcoming work')) ?></h2><a class="section__link" href="<?= e(url('/teacher/assignments', ['class_id' => (int) $class['id']])) ?>"><?= e(t('All work')) ?></a></div>
+      <div class="section__head"><h2 class="section__title" id="work-title"><?= e(t('Recent and upcoming work')) ?></h2>
+        <span class="section__links">
+          <a class="section__link" href="<?= e(url('/teacher/assignments', ['class_id' => (int) $class['id']])) ?>"><?= e(t('All assignments')) ?></a>
+          <a class="section__link" href="<?= e(url('/teacher/quizzes', ['class_id' => (int) $class['id']])) ?>"><?= e(t('All quizzes')) ?></a>
+        </span></div>
       <?php if (!$work): ?>
         <?= partial('empty', ['compact' => true, 'title' => t('No assignments yet'), 'body' => t('Create an assignment or quiz for this class.'), 'action' => [t('New assignment'), '/teacher/assignments/new?class_id=' . (int) $class['id']]]) ?>
       <?php else: ?>
@@ -52,7 +59,7 @@ $archived = $class['status'] !== 'active';
               <?= partial('entry_date', ['at' => $w['due_at']]) ?>
               <div class="entry__main">
                 <a class="row__title" href="<?= e(url('/teacher/assignments/' . (int) $w['id'])) ?>"><?= e($w['title']) ?></a>
-                <div class="row__meta"><span><?= e(work_kind((string) $w['kind'])) ?></span><span><?= e(assignment_status($w)[0]) ?></span>
+                <div class="row__meta"><?= kind_tag((string) $w['kind']) ?><span><?= e(assignment_status($w)[0]) ?></span>
                   <?php if ($w['status'] !== 'draft'): ?><span><?= e(t(':n of :m submitted', ['n' => (int) $w['submitted'], 'm' => count($activeStudents)])) ?></span><?php endif; ?></div>
               </div>
               <div class="entry__aside"><?php if ((int) $w['ungraded'] > 0): ?><a class="btn btn--secondary btn--sm" href="<?= e(url('/teacher/assignments/' . (int) $w['id'] . '/submissions')) ?>"><?= e(tp('Grade :count', 'Grade :count', (int) $w['ungraded'])) ?></a><?php endif; ?></div>

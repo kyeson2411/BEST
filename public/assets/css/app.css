@@ -299,6 +299,7 @@ html:not(.can-speak) .read-aloud { display: none; }
 .section__title { margin: 0; font-size: var(--step-1); font-weight: 700; }
 .section__title .count { color: var(--ink-3); font-weight: 600; margin-left: 4px; }
 .section__link { font-size: 0.875rem; font-weight: 600; white-space: nowrap; }
+.section__links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px var(--s-4); }
 .section__intro { color: var(--ink-2); margin: var(--s-2) 0 var(--s-4); max-width: 64ch; }
 
 .panel { background: var(--paper-raised); border: 1px solid var(--rule); border-radius: var(--radius-panel); padding: var(--s-5); }
@@ -433,6 +434,10 @@ legend { padding: 0; margin-bottom: var(--s-2); font-weight: 700; font-size: var
 .badge--ink { background: var(--forest); color: var(--paper); }
 .badge--outline { background: transparent; border: 1px solid var(--line-control); }
 .tag { display: inline-flex; align-items: center; gap: 4px; padding: 0 8px; border: 1px solid var(--rule-strong); border-radius: var(--radius-control); font-size: 0.8125rem; color: var(--ink-2); background: var(--paper-raised); }
+/* Kind tag: what a piece of work is (Quiz, Assignment, In class / on paper), the same in every list. */
+.tag--kind { color: var(--ink); font-weight: 700; line-height: 1.6; white-space: nowrap; }
+.table-sub .tag--kind { margin-right: 6px; }
+.page-lead .tag--kind { margin-right: 6px; }
 
 /* Tabs, segmented controls, toolbars --------------------------------------------------- */
 .tabs { display: flex; gap: 2px; margin-bottom: var(--s-5); border-bottom: 1px solid var(--rule); overflow-x: auto; scrollbar-width: none; }

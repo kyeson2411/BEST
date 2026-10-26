@@ -32,8 +32,9 @@ $labels = [
       <div class="entry__main">
         <a class="row__title" href="<?= e(url('/student/assignments/' . (int) $w['id'])) ?>"><?= e($w['title']) ?></a>
         <div class="row__meta">
+          <?= kind_tag((string) $w['kind']) ?>
           <?php if ($showClass): ?><span><?= e($w['class_name']) ?></span><?php endif; ?>
-          <span><?= e(work_kind((string) $w['kind'])) ?></span>
+          <?php if ($w['kind'] === 'quiz' && (int) $w['time_limit_minutes'] > 0): ?><span><?= e(t(':n minutes', ['n' => (int) $w['time_limit_minutes']])) ?></span><?php endif; ?>
           <?php if ($notOpen): ?>
             <span><?= e(t('Opens :when', ['when' => fmt_date($w['opens_at'], 'datetime_short')])) ?></span>
           <?php elseif ($w['submitted_at'] && !$paper): ?>
@@ -48,6 +49,10 @@ $labels = [
           <?= score_html($w['released_score'], $w['points_possible']) ?>
         <?php else: ?>
           <?= badge($notOpen ? t('Not open yet') : $label, $notOpen ? 'neutral' : $tone) ?>
+          <?php if ($w['kind'] === 'quiz' && $w['bucket'] === 'upcoming' && !$notOpen): ?>
+            <?php /* The quiz page has the Start button and the rules; this only takes the student there. */ ?>
+            <a class="btn btn--primary btn--sm" href="<?= e(url('/student/assignments/' . (int) $w['id'])) ?>"><?= e($w['sub_status'] === 'in_progress' ? t('Resume quiz') : t('Start quiz')) ?><span class="sr-only">: <?= e($w['title']) ?></span></a>
+          <?php endif; ?>
         <?php endif; ?>
       </div>
     </li>

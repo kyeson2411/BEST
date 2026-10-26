@@ -74,7 +74,10 @@ $next = $upcoming[0] ?? null;
     <section class="section" aria-labelledby="due-title">
       <div class="section__head">
         <h2 class="section__title" id="due-title"><?= e(t('Due soon')) ?><?php if ($due): ?><span class="count"><?= count($due) ?></span><?php endif; ?></h2>
-        <a class="section__link" href="<?= e(url('/student/assignments')) ?>"><?= e(t('All assignments')) ?></a>
+        <span class="section__links">
+          <a class="section__link" href="<?= e(url('/student/assignments')) ?>"><?= e(t('All assignments')) ?></a>
+          <a class="section__link" href="<?= e(url('/student/quizzes')) ?>"><?= e(t('All quizzes')) ?></a>
+        </span>
       </div>
       <?php if (!$due): ?>
         <?= partial('empty', ['compact' => true, 'title' => t('You are all caught up'), 'body' => t('New work from your teachers will appear here with its due date.')]) ?>
@@ -93,8 +96,9 @@ $next = $upcoming[0] ?? null;
               <div class="entry__main">
                 <a class="row__title" href="<?= e(url('/student/assignments/' . (int) $item['id'])) ?>"><?= e($item['title']) ?></a>
                 <div class="row__meta">
+                  <?= kind_tag((string) $item['kind']) ?>
                   <span><?= e($item['class_name']) ?></span>
-                  <span><?= e(work_kind((string) $item['kind'])) ?><?php if ($quiz && $item['time_limit_minutes']): ?>, <?= e(t(':n minutes', ['n' => (int) $item['time_limit_minutes']])) ?><?php endif; ?></span>
+                  <?php if ($quiz && $item['time_limit_minutes']): ?><span><?= e(t(':n minutes', ['n' => (int) $item['time_limit_minutes']])) ?></span><?php endif; ?>
                 </div>
               </div>
               <div class="entry__aside">

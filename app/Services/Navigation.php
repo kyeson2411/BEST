@@ -21,7 +21,9 @@ final class Navigation
                 return array_values(array_filter([
                     ['label' => t('Home'), 'icon' => 'house', 'url' => '/student', 'exact' => true, 'bottom' => true],
                     ['label' => t('Classes'), 'icon' => 'school', 'url' => '/student/classes', 'bottom' => !$ai],
-                    ['label' => t('Assignments'), 'icon' => 'clipboard-list', 'url' => '/student/assignments', 'count' => self::studentDueCount($id), 'bottom' => true],
+                    // Quizzes have their own page, so a student never has to pick one out of a mixed list.
+                    ['label' => t('Assignments'), 'icon' => 'clipboard-list', 'url' => '/student/assignments', 'count' => self::studentDueCount($id, false), 'bottom' => true],
+                    ['label' => t('Quizzes'), 'icon' => 'list-checks', 'url' => '/student/quizzes', 'count' => self::studentDueCount($id, true), 'bottom' => true],
                     $ai ? ['label' => t('Companion'), 'icon' => 'messages-square', 'url' => '/companion', 'bottom' => true] : null,
                     $ai ? ['label' => t('Practice'), 'icon' => 'repeat', 'url' => '/student/learning'] : null,
                     Settings::get((int) $user['organization_id'], 'features.spaced_review', true)
@@ -40,6 +42,7 @@ final class Navigation
                 ], $advisory, [
                     ['label' => t('To review'), 'icon' => 'inbox', 'url' => '/teacher/review', 'count' => self::teacherReviewCount($id), 'bottom' => true],
                     ['label' => t('Assignments'), 'icon' => 'clipboard-list', 'url' => '/teacher/assignments'],
+                    ['label' => t('Quizzes'), 'icon' => 'list-checks', 'url' => '/teacher/quizzes'],
                     ['label' => t('Materials'), 'icon' => 'folder-open', 'url' => '/teacher/materials'],
                     ['label' => t('Lessons'), 'icon' => 'notebook-pen', 'url' => '/teacher/lessons'],
                     ['label' => t('Gradebook'), 'icon' => 'table', 'url' => '/teacher/gradebook'],
@@ -87,8 +90,15 @@ final class Navigation
         return url($item['url'], $from !== null ? ['from' => $from] : []);
     }
 
-    public static function isActive(array $item): bool
+    /**
+     * $current: the menu URL a page says it belongs to (the layout's $navActive), for pages whose own URL does not
+     * say it: a quiz opens at /student/assignments/{id} but lights up Quizzes.
+     */
+    public static function isActive(array $item, ?string $current = null): bool
     {
+        if ($current !== null) {
+            return $item['url'] === $current || in_array($current, $item['also'] ?? [], true);
+        }
         if (!empty($item['exact'])) {
             return path_is($item['url'], true);
         }
@@ -108,7 +118,8 @@ final class Navigation
         return (int) Db::value('SELECT COUNT(*) FROM notifications WHERE user_id = :u AND read_at IS NULL', ['u' => $userId]);
     }
 
-    private static function studentDueCount(int $studentId): int
+    /** Open work due in the next 7 days and not handed in: quizzes only, or everything else. */
+    private static function studentDueCount(int $studentId, bool $quizzes): int
     {
         $due = Overrides::dueSql('a');
         return (int) Db::value(
@@ -117,6 +128,7 @@ final class Navigation
              JOIN classes c ON c.id = a.class_id AND c.status = 'active'"
              . Overrides::joinSql('a', 'u3') . "
              WHERE " . Overrides::openSql('a') . ' AND ' . Overrides::notExcusedSql() . " AND (a.opens_at IS NULL OR a.opens_at <= UTC_TIMESTAMP())
+               AND a.kind " . ($quizzes ? "= 'quiz'" : "<> 'quiz'") . "
                AND $due IS NOT NULL AND $due BETWEEN UTC_TIMESTAMP() AND UTC_TIMESTAMP() + INTERVAL 7 DAY
                AND NOT EXISTS (SELECT 1 FROM submissions s WHERE s.assignment_id = a.id AND s.student_id = :u2 AND s.status = 'submitted')",
             ['u' => $studentId, 'u2' => $studentId, 'u3' => $studentId]

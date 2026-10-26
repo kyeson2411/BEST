@@ -5,8 +5,8 @@ import { demoLogin, ids } from './helpers.mjs';
 // a name for every form control, button and link, and alternative text for images.
 const pages = {
   guest: ['', 'login', 'start', 'privacy', 'help', 'login?lang=fil', 'offline'],
-  student: ['student', 'student/assignments', 'student/classes', 'companion/new', 'student/progress', 'student/progress/report', 'student/review', 'student/calendar', 'student/learning', 'settings', 'feedback'],
-  teacher: ['teacher', 'teacher/review', 'teacher/comments', 'teacher/assignments/new', 'teacher/materials/new', 'teacher/lessons', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback', 'settings', 'settings/two-step'],
+  student: ['student', 'student/assignments', 'student/quizzes', 'student/classes', 'companion/new', 'student/progress', 'student/progress/report', 'student/review', 'student/calendar', 'student/learning', 'settings', 'feedback'],
+  teacher: ['teacher', 'teacher/review', 'teacher/comments', 'teacher/quizzes', 'teacher/assignments/new', 'teacher/materials/new', 'teacher/lessons', 'teacher/gradebook', 'teacher/insights', 'teacher/advisory', 'feedback', 'settings', 'settings/two-step'],
   admin: ['admin', 'admin/users', 'admin/users/new', 'admin/users/import', 'admin/classes/new', 'admin/subjects', 'admin/sections', 'admin/usage', 'admin/policies', 'admin/settings', 'admin/privacy', 'admin/audit', 'admin/feedback', 'admin/pilot', 'admin/grading', 'admin/academic-periods', 'admin/competencies', 'admin/integrations'],
 };
 
