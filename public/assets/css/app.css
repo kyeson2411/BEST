@@ -499,6 +499,18 @@ legend { padding: 0; margin-bottom: var(--s-2); font-weight: 700; font-size: var
 .error-page { padding: var(--s-7) 0; max-width: 58ch; }
 .error-page__code { font-family: var(--font-display); font-size: 4rem; font-weight: 700; color: var(--sage); line-height: 1; margin-bottom: var(--s-3); }
 
+/* Lesson editor: what students read, then the teacher's own plan folded away on a sunken sheet. */
+.lesson-part .fieldset-hint { display: flex; gap: 6px; align-items: center; }
+.lesson-plan { margin: var(--s-2) 0 var(--s-4); border: 1px solid var(--rule); border-radius: var(--radius-panel); background: var(--paper-sunken); }
+.lesson-plan > summary { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); padding: var(--s-3) var(--s-4); cursor: pointer; list-style: none; }
+.lesson-plan > summary::-webkit-details-marker { display: none; }
+.lesson-plan__title { font-weight: 700; font-size: var(--step-1); }
+.lesson-plan__chevron { transition: transform 120ms; }
+.lesson-plan[open] .lesson-plan__chevron { transform: rotate(90deg); }
+.lesson-plan > summary .meta { margin-left: auto; }
+.lesson-plan__inner { padding: 0 var(--s-4) var(--s-2); }
+@media (prefers-reduced-motion: reduce) { .lesson-plan__chevron { transition: none; } }
+
 /* Learning competencies: the code under a question (a tag, editable after answers), the list in a lesson's details. */
 .competency-tag { margin-top: var(--s-4); padding-top: var(--s-3); border-top: 1px solid var(--rule); }
 .competency-tag__code { max-width: 16rem; }

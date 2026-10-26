@@ -882,6 +882,12 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   are writing** adds the selected text, or the whole box, without leaving the page. The most used comments come
   first. Only their owner sees them; another teacher gets a 404. They are in the teacher's data export and are
   erased with their account.
+- **Lessons: what students read and the teacher's plan.** The lesson editor has two parts. **What students
+  read** (objectives, what students should already know, the explanation and a worked example) is the lesson page
+  students open once it is published; the explanation is needed to publish. **Your teaching plan** (activities,
+  checks for understanding and the exit ticket) is folded away under "Only you see this": it prints in the Daily
+  Lesson Log but never reaches students, in the page or the preview (`LessonController::forStudents()`). AI drafts
+  are asked to write the first part to the student and the second as the teacher's plan.
 - **Daily Lesson Log.** A lesson's **Daily Lesson Log** button prints it in the DepEd DLL layout (the rows of
   DepEd Order No. 42, s. 2016), from the lesson's current draft, in the lesson's language.
   - **Filled rows:** objectives go under I.C. Prior knowledge, the worked example, the explanation, activities,

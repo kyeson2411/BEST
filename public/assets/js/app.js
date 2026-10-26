@@ -398,6 +398,22 @@
     tick();
   });
 
+  /* Text boxes that grow with what is written in them (up to a limit), so long sections read without
+     scrolling inside a small box. Boxes in a closed <details> are measured when it opens. */
+  function grow(box) {
+    if (!box.offsetParent) return;
+    box.style.height = 'auto';
+    box.style.height = Math.min(box.scrollHeight + 2, 640) + 'px';
+  }
+  $all('textarea[data-autogrow]').forEach(function (box) {
+    grow(box);
+    box.addEventListener('input', function () { grow(box); });
+  });
+  $all('details').forEach(function (d) {
+    if (!$('textarea[data-autogrow]', d)) return;
+    d.addEventListener('toggle', function () { if (d.open) $all('textarea[data-autogrow]', d).forEach(grow); });
+  });
+
   /* Warn before leaving a form with unsaved changes. */
   $all('form[data-unsaved-warning]').forEach(function (form) {
     var dirty = false;

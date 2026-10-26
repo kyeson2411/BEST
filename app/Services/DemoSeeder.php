@@ -380,9 +380,9 @@ final class DemoSeeder
     {
         $content = [
             'objectives' => "- Describe the structure of the alveoli.\n- Explain how oxygen and carbon dioxide move between the alveoli and the blood.",
-            'prior_knowledge' => 'Students know that the body needs oxygen and that air enters through the nose and mouth.',
+            'prior_knowledge' => 'You know that the body needs oxygen and that air enters through the nose and mouth.',
             'explanation' => "Air reaches the alveoli through the bronchioles. Each alveolus has a wall one cell thick and is wrapped in capillaries. Oxygen moves from high concentration in the alveoli to lower concentration in the blood by **diffusion**; carbon dioxide moves the opposite way. [1]",
-            'worked_example' => "Ask: why would gas exchange slow down if the alveolar walls became thicker? Model the answer: the gases would have farther to diffuse, so less oxygen would reach the blood each second.",
+            'worked_example' => "**Question:** why would gas exchange slow down if the alveolar walls became thicker?\n\n**Answer:** the gases would have farther to diffuse, so less oxygen would reach the blood each second.",
             'activities' => "1. Pairs sketch an alveolus and its capillaries and label the direction each gas moves.\n2. Groups compare a sponge and a solid block to discuss why surface area matters.",
             'checks' => "- Which way does carbon dioxide move, and why?\n- Name two features that make gas exchange fast.",
             'exit_ticket' => 'In one sentence, explain why the alveolar wall is only one cell thick.',

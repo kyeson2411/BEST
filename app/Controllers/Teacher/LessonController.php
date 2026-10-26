@@ -30,6 +30,16 @@ final class LessonController extends Controller
     use CopiesToSections;
 
     public const SECTIONS = ['objectives', 'prior_knowledge', 'explanation', 'worked_example', 'activities', 'checks', 'exit_ticket'];
+    /** What students read on the lesson page. */
+    public const STUDENT_SECTIONS = ['objectives', 'prior_knowledge', 'explanation', 'worked_example'];
+    /** The teacher's plan for class time: only the teacher and the Daily Lesson Log see it. */
+    public const PLAN_SECTIONS = ['activities', 'checks', 'exit_ticket'];
+
+    /** @param array<string,mixed> $content @return array<string,mixed> the sections students may read, and the sources */
+    public static function forStudents(array $content): array
+    {
+        return array_intersect_key($content, array_flip(array_merge(self::STUDENT_SECTIONS, ['sources'])));
+    }
 
     public function index(): Response
     {
@@ -211,7 +221,7 @@ final class LessonController extends Controller
             'title' => t('Preview: :title', ['title' => $lesson['title']]),
             'lesson' => $lesson,
             'class' => $class,
-            'content' => json_decode((string) $lesson['draft_content'], true) ?: [],
+            'content' => self::forStudents(json_decode((string) $lesson['draft_content'], true) ?: []),
             'katex' => true,
         ]);
     }
@@ -255,8 +265,8 @@ final class LessonController extends Controller
         $user = $this->user();
         $lesson = $this->lesson($user, $id);
         $content = json_decode((string) $lesson['draft_content'], true) ?: [];
-        if (trim((string) ($content['explanation'] ?? '')) === '' && trim((string) ($content['activities'] ?? '')) === '') {
-            $this->flash('error', t('Write at least the explanation or the activities before publishing.'));
+        if (trim((string) ($content['explanation'] ?? '')) === '') {
+            $this->flash('error', t('Write the explanation before publishing. It is the main part students read.'));
             return $this->redirect('/teacher/lessons/' . $id);
         }
         $first = $lesson['status'] !== 'published';

@@ -130,7 +130,7 @@ final class ClassController extends Controller
             'crumbs' => [[t('Classes'), '/student/classes'], [$class['name'], '/student/classes/' . $classId], [$lesson['title'], null]],
             'class' => $class,
             'lesson' => $lesson,
-            'content' => json_decode((string) $lesson['published_content'], true) ?: [],
+            'content' => \Sibol\Controllers\Teacher\LessonController::forStudents(json_decode((string) $lesson['published_content'], true) ?: []),
             'katex' => true,
         ]);
     }

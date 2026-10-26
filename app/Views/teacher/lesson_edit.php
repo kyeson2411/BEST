@@ -1,13 +1,19 @@
 <?php /** @var array $lesson @var array $content @var list<array> $modules */
-$labels = [
-    'objectives' => [t('Learning objectives'), t('What students will be able to do.')],
-    'prior_knowledge' => [t('Prior knowledge'), t('What students should already know.')],
-    'explanation' => [t('Explanation'), t('The core teaching. Citations like [1] refer to the sources listed on the right.')],
-    'worked_example' => [t('Worked example'), ''],
-    'activities' => [t('Activities'), ''],
-    'checks' => [t('Checks for understanding'), ''],
-    'exit_ticket' => [t('Exit ticket'), ''],
+// Two parts: what students read when the lesson is published, and the teacher's own plan for class time.
+// Each entry: label, hint, optional.
+$forStudents = [
+    'objectives' => [t('Learning objectives'), t('Two or three things students will be able to do. Students see this first, as “What you will learn”.'), false],
+    'prior_knowledge' => [t('What students should already know'), t('A short reminder of earlier lessons.'), true],
+    'explanation' => [t('Explanation'), t('The main teaching, written to students in words they understand. You need it to publish. Citations like [1] point to the sources on the right.'), false],
+    'worked_example' => [t('Worked example'), t('One problem or case solved step by step.'), true],
 ];
+$plan = [
+    'activities' => [t('Activities'), t('What the class does, step by step, with the minutes for each.')],
+    'checks' => [t('Checks for understanding'), t('Questions you ask during class to see who is following.')],
+    'exit_ticket' => [t('Exit ticket'), t('One short task students answer at the end of class.')],
+];
+$planWritten = count(array_filter(array_keys($plan), static fn ($k) => trim((string) ($content[$k] ?? '')) !== ''));
+$planErrors = array_filter(array_keys($plan), static fn ($k) => field_error($k) !== null);
 $base = '/teacher/lessons/' . (int) $lesson['id'];
 $published = $lesson['status'] === 'published';
 ?>
@@ -36,9 +42,27 @@ $published = $lesson['status'] === 'published';
   <div class="layout-split">
     <div>
       <?= field('text', 'title', t('Lesson title'), ['value' => $lesson['title'], 'required' => true, 'attrs' => ['maxlength' => 200]]) ?>
-      <?php foreach ($labels as $key => [$label, $hint]): ?>
-        <?= field('textarea', $key, $label, ['value' => (string) ($content[$key] ?? ''), 'rows' => in_array($key, ['explanation', 'activities'], true) ? 9 : 4, 'hint' => $hint ?: null, 'attrs' => ['maxlength' => 12000]]) ?>
-      <?php endforeach; ?>
+      <fieldset class="lesson-part">
+        <legend><?= e(t('What students read')) ?></legend>
+        <p class="fieldset-hint"><?= icon('eye', 'icon--xs') ?><?= e(t('Students see these parts on the lesson page once you publish. Write to them directly.')) ?></p>
+        <?php foreach ($forStudents as $key => [$label, $hint, $optional]): ?>
+          <?= field('textarea', $key, $label, ['value' => (string) ($content[$key] ?? ''), 'rows' => $key === 'explanation' ? 8 : 3, 'hint' => $hint, 'optional_label' => $optional, 'attrs' => ['maxlength' => 12000, 'data-autogrow' => true]]) ?>
+        <?php endforeach; ?>
+      </fieldset>
+      <details class="lesson-plan"<?= $planErrors ? ' open' : '' ?>>
+        <summary>
+          <?= icon('chevron-right', 'icon--sm lesson-plan__chevron') ?>
+          <span class="lesson-plan__title"><?= e(t('Your teaching plan')) ?></span>
+          <?= badge(t('Only you see this'), 'outline') ?>
+          <span class="meta"><?= e($planWritten ? t(':count of 3 parts written', ['count' => $planWritten]) : t('Optional')) ?></span>
+        </summary>
+        <div class="lesson-plan__inner">
+          <p class="fieldset-hint"><?= e(t('Notes for running the class. Only you see them; they print in the Daily Lesson Log. Students never see this part.')) ?></p>
+          <?php foreach ($plan as $key => [$label, $hint]): ?>
+            <?= field('textarea', $key, $label, ['value' => (string) ($content[$key] ?? ''), 'rows' => 3, 'hint' => $hint, 'optional_label' => true, 'attrs' => ['maxlength' => 12000, 'data-autogrow' => true]]) ?>
+          <?php endforeach; ?>
+        </div>
+      </details>
       <div class="form-actions form-actions--sticky"><button class="btn btn--primary" type="submit" data-busy="<?= e(t('Saving…')) ?>"><?= e(t('Save draft')) ?></button><span class="meta"><?= e(t('Saving never changes what students see; publishing does.')) ?></span></div>
     </div>
     <aside class="stack">
@@ -46,8 +70,8 @@ $published = $lesson['status'] === 'published';
         <h2 class="panel__title" id="meta-title"><?= e(t('Details')) ?></h2>
         <?= field('select', 'module_id', t('Module'), ['value' => (string) $lesson['module_id'], 'options' => ['' => t('No module')] + array_column($modules, 'title', 'id')]) ?>
         <?= field('number', 'duration_minutes', t('Length (minutes)'), ['value' => (string) $lesson['duration_minutes'], 'attrs' => ['min' => 5, 'max' => 600]]) ?>
-        <?= field('text', 'reading_level', t('Reading level'), ['value' => (string) $lesson['reading_level'], 'attrs' => ['maxlength' => 40]]) ?>
-        <?= field('text', 'lesson_format', t('Format'), ['value' => (string) $lesson['lesson_format'], 'attrs' => ['maxlength' => 40]]) ?>
+        <?= field('text', 'reading_level', t('Reading level'), ['value' => (string) $lesson['reading_level'], 'placeholder' => t('For example, Grade 9'), 'optional_label' => true, 'attrs' => ['maxlength' => 40]]) ?>
+        <?= field('text', 'lesson_format', t('Format'), ['value' => (string) $lesson['lesson_format'], 'placeholder' => t('For example, group work'), 'optional_label' => true, 'attrs' => ['maxlength' => 40]]) ?>
       </section>
       <section class="panel" aria-labelledby="lc-title">
         <h2 class="panel__title" id="lc-title"><?= e(t('Learning competencies')) ?></h2>

@@ -1,13 +1,11 @@
 <?php
 /** @var array $class @var array $lesson @var array $content */
+// Only the parts written for students; the teacher's plan (activities, checks, exit ticket) stays with the teacher.
 $sections = [
     'objectives' => t('What you will learn'),
     'prior_knowledge' => t('What you already know'),
     'explanation' => t('Explanation'),
     'worked_example' => t('Worked example'),
-    'activities' => t('Activities'),
-    'checks' => t('Check your understanding'),
-    'exit_ticket' => t('Exit ticket'),
 ];
 $cites = [];
 foreach ((array) ($content['sources'] ?? []) as $s) {
