@@ -125,39 +125,9 @@ $base = '/teacher/assignments/' . (int) $a['id'];
       </section>
     <?php endif; ?>
 
-    <section class="section" id="rubric" aria-labelledby="r-title">
-      <div class="section__head"><h2 class="section__title" id="r-title"><?= e(t('Rubric')) ?></h2><span class="meta"><?= e($isQuiz ? t('Optional; used when marking essay answers.') : t('Optional; sets the points and guides marking.')) ?></span></div>
-      <form method="post" action="<?= e(url($base . '/rubric')) ?>" data-rubric>
-        <?= csrf_field() ?>
-        <?php if (field_error('rubric')): ?><p class="field__error"><?= e(field_error('rubric')) ?></p><?php endif; ?>
-        <div data-rubric-rows>
-          <?php foreach ($rubric ?: [['title' => '', 'points' => '', 'description' => '']] as $i => $c): ?>
-            <div class="form-grid" data-rubric-row style="grid-template-columns: 2fr 90px 3fr auto; align-items:end; border-bottom: 1px solid var(--rule); padding-bottom: 8px; margin-bottom: 8px">
-              <div class="field" style="margin:0"><label class="field__label" for="rc-t-<?= $i ?>"><?= e(t('Criterion')) ?></label><input class="input" id="rc-t-<?= $i ?>" name="criterion_title[]" value="<?= e($c['title']) ?>" maxlength="120"></div>
-              <div class="field" style="margin:0"><label class="field__label" for="rc-p-<?= $i ?>"><?= e(t('Points')) ?></label><input class="input" id="rc-p-<?= $i ?>" type="number" name="criterion_points[]" min="0.5" max="100" step="0.5" value="<?= e($c['points'] === '' ? '' : fmt_number($c['points'], 2)) ?>"></div>
-              <div class="field" style="margin:0"><label class="field__label" for="rc-d-<?= $i ?>"><?= e(t('What it looks like')) ?></label><input class="input" id="rc-d-<?= $i ?>" name="criterion_description[]" value="<?= e($c['description'] ?? '') ?>" maxlength="400"></div>
-              <button type="button" class="btn btn--danger-quiet btn--sm" data-rubric-remove aria-label="<?= e(t('Remove criterion')) ?>"><?= icon('x', 'icon--sm') ?></button>
-            </div>
-          <?php endforeach; ?>
-        </div>
-        <template>
-          <div class="form-grid" data-rubric-row style="grid-template-columns: 2fr 90px 3fr auto; align-items:end; border-bottom: 1px solid var(--rule); padding-bottom: 8px; margin-bottom: 8px">
-            <div class="field" style="margin:0"><label class="field__label"><?= e(t('Criterion')) ?><input class="input" name="criterion_title[]" maxlength="120"></label></div>
-            <div class="field" style="margin:0"><label class="field__label"><?= e(t('Points')) ?><input class="input" type="number" name="criterion_points[]" min="0.5" max="100" step="0.5"></label></div>
-            <div class="field" style="margin:0"><label class="field__label"><?= e(t('What it looks like')) ?><input class="input" name="criterion_description[]" maxlength="400"></label></div>
-            <button type="button" class="btn btn--danger-quiet btn--sm" data-rubric-remove aria-label="<?= e(t('Remove criterion')) ?>"><?= icon('x', 'icon--sm') ?></button>
-          </div>
-        </template>
-        <div class="cluster" style="margin-top: 8px">
-          <button type="button" class="btn btn--quiet btn--sm" data-rubric-add><?= icon('plus', 'icon--sm') ?><?= e(t('Add criterion')) ?></button>
-          <span class="meta"><?= e(t('Total:')) ?> <strong data-rubric-total><?= e(fmt_number(array_sum(array_column($rubric, 'points')), 2)) ?></strong> <?= e(t('points')) ?></span>
-          <button class="btn btn--primary btn--sm" type="submit" style="margin-left:auto"><?= e(t('Save rubric')) ?></button>
-        </div>
-      </form>
-    </section>
-
     <section class="section" id="settings" aria-labelledby="s-title">
-      <div class="section__head"><h2 class="section__title" id="s-title"><?= e(t('Settings')) ?></h2></div>
+      <div class="section__head"><h2 class="section__title" id="s-title"><?= e(t('Details')) ?></h2></div>
+      <p class="section__intro"><?= e(t('What students see, when it is due, and how it counts.')) ?></p>
       <form method="post" action="<?= e(url($base)) ?>" data-unsaved-warning>
         <?= csrf_field() ?>
         <?= partial('assignment_settings', ['assignment' => $a, 'kind' => $kind, 'classes' => $classes, 'selectedClass' => $selectedClass, 'modules' => $modules, 'categories' => $categories, 'gradingPeriods' => $gradingPeriods ?? []]) ?>
@@ -168,8 +138,47 @@ $base = '/teacher/assignments/' . (int) $a['id'];
             <?php foreach ($allMaterials as $m): ?><?= checkbox('resources[]', $m['title'], in_array((int) $m['id'], $resources, true), null, (string) $m['id']) ?><?php endforeach; ?>
           </fieldset>
         <?php endif; ?>
-        <div class="form-actions"><button class="btn btn--primary" type="submit" data-busy="<?= e(t('Saving…')) ?>"><?= e(t('Save settings')) ?></button></div>
+        <div class="form-actions"><button class="btn btn--primary" type="submit" data-busy="<?= e(t('Saving…')) ?>"><?= e(t('Save details')) ?></button></div>
       </form>
+    </section>
+
+    <?php
+    // The marking guide (rubric): optional, so it stays folded away until the teacher opens it or has one.
+    $rubricRow = static function (array $c): string {
+        ob_start(); ?>
+        <div class="rubric-row" data-rubric-row>
+          <label class="field"><span class="field__label"><?= e(t('What you check')) ?></span><input class="input" name="criterion_title[]" value="<?= e($c['title']) ?>" maxlength="120" placeholder="<?= e(t('e.g. Explains the process')) ?>"></label>
+          <label class="field"><span class="field__label"><?= e(t('Points')) ?></span><input class="input" type="number" name="criterion_points[]" min="0.5" max="100" step="0.5" value="<?= e($c['points'] === '' ? '' : fmt_number($c['points'], 2)) ?>" placeholder="5"></label>
+          <label class="field"><span class="field__label"><?= e(t('What earns full points')) ?> <span class="field__optional"><?= e(t('optional')) ?></span></span><input class="input" name="criterion_description[]" value="<?= e($c['description'] ?? '') ?>" maxlength="400" placeholder="<?= e(t('e.g. Names all four steps in order')) ?>"></label>
+          <button type="button" class="btn btn--danger-quiet btn--sm rubric-row__remove" data-rubric-remove aria-label="<?= e(t('Remove this part')) ?>"><?= icon('x', 'icon--sm') ?></button>
+        </div>
+        <?php return (string) ob_get_clean();
+    };
+    $hasRubric = (bool) $rubric || field_error('rubric') !== null;
+    ?>
+    <section class="section" id="rubric" aria-labelledby="r-title">
+      <div class="section__head"><h2 class="section__title" id="r-title"><?= e(t('Marking guide (rubric)')) ?> <span class="field__optional"><?= e(t('optional')) ?></span></h2></div>
+      <p class="section__intro"><?= e($isQuiz
+          ? t('Split an essay question\'s points into the parts you check when marking. Students see the guide, so they know what is expected.')
+          : t('Split the score into the parts you check when marking. Students see the guide, so they know what is expected, and its total becomes this work\'s points.')) ?></p>
+      <?php if (!$hasRubric): ?>
+      <details class="rubric">
+        <summary class="btn btn--secondary btn--sm rubric__open"><?= icon('plus', 'icon--sm') ?><?= e(t('Add a marking guide')) ?></summary>
+      <?php endif; ?>
+        <form method="post" action="<?= e(url($base . '/rubric')) ?>" data-rubric>
+          <?= csrf_field() ?>
+          <?php if (field_error('rubric')): ?><p class="field__error"><?= e(field_error('rubric')) ?></p><?php endif; ?>
+          <div data-rubric-rows>
+            <?php foreach ($rubric ?: [['title' => '', 'points' => '', 'description' => '']] as $c): ?><?= $rubricRow($c) ?><?php endforeach; ?>
+          </div>
+          <template><?= $rubricRow(['title' => '', 'points' => '', 'description' => '']) ?></template>
+          <div class="cluster" style="margin-top: 8px">
+            <button type="button" class="btn btn--quiet btn--sm" data-rubric-add><?= icon('plus', 'icon--sm') ?><?= e(t('Add another part')) ?></button>
+            <span class="meta"><?= e(t('Total:')) ?> <strong data-rubric-total><?= e(fmt_number(array_sum(array_column($rubric, 'points')), 2)) ?></strong> <?= e(t('points')) ?></span>
+            <button class="btn btn--primary btn--sm" type="submit" style="margin-left:auto"><?= e(t('Save marking guide')) ?></button>
+          </div>
+        </form>
+      <?php if (!$hasRubric): ?></details><?php endif; ?>
     </section>
   </div>
 
@@ -177,6 +186,9 @@ $base = '/teacher/assignments/' . (int) $a['id'];
     <?php if (!$locked): ?>
       <section class="panel" id="ai-draft" aria-labelledby="ai-title">
         <h2 class="panel__title" id="ai-title"><?= icon('square-pen', 'icon--sm') ?> <?= e(t('Draft questions from materials')) ?></h2>
+        <?php if (!$isQuiz && !$isPaper && !$questions): ?>
+          <p style="font-size:.9375rem"><strong><?= e(t('Optional.')) ?></strong> <?= e(t('Adds questions that students answer online, as well as their written work.')) ?></p>
+        <?php endif; ?>
         <p style="font-size:.9375rem"><?= e(t('B.E.S.T. Learning and Interactive Study System drafts questions from the materials you choose. Every drafted question waits for your review and cannot be published until you approve it.')) ?></p>
         <?php if (!$materials): ?>
           <p class="meta"><?= e(t('No readable materials in this class yet. Upload notes first.')) ?></p>

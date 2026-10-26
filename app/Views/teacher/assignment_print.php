@@ -99,7 +99,7 @@ $typeLabels = ['multiple_choice' => t('Multiple choice'), 'true_false' => t('Tru
     <section class="print-sheet__section">
       <h3 class="print-sheet__subhead"><?= e(t('How this is graded')) ?></h3>
       <table class="print-rubric">
-        <thead><tr><th scope="col"><?= e(t('Criterion')) ?></th><th scope="col"><?= e(t('What it looks like')) ?></th><th scope="col" class="num"><?= e(t('Points')) ?></th></tr></thead>
+        <thead><tr><th scope="col"><?= e(t('What you check')) ?></th><th scope="col"><?= e(t('What earns full points')) ?></th><th scope="col" class="num"><?= e(t('Points')) ?></th></tr></thead>
         <tbody>
           <?php foreach ($rubric as $c): ?>
             <tr><td><strong><?= e($c['title']) ?></strong></td><td><?= e($c['description'] ?? '') ?></td><td class="num"><?= e(fmt_number($c['points'], 2)) ?></td></tr>

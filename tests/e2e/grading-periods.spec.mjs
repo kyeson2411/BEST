@@ -65,7 +65,7 @@ test('a teacher sees quarter and final grades, exports them and places work in a
   // The quiz was due this quarter; its teacher counts it in Quarter 1 instead.
   await page.goto(`teacher/assignments/${ids().sciPastQuiz}/edit`);
   await page.getByLabel('Grading period').selectOption({ index: 1 });
-  await page.getByRole('button', { name: 'Save settings' }).click();
+  await page.getByRole('button', { name: 'Save details' }).click();
   await page.goto(gradebook);
   await tabs.getByRole('link', { name: 'Quarter 1' }).click();
   await expect(page.locator('table.gradebook thead')).toContainText('Respiratory and circulatory systems');

@@ -629,6 +629,21 @@ dialog.dialog::backdrop { background: rgba(26, 38, 32, 0.45); }
 .how > summary { cursor: pointer; color: var(--link); font-weight: 600; width: fit-content; }
 .how > div { padding: var(--s-2) 0 0; max-width: 64ch; }
 
+/* Marking guide (rubric) on the assignment builder: folded behind one button until used. */
+.rubric__open { list-style: none; width: fit-content; }
+.rubric__open::-webkit-details-marker { display: none; }
+.rubric[open] > .rubric__open { display: none; }
+.rubric-row { display: grid; grid-template-columns: minmax(0, 2fr) 90px minmax(0, 3fr) auto; gap: 0 var(--s-3); align-items: end;
+  border-bottom: 1px solid var(--rule); padding-bottom: var(--s-2); margin-bottom: var(--s-2); }
+.rubric-row .field { margin: 0; }
+@media (max-width: 759px) {
+  .rubric-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "what what" "points remove" "full full"; gap: var(--s-2) var(--s-3); }
+  .rubric-row > :nth-child(1) { grid-area: what; }
+  .rubric-row > :nth-child(2) { grid-area: points; max-width: 120px; }
+  .rubric-row > :nth-child(3) { grid-area: full; }
+  .rubric-row > :nth-child(4) { grid-area: remove; }
+}
+
 /* Cards (only for real objects such as classes) ------------------------------------------- */
 .class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--s-4); }
 .class-card {

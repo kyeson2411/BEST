@@ -19,7 +19,7 @@ test('online work with a past due date is not published until the date is moved'
   await expect(page.locator('.page-lead')).toContainText('Draft');
 
   await page.getByLabel('Due', { exact: true }).fill(inDays(3));
-  await page.getByRole('button', { name: 'Save settings' }).click();
+  await page.getByRole('button', { name: 'Save details' }).click();
   await expect(page.locator('#publish-problems')).toHaveCount(0);
   await confirmClick(page, page.getByRole('button', { name: 'Publish' }));
   await expect(page.locator('.toast').first()).toContainText('Published.');

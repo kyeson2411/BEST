@@ -66,7 +66,7 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
           <div class="table-frame" style="margin-bottom: 16px">
             <table class="table table--stack">
               <caption class="sr-only"><?= e(t('Rubric scores')) ?></caption>
-              <thead><tr><th scope="col"><?= e(t('Criterion')) ?></th><th scope="col" class="num"><?= e(t('Points')) ?></th></tr></thead>
+              <thead><tr><th scope="col"><?= e(t('What you check')) ?></th><th scope="col" class="num"><?= e(t('Points')) ?></th></tr></thead>
               <tbody>
                 <?php foreach ($rubric as $c): ?>
                   <tr>
@@ -108,12 +108,12 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
         <div class="table-frame">
           <table class="table table--stack">
             <caption class="sr-only"><?= e(t('Rubric')) ?></caption>
-            <thead><tr><th scope="col"><?= e(t('Criterion')) ?></th><th scope="col"><?= e(t('What it looks like')) ?></th><th scope="col" class="num"><?= e(t('Points')) ?></th></tr></thead>
+            <thead><tr><th scope="col"><?= e(t('What you check')) ?></th><th scope="col"><?= e(t('What earns full points')) ?></th><th scope="col" class="num"><?= e(t('Points')) ?></th></tr></thead>
             <tbody>
               <?php foreach ($rubric as $c): ?>
                 <tr>
                   <td class="cell-primary"><strong><?= e($c['title']) ?></strong></td>
-                  <td data-label="<?= e(t('What it looks like')) ?>"><?= e($c['description'] ?? '') ?></td>
+                  <td data-label="<?= e(t('What earns full points')) ?>"><?= e($c['description'] ?? '') ?></td>
                   <td class="num" data-label="<?= e(t('Points')) ?>"><?= e(fmt_number($c['points'], 2)) ?></td>
                 </tr>
               <?php endforeach; ?>

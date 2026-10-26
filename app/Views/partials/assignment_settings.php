@@ -37,7 +37,7 @@ $val = static fn (string $k, $default = '') => $a[$k] ?? $default;
   <?php endif; ?>
   <?php if (!$isQuiz): ?>
     <?= field('number', 'points_possible', t('Points'), ['value' => (string) ($val('points_possible', '') === '' ? '10' : fmt_number($val('points_possible'), 2)), 'attrs' => ['min' => 0, 'max' => 1000, 'step' => '0.5'],
-        'hint' => $isPaper ? t('The highest possible score. Questions or a rubric, if you add them, set this automatically.') : t('A rubric, if you add one, sets this automatically.')]) ?>
+        'hint' => $isPaper ? t('The highest possible score. Questions or a marking guide, if you add them, set this automatically.') : t('A marking guide, if you add one, sets this automatically.')]) ?>
   <?php endif; ?>
 </div>
 

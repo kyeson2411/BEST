@@ -19,7 +19,7 @@ test('a teacher is told that work without a grading category is not counted, unt
   await expect(page.getByText('Not counted in the gradebook yet')).toBeVisible();
   await page.getByRole('link', { name: 'Choose a category' }).click();
   await page.getByLabel('Grading category').selectOption({ label: 'Written work (40%)' });
-  await page.getByRole('button', { name: 'Save settings' }).click();
+  await page.getByRole('button', { name: 'Save details' }).click();
 
   await page.goto(workPath);
   await expect(page.getByText('Not counted in the gradebook yet')).toHaveCount(0);
