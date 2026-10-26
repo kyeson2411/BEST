@@ -285,7 +285,7 @@ C:\xampp\php\php.exe bin\sibol.php ai:eval --demo                  :: demo mode,
 C:\xampp\php\php.exe bin\sibol.php ai:eval --case=B02,D04 --show   :: some cases, with their answers
 ```
 
-In demo mode all 35 cases pass at no cost. With a model, 31 cases make one request each (the refusal and limit
+In demo mode all 36 cases pass at no cost. With a model, 32 cases make one request each (C05 makes a second when the first reply gives the answer away; the refusal and limit
 cases never reach the provider); the cost of a run has not been measured yet, so read it from the table. The
 checks are patterns, not judgement: read a live run's answers with `--show` before going live, and treat a pass
 as a floor, not a guarantee about other questions.
@@ -420,7 +420,7 @@ permission-filtered retrieval (other sections, drafts and scheduled materials ne
 a full demo companion turn, data export and erasure, daily limits and usage accounting, audit-log hygiene and
 retention purging, copying work to other sections without exposing drafts, extensions and excused work,
 reopening quiz attempts, the notification badge's count-only background check, retrieval of Filipino questions,
-headings and numbers, the AI check (all 35 cases pass in demo mode and leave nothing behind; a scripted
+headings and numbers, the AI check (all 36 cases pass in demo mode and leave nothing behind; a scripted
 model that invents citations, ignores the language or writes graded work fails; one that follows the rules
 passes; its checks are unit-tested with good and bad answers), usernames made from names, sign-in slip codes and
 who may print them, sections and advisers, the QR encoder (published Reed-Solomon examples, format and
@@ -784,6 +784,17 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   labelled "Not found in your class materials".
 - The companion is told not to do graded work for students; teachers' AI drafts (questions, lessons, grading
   suggestions) are never shown to students until the teacher reviews them.
+- Graded work does not rest on that instruction alone (`Services/Ai/GradedWork.php`). While a student is taking
+  a quiz (an attempt started, not submitted, time not up), the companion and AI practice are paused, and a quiz
+  page offers "Study this topic" before the attempt instead of "Get a hint" (assignments keep "Get a hint").
+  At other times, a message that quotes a question from the student's own quiz, assignment or test whose
+  answers they cannot see yet (most of its key words, or a short question word for word) is answered with hints:
+  Sibol opens the reply with a line saying so, tells the model which question it is (never its key), does not
+  stream the reply, and checks it against the answer key first (the correct choice or its letter, an accepted
+  short answer, the same number written as 1 in 4, 1/4, 25% or 0.25). A reply that gives it away is written
+  again once; if it still does, the student gets a fixed message instead. Later messages in the same
+  conversation stay guarded, and in demo mode such a question gets no passages, since they could quote the
+  answer. True-or-false and essay answers cannot be checked this way and rely on the instruction.
 
 **Privacy**
 - Companion conversations are private to their owner. Teachers see an excerpt only when a student chooses

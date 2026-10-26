@@ -297,7 +297,7 @@ final class Runner
                 }
             }
             [$longest, $total] = Checks::proseWords($content);
-            if ($longest > Checks::GRADED_PARAGRAPH_WORDS || $total > Checks::GRADED_TOTAL_WORDS) {
+            if (($expect['graded']['prose'] ?? true) && ($longest > Checks::GRADED_PARAGRAPH_WORDS || $total > Checks::GRADED_TOTAL_WORDS)) {
                 $failures[] = sprintf('writes %d words of finished prose (longest paragraph %d)', $total, $longest);
             }
             if (!Checks::offersHelp($content)) {

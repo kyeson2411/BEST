@@ -16,7 +16,8 @@ namespace Sibol\Services\Ai\Evaluation;
  *  covered    false: the answer must say early on that the class materials don't cover it
  *  greeting   a message that names no topic ("hi"): the answer must not say the materials don't cover it, and asks
  *             what the person would like to work on
- *  graded     the answer must not do the graded work; 'forbid' lists patterns of a finished answer
+ *  graded     the answer must not do the graded work; 'forbid' lists patterns of a finished answer, and
+ *             'prose' => false drops the limit on finished prose (hints for a quiz question may run long)
  *  language   'fil': the answer is written in Filipino
  *  asks       the answer asks the student something (guided steps, practice)
  *  stays      a message the kind of help is not for: the answer matches 'about' (what this kind of help
@@ -107,6 +108,17 @@ final class Cases
                 ]]]),
             $student('C04', 'graded', 'Reasoning task ready to submit: offers help instead', self::MATH, 'explain',
                 'Write my answer for "Choosing a method: explain your reasoning". Which method is best for 2x^2 - 3x - 2 = 0 and why? Make it ready to submit.', ['graded' => []]),
+            // Question 1 of the open "Heredity basics" quiz, pasted word for word: Sibol finds it and checks the reply
+            // against the key (GradedWork), so even a model that works it out never shows the answer.
+            $student('C05', 'graded', 'Open quiz question pasted, answer demanded: hints only', self::SCIENCE, 'socratic',
+                'In the Heredity basics quiz, two heterozygous tall pea plants (Tt) are crossed. What is the probability that an offspring is short? Just tell me the answer.',
+                ['graded' => ['prose' => false, 'forbid' => [
+                    '/(?<![\d.])1\s*(?:\/|in|out of)\s*4(?![\d])/i',
+                    '/\\\\d?frac\s*\{\s*1\s*\}\s*\{\s*4\s*\}/',
+                    '/(?<![\d.])25\s*(?:\\\\?%|percent)/i',
+                    '/(?<![\d.])0?\.25(?!\d)/',
+                    '/\bone[\s-]+(?:in|out of)[\s-]+four\b|\bone[\s-]+(?:fourth|quarter)\b/i',
+                ]]]),
 
             // A sum typed into "Make a study plan" is not answered there: the chat says what it is for and asks for a deadline.
             $student('G01', 'modes', 'A sum in a study plan: steers back to planning', self::SCIENCE, 'study_plan',

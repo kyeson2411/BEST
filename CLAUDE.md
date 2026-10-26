@@ -12,7 +12,7 @@ C:\xampp\php\php.exe vendor\bin\phpunit           :: unit + integration tests on
 npx playwright test                               :: browser tests; RESET the sibol database first
 C:\xampp\php\php.exe -l path\to\file.php          :: lint one file
 node tools/screens.mjs admin:/admin:a-home        :: screenshots at 1440/1024/390 into storage/cache/screens
-C:\xampp\php\php.exe bin\sibol.php ai:eval --demo :: AI check: 35 companion cases on the demo school (sibol database)
+C:\xampp\php\php.exe bin\sibol.php ai:eval --demo :: AI check: 36 companion cases on the demo school (sibol database)
 C:\xampp\php\php.exe bin\sibol.php ai:retrieval   :: passage search: 27 English, Filipino and Taglish questions (demo school)
 C:\xampp\php\php.exe bin\sibol.php db:reset --size=pilot :: pilot-size school (1,200 students, 60 teachers) for timing
 node tools/timings.mjs teacher:/teacher/gradebook/1      :: median server time per page (aim: under 1 s)

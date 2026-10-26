@@ -8,10 +8,12 @@ use Sibol\Controllers\Student\AssignmentController;
 use Sibol\Core\Auth;
 use Sibol\Core\Db;
 use Sibol\Core\Request;
+use Sibol\Services\Assessments;
 
 /**
  * The side box on a student's work page says what already happened (feedback released, answers shown below),
- * and "Get a hint" is offered only while the work can still be done.
+ * and "Get a hint" is offered only while the work can still be done. A quiz offers studying before it, never hints,
+ * and says the companion is paused while it is being taken.
  */
 final class WorkSideBoxTest extends IntegrationTestCase
 {
@@ -71,6 +73,27 @@ final class WorkSideBoxTest extends IntegrationTestCase
             self::assertStringNotContainsString('Get a hint', $this->page('andrea.cruz', 'Inference journal: three clues'));
         } finally {
             Db::update('users', ['ai_enabled' => null], ['id' => (int) $andrea['id']]);
+        }
+    }
+
+    public function testAnOpenQuizOffersStudyingBeforeItAndNoHints(): void
+    {
+        $before = $this->page('gabriel.torres', 'Heredity basics');
+        self::assertStringContainsString('Study this topic', $before);
+        self::assertStringContainsString('mode=explain', $before);
+        self::assertStringNotContainsString('Get a hint', $before);
+
+        $gabriel = $this->person('gabriel.torres');
+        $quizId = (int) Db::value("SELECT id FROM assignments WHERE title = 'Heredity basics'");
+        Auth::actingAs($gabriel);
+        $sub = Assessments::startAttempt(Assessments::forStudent((int) $gabriel['id'], $quizId), (int) $gabriel['id']);
+        try {
+            $during = $this->page('gabriel.torres', 'Heredity basics');
+            self::assertStringContainsString('Companion paused', $during);
+            self::assertStringNotContainsString('Study this topic', $during);
+            self::assertStringNotContainsString('Get a hint', $during);
+        } finally {
+            Db::delete('submissions', ['id' => (int) $sub['id']]);
         }
     }
 }

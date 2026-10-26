@@ -56,20 +56,30 @@ final class Companion
         $mode = (string) $conversation['mode'];
         $sources = self::gatherSources($user, $conversation, $question);
         $upcoming = ($mode === 'study_plan' && $user['role'] === 'student') ? StudentRepo::dueSoon($user, 14, 0, 6) : [];
+        // Questions quoted from the student's own graded work whose answers are not out yet: hints, never the answer.
+        $graded = GradedWork::matches($user, array_merge([$question], array_map('strval', Db::column(
+            "SELECT content FROM ai_messages WHERE conversation_id = :c AND role = 'user' ORDER BY id DESC LIMIT 6",
+            ['c' => $conversationId]
+        ))));
+        $language = Language::answerLanguage((string) ($conversation['language'] ?? 'en'), $question);
         $emit(['type' => 'meta', 'sources' => count($sources), 'demo' => $provider->isDemo()]);
 
         $result = new AiResult();
         $error = null;
         // With a live model, Sibol itself says first when the class materials do not cover the question, so it never
-        // depends on the model doing so (demo answers say it in their own words).
-        $notice = $provider->isDemo() ? null : self::coverageNotice($user, $conversation, $question, $sources);
-        if ($notice !== null) {
-            $emit(['type' => 'delta', 'text' => $notice . "\n\n"]);
+        // depends on the model doing so (demo answers say it in their own words). Graded work gets its own line.
+        $notice = $provider->isDemo() || $graded ? null : self::coverageNotice($user, $conversation, $question, $sources);
+        $gradedNotice = !$provider->isDemo() && $graded ? GradedWork::notice($graded, $language) : null;
+        $gradedFallback = false;
+        foreach ([$notice, $gradedNotice] as $line) {
+            if ($line !== null) {
+                $emit(['type' => 'delta', 'text' => $line . "\n\n"]);
+            }
         }
         try {
             if ($provider->isDemo()) {
                 $started = microtime(true);
-                $text = DemoResponder::respond($user, $conversation, $question, $sources, $upcoming);
+                $text = DemoResponder::respond($user, $conversation, $question, $sources, $upcoming, $graded);
                 foreach (preg_split('/(?<=\s)/u', $text) ?: [] as $i => $piece) {
                     if ($aborted()) {
                         $result->cancelled = true;
@@ -84,16 +94,36 @@ final class Companion
                 $result->model = $provider->model();
                 $result->latencyMs = (int) round((microtime(true) - $started) * 1000);
             } else {
-                $request = new AiRequest(
+                $request = static fn (string $note): AiRequest => new AiRequest(
                     Prompts::companionSystem($user, $mode, ['language' => $conversation['language'], 'level' => $conversation['level'] ?? '']),
-                    self::messages($conversationId, $question, $sources, $conversation, $user, $upcoming, $notice !== null),
+                    self::messages($conversationId, $question, $sources, $conversation, $user, $upcoming, $notice !== null, $note),
                     'companion',
                     16000,
                     (string) Config::get('ai.effort', 'medium')
                 );
-                $result = $provider->complete($request, static function (string $t) use ($emit): void {
-                    $emit(['type' => 'delta', 'text' => $t]);
-                }, $aborted);
+                if ($graded) {
+                    // Not streamed: the reply is checked against the answer keys before the student sees any of it.
+                    $result = $provider->complete($request(GradedWork::instruction($graded)), null, $aborted);
+                    if (self::givesAway($result, $graded)) {
+                        $first = $result;
+                        try {
+                            $result = $provider->complete($request(GradedWork::instruction($graded) . "\n\n" . GradedWork::retryInstruction()), null, $aborted);
+                            $result->inputTokens += $first->inputTokens;
+                            $result->outputTokens += $first->outputTokens;
+                            $result->latencyMs += $first->latencyMs;
+                        } catch (AiException $e) {
+                            $result = $first;
+                        }
+                        if (self::givesAway($result, $graded)) {
+                            $result->text = GradedWork::fallback($graded, $language);
+                            $gradedFallback = true;
+                        }
+                    }
+                } else {
+                    $result = $provider->complete($request(''), static function (string $t) use ($emit): void {
+                        $emit(['type' => 'delta', 'text' => $t]);
+                    }, $aborted);
+                }
             }
         } catch (AiException $e) {
             $error = $e;
@@ -104,7 +134,7 @@ final class Companion
 
         if ($error !== null) {
             $messageId = Db::insert('ai_messages', [
-                'conversation_id' => $conversationId, 'role' => 'assistant', 'content' => $error->getMessage(),
+                'conversation_id' => $conversationId, 'role' => 'assistant', 'mode' => $mode, 'content' => $error->getMessage(),
                 'status' => 'error', 'provider' => $provider->name(), 'model' => $provider->model(),
                 'is_demo' => $provider->isDemo() ? 1 : 0, 'error_code' => $error->errorCode, 'created_at' => Db::now(),
             ]);
@@ -138,12 +168,17 @@ final class Companion
         if ($notice !== null && !$result->refused) {
             $text = $notice . "\n\n" . $text;
         }
-        $grounding = $provider->isDemo() ? 'demo' : ($citations ? 'sources' : ($sources ? 'no_sources' : 'general'));
+        if ($gradedNotice !== null && !$result->refused && !$gradedFallback) {
+            $text = $gradedNotice . "\n\n" . $text;
+        }
+        // Sibol's own graded-work message is no answer about the materials, so it gets no grounding label.
+        $grounding = $provider->isDemo() ? 'demo' : ($gradedFallback ? null : ($citations ? 'sources' : ($sources ? 'no_sources' : 'general')));
 
-        $messageId = Db::transaction(static function () use ($conversationId, $text, $status, $grounding, $provider, $result, $errorCode, $citations): int {
+        $messageId = Db::transaction(static function () use ($conversationId, $mode, $text, $status, $grounding, $provider, $result, $errorCode, $citations): int {
             $id = Db::insert('ai_messages', [
                 'conversation_id' => $conversationId,
                 'role' => 'assistant',
+                'mode' => $mode,
                 'content' => $text,
                 'status' => $status,
                 'grounding' => $grounding,
@@ -253,12 +288,27 @@ final class Companion
         return $sources;
     }
 
+    /** Whether a finished reply gives away the answer to any of the quoted graded questions. */
+    private static function givesAway(AiResult $result, array $graded): bool
+    {
+        if ($result->refused || $result->cancelled) {
+            return false;
+        }
+        foreach ($graded as $q) {
+            if (GradedWork::givesAway($result->text, $q)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * History plus the new question with its sources and context. $noticeShown: the answer already opens with
-     * coverageNotice(), so the model is told not to say it again.
+     * coverageNotice(), so the model is told not to say it again. $note: what the model must know about graded
+     * work the question quotes (GradedWork::instruction()).
      * @return list<array{role:string,content:string}>
      */
-    private static function messages(int $conversationId, string $question, array $sources, array $conversation, array $user, array $upcoming, bool $noticeShown = false): array
+    private static function messages(int $conversationId, string $question, array $sources, array $conversation, array $user, array $upcoming, bool $noticeShown = false, string $note = ''): array
     {
         $rows = Db::all(
             "SELECT role, content FROM ai_messages WHERE conversation_id = :c AND status = 'complete' ORDER BY id DESC LIMIT " . (self::HISTORY_MESSAGES + 1),
@@ -295,6 +345,7 @@ final class Companion
         }
         $content = ($block !== '' ? $block . "\n\n" : '')
             . implode("\n", $context) . "\n\n"
+            . ($note !== '' ? $note . "\n\n" : '')
             . ($user['role'] === 'teacher' ? "Teacher's request:\n" : "Student's question:\n") . $question;
         $messages[] = ['role' => 'user', 'content' => $content];
         return $messages;
@@ -307,6 +358,12 @@ final class Companion
             $update['title'] = mb_substr(Markdown::plain($question, 70), 0, 160) ?: t('New session');
         }
         Db::update('ai_conversations', $update, ['id' => (int) $conversation['id']]);
+    }
+
+    /** The mode an answer was written in: its own, or its conversation's for answers saved before messages kept one. */
+    public static function answerMode(array $message, array $conversation): string
+    {
+        return (string) ($message['mode'] ?? $conversation['mode']);
     }
 
     /**

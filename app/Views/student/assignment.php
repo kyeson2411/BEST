@@ -316,7 +316,19 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
         <?php if ($isQuiz): ?><dt><?= e(t('Answers')) ?></dt><dd><?= e($answersReleased ? t('Shown below with your answers.') : $answerRule) ?></dd><?php endif; ?>
       </dl>
     </section>
-    <?php if (my_ai_on() && $stillOpen): ?>
+    <?php if (my_ai_on() && $stillOpen && $isQuiz): ?>
+      <?php // A quiz gets no hints: the companion helps students study before it and pauses while they take it. ?>
+      <section class="panel panel--sunken" aria-labelledby="help-title">
+        <?php if ($state['in_progress'] !== null): ?>
+          <h2 class="panel__title" id="help-title"><?= e(t('Companion paused')) ?></h2>
+          <p style="font-size:.9375rem; margin:0"><?= e(t('The companion and AI practice come back when you submit this quiz.')) ?></p>
+        <?php else: ?>
+          <h2 class="panel__title" id="help-title"><?= e(t('Study first')) ?></h2>
+          <p style="font-size:.9375rem"><?= e(t('The companion can explain the topic before you start. While you take the quiz, it is paused.')) ?></p>
+          <a class="btn btn--secondary btn--sm" href="<?= e(url('/companion/new', ['mode' => 'explain', 'class_id' => (int) $assignment['class_id'], 'topic' => $assignment['title']])) ?>"><?= icon('book-open', 'icon--sm') ?><?= e(t('Study this topic')) ?></a>
+        <?php endif; ?>
+      </section>
+    <?php elseif (my_ai_on() && $stillOpen): ?>
       <section class="panel panel--sunken" aria-labelledby="help-title">
         <h2 class="panel__title" id="help-title"><?= e(t('Stuck?')) ?></h2>
         <p style="font-size:.9375rem"><?= e(t('The companion can explain the topic or guide you with hints. It will not do the work for you.')) ?></p>

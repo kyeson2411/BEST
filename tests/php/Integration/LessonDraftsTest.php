@@ -120,6 +120,45 @@ final class LessonDraftsTest extends IntegrationTestCase
         }
     }
 
+    public function testAnExplainForMyClassBriefingTurnsIntoALessonRequest(): void
+    {
+        $ramon = $this->person('ramon.dizon');
+        [$chat, $briefing] = $this->plan($ramon, $this->classId('Science 9 – Narra'), 'explain_for_class');
+        try {
+            Auth::actingAs($ramon);
+            $html = (new CompanionController(new Request('GET', '/companion/' . $chat)))->show($chat)->body;
+            self::assertStringContainsString('Turn into a lesson', $html);
+            self::assertStringNotContainsString('Save as lesson draft', $html, 'a briefing for the teacher is not a lesson for students');
+
+            $response = (new CompanionController(new Request('POST', '/companion/messages/' . $briefing . '/lesson-from-plan')))->lessonFromPlan($briefing);
+            self::assertSame(url('/companion/' . $chat), $response->headers['Location']);
+            self::assertSame('lesson_ideas', Db::value('SELECT mode FROM ai_conversations WHERE id = :c', ['c' => $chat]));
+            self::assertStringStartsWith('Turn the plan above into a lesson for my students', (string) $_SESSION['companion_pending']['text'], 'the request is sent when the conversation opens');
+
+            // The briefing keeps its own mode, so only the lesson written next can be saved as a lesson draft.
+            Db::update('ai_messages', ['mode' => 'explain_for_class'], ['id' => $briefing]);
+            $lesson = Db::insert('ai_messages', [
+                'conversation_id' => $chat, 'role' => 'assistant', 'mode' => 'lesson_ideas', 'content' => self::OUTLINE, 'status' => 'complete',
+                'grounding' => 'sources', 'is_demo' => 0, 'created_at' => Db::now(),
+            ]);
+            $_SESSION = [];
+            $html = (new CompanionController(new Request('GET', '/companion/' . $chat)))->show($chat)->body;
+            self::assertSame(1, substr_count($html, 'Save as lesson draft'));
+            self::assertStringContainsString('/companion/messages/' . $lesson . '/lesson"', $html);
+            $this->assertNotFound($briefing);
+
+            Auth::actingAs($this->person('liza.mercado'));
+            try {
+                (new CompanionController(new Request('POST', '/x')))->lessonFromPlan($briefing);
+                self::fail('another teacher cannot use the briefing');
+            } catch (HttpException $e) {
+                self::assertSame(404, $e->status);
+            }
+        } finally {
+            Db::delete('ai_conversations', ['id' => $chat]);
+        }
+    }
+
     /** @return array{0:int,1:int} a conversation and its answer */
     private function plan(array $teacher, int $classId, string $mode): array
     {

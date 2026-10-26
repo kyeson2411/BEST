@@ -340,12 +340,32 @@ final class CompanionController extends Controller
         $user = $this->user();
         $message = $this->ownMessage($user, $id);
         $conversation = $this->conversation($user, (int) $message['conversation_id']);
-        if ($user['role'] !== 'teacher' || $conversation['mode'] !== 'lesson_ideas' || $message['status'] !== 'complete' || $conversation['class_id'] === null) {
+        if ($user['role'] !== 'teacher' || Companion::answerMode($message, $conversation) !== 'lesson_ideas' || $message['status'] !== 'complete' || $conversation['class_id'] === null) {
             throw HttpException::notFound();
         }
         $lessonId = LessonDrafts::fromCompanion($user, $conversation, $message);
         $this->flash('success', t('Saved as a lesson draft. Read and edit every section before publishing; students see nothing until you do.'));
         return $this->redirect('/teacher/lessons/' . $lessonId);
+    }
+
+    /**
+     * A teacher's "Explain for my class" briefing is written for the teacher, so it is not saved as a lesson itself:
+     * the conversation moves to "Plan a lesson" and asks for a lesson for students built on it, which the teacher
+     * can then save as a lesson draft. The briefing stays in the conversation as the teacher's notes.
+     */
+    public function lessonFromPlan(int $id): Response
+    {
+        $user = $this->user();
+        $message = $this->ownMessage($user, $id);
+        $conversation = $this->conversation($user, (int) $message['conversation_id']);
+        if ($user['role'] !== 'teacher' || Companion::answerMode($message, $conversation) !== 'explain_for_class' || $message['status'] !== 'complete'
+            || $conversation['class_id'] === null || $conversation['archived_at'] !== null || !in_array('lesson_ideas', $this->modes($user), true)) {
+            throw HttpException::notFound();
+        }
+        Db::update('ai_conversations', ['mode' => 'lesson_ideas', 'updated_at' => Db::now()], ['id' => (int) $conversation['id']]);
+        // Sent automatically when the conversation opens, as a new conversation's first message is.
+        Session::set('companion_pending', ['id' => (int) $conversation['id'], 'text' => t('Turn the plan above into a lesson for my students, with objectives, an explanation, a worked example, activities, checks for understanding and an exit ticket.')]);
+        return $this->redirect('/companion/' . (int) $conversation['id']);
     }
 
     // ---------------------------------------------------------------- helpers

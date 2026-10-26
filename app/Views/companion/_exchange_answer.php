@@ -3,6 +3,7 @@
  * Assistant answer + its margin notes. Rendered on page load and returned by the stream's "done" event.
  * @var array $message (with citations, display, plan) @var array $user @var bool $isLast @var array $conversation
  */
+use Sibol\Services\Ai\Companion;
 use Sibol\Services\Ai\Retrieval;
 
 $id = (int) $message['id'];
@@ -54,10 +55,17 @@ $isStudent = $user['role'] === 'student';
       <?php if ($isStudent && !empty($conversation['class_id']) && (bool) setting('features.share_with_teacher', true)): ?>
         <button type="button" class="btn btn--quiet" data-share="<?= $id ?>"><?= icon('share-2', 'icon--xs') ?><?= e(t('Share with teacher')) ?></button>
       <?php endif; ?>
-      <?php if (!$isStudent && $conversation['mode'] === 'lesson_ideas' && !empty($conversation['class_id'])): ?>
+      <?php $answerMode = Companion::answerMode($message, $conversation); ?>
+      <?php if (!$isStudent && $answerMode === 'lesson_ideas' && !empty($conversation['class_id'])): ?>
         <form method="post" action="<?= e(url('/companion/messages/' . $id . '/lesson')) ?>">
           <?= csrf_field() ?>
           <button type="submit" class="btn btn--quiet"><?= icon('notebook-pen', 'icon--xs') ?><?= e(t('Save as lesson draft')) ?></button>
+        </form>
+      <?php elseif (!$isStudent && $answerMode === 'explain_for_class' && !empty($conversation['class_id']) && empty($conversation['archived_at'])): ?>
+        <?php /* The briefing is for the teacher; this asks for a lesson for students built on it, in "Plan a lesson". */ ?>
+        <form method="post" action="<?= e(url('/companion/messages/' . $id . '/lesson-from-plan')) ?>">
+          <?= csrf_field() ?>
+          <button type="submit" class="btn btn--quiet"><?= icon('notebook-pen', 'icon--xs') ?><?= e(t('Turn into a lesson')) ?></button>
         </form>
       <?php endif; ?>
     <?php endif; ?>

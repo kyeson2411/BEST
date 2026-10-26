@@ -28,6 +28,7 @@ use Sibol\Core\HttpException;
 use Sibol\Core\Request;
 use Sibol\Core\Response;
 use Sibol\Core\Session;
+use Sibol\Services\Ai\GradedWork;
 use Sibol\Services\AiAccess;
 use Sibol\Services\Notices;
 
@@ -50,11 +51,15 @@ $router->guard('notices', static function (Request $request): ?Response {
     return Response::redirect('/welcome', 302);
 });
 
-// The companion and AI practice are not there for a student whose AI an adviser or administrator switched off.
+// The companion and AI practice are not there for a student whose AI an adviser or administrator switched off,
+// and they pause while the student is taking a quiz.
 $router->guard('ai-student', static function (): ?Response {
     $user = Auth::user();
     if ($user && $user['role'] === 'student' && !AiAccess::studentOn($user)) {
         throw HttpException::forbidden(t('The companion and AI practice are switched off for your account. Everything else in B.E.S.T. Learning and Interactive Study System works as usual. Ask your adviser if you have questions.'));
+    }
+    if ($user && ($quiz = GradedWork::quizInProgress($user)) !== null) {
+        throw HttpException::forbidden(t('The companion and AI practice are paused while you take the quiz “:title”. They come back when you submit it.', ['title' => $quiz['title']]));
     }
     return null;
 });
@@ -154,6 +159,7 @@ $router->group('', ['auth', 'notices'], static function ($r): void {
         $c->post('/messages/{id}/share', [CompanionController::class, 'share']);
         $c->post('/messages/{id}/plan', [CompanionController::class, 'addPlanToCalendar']);
         $c->post('/messages/{id}/lesson', [CompanionController::class, 'saveAsLesson']);
+        $c->post('/messages/{id}/lesson-from-plan', [CompanionController::class, 'lessonFromPlan']);
     });
 });
 

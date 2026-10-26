@@ -20,12 +20,19 @@ final class DemoResponder
         'questions', 'section', 'notes', 'always', 'enough', 'almost', 'rather', 'number', 'remember', 'explain', 'describe',
         'following', 'learning', 'reading', 'understand', 'probably', 'together', 'clearly', 'directly'];
 
-    public static function respond(array $user, array $conversation, string $question, array $sources, array $upcoming = []): string
+    /** @param list<array<string,mixed>> $graded questions from the student's unfinished graded work (GradedWork::matches) */
+    public static function respond(array $user, array $conversation, string $question, array $sources, array $upcoming = [], array $graded = []): string
     {
         // The reply follows the session language and the message, as a connected model is told to.
+        $language = Language::answerLanguage((string) ($conversation['language'] ?? 'en'), $question);
         $locale = Translator::locale();
-        Translator::setLocale(Language::answerLanguage((string) ($conversation['language'] ?? 'en'), $question));
+        Translator::setLocale($language);
         try {
+            if ($graded) {
+                // Passages would quote the answer back, so a quoted graded question gets no passages.
+                return '**' . t('Demo mode') . ':** ' . t('no AI model is connected, so this reply is assembled from your class materials, not written by an AI.')
+                    . "\n\n" . GradedWork::fallback($graded, $language);
+            }
             return self::compose($user, $conversation, $question, $sources, $upcoming);
         } finally {
             Translator::setLocale($locale);
