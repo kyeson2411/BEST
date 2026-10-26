@@ -17,11 +17,15 @@ All demo accounts share the password `Sibol-demo-2026`. Nothing secret is inside
    C:\xampp\mysql\bin\mysql.exe -u root -e "CREATE DATABASE sibol CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
    C:\xampp\mysql\bin\mysql.exe -u root --default-character-set=utf8mb4 sibol < database\sample\sibol-demo.sql
    ```
-3. Copy everything inside `database/sample/uploads` into `storage/uploads`:
+3. Bring the database up to date: the file was saved before newer columns existed (such as anti-cheating).
+   ```bat
+   C:\xampp\php\php.exe bin\sibol.php migrate
+   ```
+4. Copy everything inside `database/sample/uploads` into `storage/uploads`:
    ```bat
    xcopy /E /I /Y database\sample\uploads storage\uploads
    ```
-4. Open http://localhost/BEST/public and sign in.
+5. Open http://localhost/BEST/public and sign in.
 
 Dates in this file stay as they were, so due dates move into the past as time goes on. For a fresh demo
 school with dates around today, run `C:\xampp\php\php.exe bin\sibol.php db:reset` instead (it replaces the

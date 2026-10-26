@@ -7,7 +7,7 @@ cleaned so no screen says "demo" or "sample", with its AI-made parts written by 
 | --- | --- |
 | `best-presentation.sql` | The whole `sibol` database. Importing it **deletes** the current `sibol` database first. Dates move to the day you import it. |
 | `uploads/` | The class files the materials point to. They must go into `storage/uploads`. |
-| `reset-presentation.bat` | Does both steps. Double-click it to start the presentation again from the beginning. |
+| `reset-presentation.bat` | Does both steps, then brings the database up to date for the app (`bin/sibol.php migrate`, which adds what newer versions need, such as anti-cheating). Double-click it to start the presentation again from the beginning. |
 | `files-for-the-demo/` | A handout to upload during the demo (`Blood types and inheritance`, PDF and Word). |
 
 All accounts use the password `Polomolok-2026`.
@@ -22,8 +22,10 @@ All accounts use the password `Polomolok-2026`.
 
 1. Open http://localhost/phpmyadmin. Do not choose a database.
 2. Click **Import**, choose `best-presentation.sql`, then click **Import** at the bottom.
-3. Copy everything inside `uploads` into `C:\xampp\htdocs\BEST\storage\uploads` (replace the files there).
-4. Sign out of the app and sign in again.
+3. In the project folder, run `C:\xampp\php\php.exe bin\sibol.php migrate`. The file was saved before some
+   newer columns existed; without this step, pages that use them stop with a database error.
+4. Copy everything inside `uploads` into `C:\xampp\htdocs\BEST\storage\uploads` (replace the files there).
+5. Sign out of the app and sign in again.
 
 ## How it was made
 

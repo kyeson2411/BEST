@@ -5,6 +5,7 @@ rem Start Apache and MySQL in the XAMPP Control Panel first. Add /y to skip the 
 setlocal
 set "HERE=%~dp0"
 set "MYSQL=C:\xampp\mysql\bin\mysql.exe"
+set "PHP=C:\xampp\php\php.exe"
 set "UPLOADS=%HERE%..\..\storage\uploads"
 
 echo.
@@ -26,6 +27,15 @@ echo Loading the database...
 "%MYSQL%" -u root --default-character-set=utf8mb4 < "%HERE%best-presentation.sql"
 if errorlevel 1 (
   echo The database could not be loaded. Check that MySQL is running in the XAMPP Control Panel.
+  pause
+  exit /b 1
+)
+
+rem Newer versions of the app add columns to the database: bring it up to date.
+echo Bringing the database up to date for this version of the app...
+"%PHP%" "%HERE%..\..\bin\sibol.php" migrate
+if errorlevel 1 (
+  echo The database could not be brought up to date. In the project folder, run: C:\xampp\php\php.exe bin\sibol.php migrate
   pause
   exit /b 1
 )
