@@ -125,9 +125,10 @@ final class StudyAidsTest extends IntegrationTestCase
             $html = $this->read($id, 'filipino');
             self::assertStringContainsString('Ang mga katangian ay namamana', $html);
             self::assertStringContainsString('data-lang="fil"', $html, 'the Filipino version is read with a Filipino voice');
-            self::assertStringContainsString('href="' . e(url('/materials/' . $id . '/file')) . '"', $html, 'the Original tab opens the PDF');
+            self::assertStringContainsString('<a class="tab" href="' . e(url('/materials/' . $id . '/read')) . '"', $html, 'the Original tab shows the PDF\'s own text');
             $original = (new FileController(new Request('GET', '/materials/' . $id . '/read')))->read($id);
-            self::assertSame(303, $original->status, 'the PDF itself still opens as a file');
+            self::assertSame(200, $original->status);
+            self::assertStringContainsString('The instructions for traits are carried by genes.', $original->body);
         } finally {
             Db::exec('DELETE FROM reading_versions WHERE material_id = :m', ['m' => $id]);
         }

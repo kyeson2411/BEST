@@ -9,6 +9,7 @@ use Sibol\Core\HttpException;
 use Sibol\Core\Response;
 use Sibol\Core\Uploads;
 use Sibol\Policies\Access;
+use Sibol\Services\Chunker;
 use Sibol\Services\Materials;
 use Sibol\Services\ReadingVersions;
 
@@ -18,6 +19,8 @@ final class FileController extends Controller
     /** Materials shown as a reading page, and the largest file shown that way (bigger ones open as files). */
     private const READABLE = ['md', 'txt'];
     private const READ_LIMIT = 1000000;
+    /** Most characters of a PDF, Word or PowerPoint file's text shown on its reading page; the rest is in the file. */
+    private const TEXT_LIMIT = 150000;
 
     public function material(int $id): Response
     {
@@ -42,9 +45,11 @@ final class FileController extends Controller
     }
 
     /**
-     * A text material (.md or .txt) as a page to read inside Sibol, or one of its other reading versions (?v=simpler,
-     * ?v=filipino) for any material: approved ones for students, drafts too for teachers, as a preview. Without
-     * either, the material opens as the file itself; the file stays at /file for downloads and offline copies.
+     * A file material as a page to read inside Sibol, or one of its other reading versions (?v=simpler, ?v=filipino):
+     * approved ones for students, drafts too for teachers, as a preview. A .md or .txt file is shown as it is; a PDF,
+     * Word or PowerPoint file as the text Sibol read from it, with buttons to open or download the file itself, so
+     * nobody has to download a file just to see what it is. Links open as before; the file stays at /file for
+     * downloads and offline copies.
      */
     public function read(int $id): Response
     {
@@ -59,13 +64,20 @@ final class FileController extends Controller
         $kinds = $version ? ($isStudent ? ReadingVersions::approvedKinds($id) : array_values(array_intersect(ReadingVersions::KINDS, array_keys(ReadingVersions::forMaterial($id))))) : [];
         $asked = $this->request->str('v');
         $reading = in_array($asked, $kinds, true) ? ReadingVersions::forMaterial($id)[$asked] : null;
-        if ($reading === null && !$readableOriginal) {
+        if (!$version) {
             return $this->redirect('/materials/' . $id . '/file');
         }
         if ($isStudent) {
             Materials::recordView((int) $user['id'], 'material', $id, (int) $material['class_id']);
         }
-        $text = $reading !== null ? (string) $reading['content'] : (string) file_get_contents($absolute);
+        $units = null;
+        $cut = false;
+        if ($reading === null && !$readableOriginal) {
+            [$units, $cut] = $this->fileText((int) $version['id']);
+            $text = implode("\n\n", array_map(static fn ($u) => $u['text'], $units));
+        } else {
+            $text = $reading !== null ? (string) $reading['content'] : (string) file_get_contents($absolute);
+        }
         if (!mb_check_encoding($text, 'UTF-8')) {
             $text = mb_convert_encoding($text, 'UTF-8', 'Windows-1252');
         }
@@ -96,8 +108,40 @@ final class FileController extends Controller
             'kinds' => $kinds,
             'reading' => $reading,
             'readableOriginal' => $readableOriginal,
+            'units' => $units,
+            'cut' => $cut,
             'katex' => true,
         ]);
+    }
+
+    /**
+     * The text read from a file when it was processed, by page or section, up to TEXT_LIMIT characters. Empty while
+     * the file is still being read, or when it has no readable text (a scan, or an unsupported type).
+     *
+     * @return array{0:list<array{page:int|null,section:string|null,text:string}>,1:bool}
+     */
+    private function fileText(int $versionId): array
+    {
+        $rows = Db::all(
+            "SELECT c.page_from AS page, c.section_title AS section, c.content AS text
+             FROM material_chunks c JOIN material_versions v ON v.id = c.material_version_id
+             WHERE c.material_version_id = :v AND v.processing_status = 'ready' ORDER BY c.chunk_index",
+            ['v' => $versionId]
+        );
+        $units = [];
+        $chars = 0;
+        foreach (Chunker::rejoin(array_map(static fn ($r) => ['page' => $r['page'] !== null ? (int) $r['page'] : null, 'section' => $r['section'], 'text' => (string) $r['text']], $rows)) as $unit) {
+            if ($chars + mb_strlen($unit['text']) > self::TEXT_LIMIT) {
+                if (!$units) {
+                    $unit['text'] = (string) mb_substr($unit['text'], 0, self::TEXT_LIMIT);
+                    $units[] = $unit;
+                }
+                return [$units, true];
+            }
+            $units[] = $unit;
+            $chars += mb_strlen($unit['text']);
+        }
+        return [$units, false];
     }
 
     public function submissionFile(int $id): Response

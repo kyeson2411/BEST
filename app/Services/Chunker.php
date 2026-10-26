@@ -42,6 +42,34 @@ final class Chunker
         return $chunks;
     }
 
+    /**
+     * Stored chunks back in reading order, one unit per page or section, without the sentence each chunk carries over
+     * from the one before it. Used to show a file's text as a page inside Sibol.
+     *
+     * @param list<array{page:int|null,section:string|null,text:string}> $chunks in chunk order
+     * @return list<array{page:int|null,section:string|null,text:string}>
+     */
+    public static function rejoin(array $chunks): array
+    {
+        $units = [];
+        $previous = null;
+        foreach ($chunks as $chunk) {
+            $text = (string) $chunk['text'];
+            $last = $units ? count($units) - 1 : null;
+            if ($last !== null && $units[$last]['page'] === $chunk['page'] && $units[$last]['section'] === $chunk['section']) {
+                $carry = self::lastSentence((string) $previous);
+                if ($carry !== '' && strncmp($text, $carry . "\n\n", strlen($carry) + 2) === 0) {
+                    $text = substr($text, strlen($carry) + 2);
+                }
+                $units[$last]['text'] .= "\n\n" . $text;
+            } else {
+                $units[] = ['page' => $chunk['page'], 'section' => $chunk['section'], 'text' => $text];
+            }
+            $previous = (string) $chunk['text'];
+        }
+        return $units;
+    }
+
     /** Paragraphs, with oversized paragraphs split by sentence and then by words. @return list<string> */
     private static function pieces(string $text): array
     {

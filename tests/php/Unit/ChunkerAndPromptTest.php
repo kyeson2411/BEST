@@ -27,6 +27,25 @@ final class ChunkerAndPromptTest extends TestCase
         self::assertSame('The heart has four chambers.', $last['text']);
     }
 
+    public function testChunksRejoinIntoTheirPagesWithoutRepeatedSentences(): void
+    {
+        $paragraphs = [];
+        for ($i = 1; $i <= 30; $i++) {
+            $paragraphs[] = 'Paragraph ' . $i . ' explains one more idea about how cells divide. It ends here.';
+        }
+        $units = [
+            ['page' => 1, 'section' => null, 'text' => implode("\n\n", $paragraphs)],
+            ['page' => 2, 'section' => null, 'text' => 'The heart has four chambers.'],
+        ];
+        $chunks = Chunker::chunk($units);
+        self::assertGreaterThan(2, count($chunks), 'page 1 is split into several chunks');
+
+        $rejoined = Chunker::rejoin($chunks);
+        self::assertCount(2, $rejoined);
+        self::assertSame($units[0]['text'], $rejoined[0]['text'], 'each carried-over sentence appears once');
+        self::assertSame(['page' => 2, 'section' => null, 'text' => 'The heart has four chambers.'], $rejoined[1]);
+    }
+
     public function testSourceTextCannotCloseItsOwnTag(): void
     {
         $block = Prompts::sourceBlock([[
