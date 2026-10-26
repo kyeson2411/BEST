@@ -1226,3 +1226,25 @@ WHERE m.role = 'assistant' AND m.mode IS NULL;
 
 INSERT INTO schema_migrations (version, applied_at) VALUES ('022_message_mode.sql', UTC_TIMESTAMP());
 
+-- ---------------------------------------------------------------- 023_anti_cheating.sql
+-- Anti-cheating for quizzes and online assignments, on unless the teacher switches it off. Students cannot copy or
+-- paste in their answers, and during a quiz each time the student leaves the quiz page (another tab, window or app)
+-- is counted on the attempt with the time away, for the teacher. A browser cannot stop a student from leaving, so
+-- the attempt records it instead.
+ALTER TABLE assignments ADD COLUMN anti_cheating TINYINT(1) NOT NULL DEFAULT 1 AFTER allow_resubmission;
+
+ALTER TABLE submissions
+  ADD COLUMN left_page_count INT UNSIGNED NOT NULL DEFAULT 0,
+  ADD COLUMN left_page_seconds INT UNSIGNED NOT NULL DEFAULT 0,
+  ADD COLUMN paste_blocked_count INT UNSIGNED NOT NULL DEFAULT 0;
+
+INSERT INTO schema_migrations (version, applied_at) VALUES ('023_anti_cheating.sql', UTC_TIMESTAMP());
+
+-- ---------------------------------------------------------------- 024_attempt_anti_cheating.sql
+-- Whether anti-cheating was on for a quiz attempt, set when the attempt starts. Attempts from before anti-cheating
+-- existed stay NULL, so their teacher is never told "nothing was recorded" for an attempt nobody watched; switching
+-- it on or off later does not change an attempt already under way.
+ALTER TABLE submissions ADD COLUMN anti_cheating TINYINT(1) NULL AFTER paste_blocked_count;
+
+INSERT INTO schema_migrations (version, applied_at) VALUES ('024_attempt_anti_cheating.sql', UTC_TIMESTAMP());
+

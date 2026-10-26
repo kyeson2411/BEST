@@ -158,6 +158,13 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
             <?= csrf_field() ?>
             <?php if ((int) $assignment['allow_text']): ?>
               <?= field('textarea', 'body', t('Your response'), ['value' => (string) ($latest['body'] ?? ''), 'rows' => 12, 'attrs' => ['maxlength' => 20000, 'data-charcount' => true], 'hint' => t('Save a draft as often as you like. Only Submit hands it in.')]) ?>
+              <?php if ((int) $assignment['anti_cheating']): ?>
+                <?php /* anticheat.js blocks copy and paste in the response box. */ ?>
+                <div data-anticheat data-anticheat-target="#f-body" data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::antiCheat()) ?>">
+                  <p class="anticheat-line"><?= icon('shield-check', 'icon--sm') ?><span><?= e(t('Anti-cheating is on: copy and paste are off in your response, so type it yourself. Attached files are not affected.')) ?></span></p>
+                  <p class="anticheat-note" data-anticheat-note role="status" aria-live="polite" hidden></p>
+                </div>
+              <?php endif; ?>
             <?php endif; ?>
             <?php if ((int) $assignment['allow_files']): ?>
               <?php if ($files): ?>
@@ -208,6 +215,9 @@ $minutes = (int) $assignment['time_limit_minutes'] > 0 ? (int) $assignment['time
     <?php else: ?>
       <section class="section" aria-labelledby="attempts-title">
         <div class="section__head"><h2 class="section__title" id="attempts-title"><?= e(t('Your attempts')) ?></h2></div>
+        <?php if ((int) $assignment['anti_cheating'] && ($state['in_progress'] || $state['can_start'])): ?>
+          <p class="anticheat-line" style="margin-bottom:12px"><?= icon('shield-check', 'icon--sm') ?><span><?= e(t('Anti-cheating is on for this quiz: copy and paste are off, and each time you leave the quiz page (another tab or app) it is recorded for your teacher.')) ?></span></p>
+        <?php endif; ?>
         <?php if ($state['in_progress']): ?>
           <div class="callout callout--amber" style="margin-bottom:16px"><?= icon('timer') ?><div>
             <p class="callout__title"><?= e(t('You have an attempt in progress')) ?></p>

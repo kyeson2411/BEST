@@ -894,6 +894,19 @@ Without the original `APP_KEY`, two-step sign-in cannot be checked: switch it of
   and notifications still work, light up **Quizzes** in the menu and in the breadcrumb (`work_list()`). The
   teacher's **Quizzes** page has **New quiz**, and so does each class page; `/teacher/assignments?kind=quiz` and
   `/teacher/assessments` lead there.
+- **Anti-cheating.** On for every quiz and online assignment unless the teacher unticks **Anti-cheating** in
+  its settings (`assignments.anti_cheating`, migration 023). Copy, cut, paste, drag-and-drop and the right-click
+  menu are blocked in a quiz and in an assignment's typed response, and question text cannot be selected
+  (`anticheat.js`). During a quiz, each time the student leaves the page (another tab, window or app) is sent to
+  `POST /student/assignments/{id}/attempt/activity` and counted on the attempt in progress with the time away
+  (`submissions.left_page_count`, `left_page_seconds`, `paste_blocked_count`); the student sees a notice each
+  time, and leaving because the quiz itself navigates (Submit, time up) is not counted. Each attempt keeps the
+  setting it started with (`submissions.anti_cheating`, migration 024), so a later change does not affect it, and
+  attempts from before anti-cheating existed show nothing about it. A browser cannot stop a
+  student from leaving, so Sibol records it: the teacher sees it on the submissions list ("Left the quiz 2
+  times") and on the attempt, with a reminder that a short look away can be innocent; the student sees the same
+  on the receipt, and it is in their data export. Students are told before they start. Nothing else about the
+  device is recorded, and scores are not changed.
 - **Comment bank.** Teachers save feedback they write often (**Comment bank**, linked from **To review** and
   the grading page), optionally tied to a rubric criterion by its title. On the grading page the bank lists the
   comments for this rubric's criteria first. A click inserts a comment into the comment box the teacher was

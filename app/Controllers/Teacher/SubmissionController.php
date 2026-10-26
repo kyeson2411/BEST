@@ -48,7 +48,7 @@ final class SubmissionController extends Controller
         $overrides = Overrides::forAssignment($id);
         $rows = Db::all(
             "SELECT u.id AS student_id, u.given_name, u.family_name, u.preferred_name, s.id, s.status, s.submitted_at, s.is_late, s.score, s.points_possible,
-                    s.grading_status, s.feedback_status, s.attempt_no,
+                    s.grading_status, s.feedback_status, s.attempt_no, s.left_page_count,
                     (SELECT COUNT(*) FROM submissions s2 WHERE s2.assignment_id = :a1 AND s2.student_id = u.id AND s2.status = 'submitted') AS attempts
              FROM class_memberships cm JOIN users u ON u.id = cm.user_id
              LEFT JOIN submissions s ON s.id = (

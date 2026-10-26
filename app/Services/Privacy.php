@@ -34,7 +34,7 @@ final class Privacy
                 }
                 unset($s['id']);
                 return $s;
-            }, Db::all('SELECT s.id, a.title AS assignment, s.attempt_no, s.status, s.body, s.submitted_at, s.is_late, s.score, s.points_possible, s.feedback, s.feedback_status, s.receipt_code FROM submissions s JOIN assignments a ON a.id = s.assignment_id WHERE s.student_id = :u', ['u' => $userId])),
+            }, Db::all('SELECT s.id, a.title AS assignment, s.attempt_no, s.status, s.body, s.submitted_at, s.is_late, s.score, s.points_possible, s.feedback, s.feedback_status, s.receipt_code, s.left_page_count, s.left_page_seconds, s.paste_blocked_count FROM submissions s JOIN assignments a ON a.id = s.assignment_id WHERE s.student_id = :u', ['u' => $userId])),
             'due_date_changes' => Db::all('SELECT a.title AS assignment, o.due_at, o.extra_minutes, o.excused, o.updated_at FROM assignment_overrides o JOIN assignments a ON a.id = o.assignment_id WHERE o.student_id = :u', ['u' => $userId]),
             'companion_conversations' => array_map(static function (array $c): array {
                 $c['messages'] = Db::all('SELECT role, content, created_at FROM ai_messages WHERE conversation_id = :c ORDER BY id', ['c' => (int) $c['id']]);

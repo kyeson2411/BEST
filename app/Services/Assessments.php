@@ -428,6 +428,8 @@ final class Assessments
             'started_at' => Db::now(),
             'deadline_at' => $deadline !== null ? gmdate('Y-m-d H:i:s', $deadline) : null,
             'points_possible' => (float) $assignment['points_possible'],
+            // Anti-cheating as it is when the attempt starts; a later change in the settings does not affect it.
+            'anti_cheating' => (int) ($assignment['anti_cheating'] ?? 0) === 1 ? 1 : 0,
             'created_at' => Db::now(),
             'updated_at' => Db::now(),
         ]);

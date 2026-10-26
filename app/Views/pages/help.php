@@ -12,6 +12,7 @@
     <ul>
       <li><?= e(t('Home shows what is due soon and where you left off. Assignments lists the work you hand in and the work done in class. Quizzes lists the quizzes you take online. Both have filters for work to do, submitted, graded and overdue.')) ?></li>
       <li><?= e(t('Every piece of work carries a small tag that says what it is: Quiz, Assignment, or In class / on paper.')) ?></li>
+      <li><?= e(t('When anti-cheating is on, copy and paste are off in your answers, and each time you leave a quiz page (another tab or app) it is recorded for your teacher. The quiz tells you before you start.')) ?></li>
       <li><?= e(t('To join a class, open Classes and enter the code your teacher gives you.')) ?></li>
       <li><?= e(t('Save a draft as often as you like. Your work counts only after you choose Submit, and you get a receipt with a code.')) ?></li>
       <li><?= e(t('Grades and feedback appear when your teacher releases them.')) ?></li>
@@ -22,6 +23,7 @@
     <ul>
       <li><?= e(t('Upload materials to a class, then publish them. Only published, released materials are visible to students and to the companion.')) ?></li>
       <li><?= e(t('Assignments holds work students hand in and work done in class or on paper. Quizzes holds the quizzes students take online. Each has its own New button, and so does each class page.')) ?></li>
+      <li><?= e(t('Anti-cheating is on for new quizzes and assignments: copy and paste are off in answers, and a quiz counts each time a student leaves its page, shown on the attempt. Untick it in the settings to switch it off.')) ?></li>
       <li><?= e(t('AI drafts of lessons and questions stay drafts until you review and publish them. AI grading help is a suggestion you can accept, change or ignore.')) ?></li>
       <li><?= e(t('Feedback reaches students only when you release it.')) ?></li>
     </ul>

@@ -434,6 +434,11 @@ legend { padding: 0; margin-bottom: var(--s-2); font-weight: 700; font-size: var
 .badge--ink { background: var(--forest); color: var(--paper); }
 .badge--outline { background: transparent; border: 1px solid var(--line-control); }
 .tag { display: inline-flex; align-items: center; gap: 4px; padding: 0 8px; border: 1px solid var(--rule-strong); border-radius: var(--radius-control); font-size: 0.8125rem; color: var(--ink-2); background: var(--paper-raised); }
+/* Anti-cheating: a quiet line saying it is on, a note when a copy or paste was blocked, and question text that
+   cannot be selected for copying. */
+.anticheat-line { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--ink-2); font-size: 0.875rem; }
+.anticheat-note { width: fit-content; margin: var(--s-1) 0 0; padding: 2px 8px; border-radius: var(--radius-control); background: var(--amber-soft); color: var(--amber); font-size: 0.875rem; font-weight: 600; }
+[data-anticheat] .question__prompt, [data-anticheat] .choice { -webkit-user-select: none; user-select: none; }
 /* Kind tag: what a piece of work is (Quiz, Assignment, In class / on paper), the same in every list. */
 .tag--kind { color: var(--ink); font-weight: 700; line-height: 1.6; white-space: nowrap; }
 .table-sub .tag--kind { margin-right: 6px; }

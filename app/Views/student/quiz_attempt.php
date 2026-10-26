@@ -2,7 +2,14 @@
 /** @var array $assignment @var array $submission @var list<array> $questions @var array<int,string> $saved */
 $deadline = $submission['deadline_at'] ? \Sibol\Core\Dates::format($submission['deadline_at'], 'iso') : null;
 $answered = count(array_filter($saved, static fn ($v) => trim((string) $v) !== ''));
+// Anti-cheating (anticheat.js): copy and paste off in the quiz, and leaving the page recorded for the teacher.
+// Set on the attempt when it started, so a change in the settings does not affect an attempt under way.
+$guarded = (int) ($submission['anti_cheating'] ?? 0) === 1;
 ?>
+<?php if ($guarded): ?>
+<div data-anticheat data-anticheat-target="#quiz-form" data-anticheat-url="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/attempt/activity')) ?>"
+     data-anticheat-left="<?= (int) $submission['left_page_count'] ?>" data-i18n="<?= json_attr(\Sibol\Services\ScriptStrings::antiCheat()) ?>">
+<?php endif; ?>
 <form method="post" action="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/attempt')) ?>" id="quiz-form" data-quiz
       data-attempt="<?= (int) $submission['id'] ?>" data-autosave-url="<?= e(url('/student/assignments/' . (int) $assignment['id'] . '/attempt')) ?>"
       data-assignment-url="<?= e(url('/student/assignments/' . (int) $assignment['id'])) ?>" data-no-busy
@@ -24,6 +31,10 @@ $answered = count(array_filter($saved, static fn ($v) => trim((string) $v) !== '
     <?php /* Connection notices from quiz.js (offline, answers restored, back online), kept in the sticky bar so
              they stay in view; the same text goes to the live region below for screen readers. */ ?>
     <div class="callout callout--amber" data-connection hidden style="flex: 1 1 100%"><?= icon('wifi-off') ?><p data-connection-text></p></div>
+    <?php if ($guarded): ?>
+      <p class="anticheat-line" style="flex: 1 1 100%"><?= icon('shield-check', 'icon--sm') ?><span><?= e(t('Anti-cheating is on: copy and paste are off, and leaving this page is recorded for your teacher.')) ?></span></p>
+      <p class="anticheat-note" data-anticheat-note role="status" aria-live="polite" hidden style="flex: 1 1 100%"></p>
+    <?php endif; ?>
   </div>
   <p class="sr-only" role="status" aria-live="polite" data-connection-live></p>
 
@@ -79,3 +90,17 @@ $answered = count(array_filter($saved, static fn ($v) => trim((string) $v) !== '
     <span class="meta"><?= e(t('Answers save as you go and stay on this device if the connection drops.')) ?></span>
   </div>
 </form>
+<?php if ($guarded): ?>
+  <dialog class="dialog" data-anticheat-dialog aria-labelledby="anticheat-title" aria-describedby="anticheat-text">
+    <form method="dialog">
+      <div class="dialog__body">
+        <h2 class="dialog__title" id="anticheat-title"><?= e(t('You left the quiz page')) ?></h2>
+        <p class="dialog__text" id="anticheat-text" data-anticheat-count></p>
+      </div>
+      <div class="dialog__actions">
+        <button type="submit" class="btn btn--primary" autofocus><?= e(t('Back to the quiz')) ?></button>
+      </div>
+    </form>
+  </dialog>
+</div>
+<?php endif; ?>

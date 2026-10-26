@@ -27,6 +27,19 @@ $historyLabels = ['submitted' => t('Submitted by the student'), 'graded' => t('G
   <input type="hidden" name="next_id" value="<?= (int) $nextId ?>">
   <div class="layout-split layout-split--wide-aside">
     <div class="stack">
+      <?php if ($a['kind'] === 'quiz' && (int) ($sub['anti_cheating'] ?? 0) === 1): $record = anticheat_record($sub); ?>
+        <?php /* What anticheat.js counted during this attempt (only attempts that started with anti-cheating on).
+                 Leaving the page is not proof of cheating. */ ?>
+        <div class="callout<?= $record ? ' callout--amber' : '' ?>"><?= icon($record ? 'eye-off' : 'shield-check') ?><div>
+          <p class="callout__title"><?= e(t('Anti-cheating')) ?></p>
+          <?php if ($record): ?>
+            <?php foreach ($record as $line): ?><p><?= e($line) ?></p><?php endforeach; ?>
+            <p class="meta"><?= e(t('A short look away can have an innocent reason. Talk with the student before deciding anything.')) ?></p>
+          <?php else: ?>
+            <p><?= e(t('Nothing was recorded: no time away from the quiz page and no blocked pastes.')) ?></p>
+          <?php endif; ?>
+        </div></div>
+      <?php endif; ?>
       <?php if (trim((string) $sub['body']) !== '' || $files): ?>
         <section class="section" aria-labelledby="work-title">
           <div class="section__head"><h2 class="section__title" id="work-title"><?= e(t('Student work')) ?></h2></div>

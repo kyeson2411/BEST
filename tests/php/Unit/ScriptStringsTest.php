@@ -16,6 +16,7 @@ final class ScriptStringsTest extends TestCase
 {
     /** Each script and the ScriptStrings sets its page provides (the layout always provides common). */
     private const SCRIPTS = [
+        'anticheat.js' => ['antiCheat', 'common'],
         'app.js' => ['common'],
         'builder.js' => ['common'],
         'companion.js' => ['companion', 'common'],
@@ -54,7 +55,7 @@ final class ScriptStringsTest extends TestCase
                 }
             }
         }
-        foreach (['common', 'quiz', 'companion', 'flashcards', 'material', 'grading', 'offline'] as $set) {
+        foreach (['common', 'quiz', 'companion', 'flashcards', 'material', 'grading', 'offline', 'antiCheat'] as $set) {
             foreach (array_keys(ScriptStrings::$set()) as $key) {
                 self::assertArrayHasKey($key, $used[$set] ?? [], "ScriptStrings::$set() provides '$key', but no script uses it");
             }
@@ -63,7 +64,7 @@ final class ScriptStringsTest extends TestCase
 
     public function testStringsAreTextOrPluralPairs(): void
     {
-        foreach (['common', 'quiz', 'companion', 'flashcards', 'material', 'grading', 'offline'] as $set) {
+        foreach (['common', 'quiz', 'companion', 'flashcards', 'material', 'grading', 'offline', 'antiCheat'] as $set) {
             foreach (ScriptStrings::$set() as $key => $value) {
                 if (is_array($value)) {
                     self::assertCount(2, $value, "$set.$key must be a [singular, plural] pair");

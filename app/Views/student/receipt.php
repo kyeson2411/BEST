@@ -19,6 +19,10 @@ use Sibol\Core\Uploads;
     <?php if ($assignment['kind'] === 'quiz'): ?>
       <dt><?= e(t('Attempt')) ?></dt><dd><?= (int) $submission['attempt_no'] ?></dd>
       <dt><?= e(t('Answered')) ?></dt><dd><?= e(t(':n of :total questions', ['n' => $answered, 'total' => $questionCount])) ?></dd>
+      <?php if ($record = anticheat_record($submission)): ?>
+        <?php /* The same record the teacher sees, so the student knows what was counted. */ ?>
+        <dt><?= e(t('Anti-cheating')) ?></dt><dd><?= e(implode(' ', $record)) ?> <span class="meta"><?= e(t('Your teacher sees this with your answers.')) ?></span></dd>
+      <?php endif; ?>
     <?php endif; ?>
     <?php if ($files): ?>
       <dt><?= e(t('Files')) ?></dt>

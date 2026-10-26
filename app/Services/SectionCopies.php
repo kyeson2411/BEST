@@ -32,7 +32,7 @@ final class SectionCopies
     private const VERSION_FIELDS = ['original_filename', 'stored_path', 'mime_type', 'extension', 'size_bytes', 'sha256', 'page_count', 'char_count'];
     private const ASSIGNMENT_FIELDS = [
         'kind', 'title', 'instructions', 'objectives', 'category', 'opens_at', 'due_at', 'late_policy', 'late_penalty_pct',
-        'max_attempts', 'time_limit_minutes', 'points_possible', 'allow_text', 'allow_files', 'allow_resubmission', 'rubric',
+        'max_attempts', 'time_limit_minutes', 'points_possible', 'allow_text', 'allow_files', 'allow_resubmission', 'anti_cheating', 'rubric',
         'feedback_release', 'answer_key_release', 'ai_assisted',
     ];
     private const QUESTION_FIELDS = ['position', 'qtype', 'prompt', 'points', 'options', 'answer_key', 'explanation', 'topic', 'competency_id', 'source_ref', 'ai_generated', 'reviewed'];

@@ -56,7 +56,8 @@ $describe = static function (array $ov, bool $withExcused = true) use ($timed): 
           <tr>
             <td class="cell-primary"><?= e(user_name($r)) ?><?php if ((int) $r['attempts'] > 1): ?><span class="table-sub"><?= e(t(':n attempts, best shown', ['n' => (int) $r['attempts']])) ?></span><?php endif; ?></td>
             <td data-label="<?= e(t('Status')) ?>"><span class="cluster" style="gap: 4px"><?= badge($l, $tone) ?>
-              <?php if ($r['override']): foreach ($describe($r['override'], false) as $note): ?><?= badge($note, 'outline') ?><?php endforeach; endif; ?></span></td>
+              <?php if ($r['override']): foreach ($describe($r['override'], false) as $note): ?><?= badge($note, 'outline') ?><?php endforeach; endif; ?>
+              <?php if ((int) ($r['left_page_count'] ?? 0) > 0): ?><?= badge(tp('Left the quiz :count time', 'Left the quiz :count times', (int) $r['left_page_count']), 'amber', 'eye-off') ?><?php endif; ?></span></td>
             <td data-label="<?= e(t('Submitted')) ?>"><?= $r['submitted_at'] ? e(fmt_date($r['submitted_at'], 'datetime_short')) . ((int) $r['is_late'] ? ' ' . badge(t('Late'), 'amber') : '') : '<span class="meta">—</span>' ?></td>
             <td class="num" data-label="<?= e(t('Score')) ?>"><?= $r['score'] !== null ? e(fmt_number($r['score'], 2)) . ' / ' . e(fmt_number($r['points_possible'], 2)) : '<span class="meta">—</span>' ?></td>
             <td class="actions">

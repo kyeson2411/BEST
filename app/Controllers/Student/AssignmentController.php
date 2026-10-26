@@ -9,6 +9,7 @@ use Sibol\Controllers\Controller;
 use Sibol\Core\Audit;
 use Sibol\Core\Db;
 use Sibol\Core\HttpException;
+use Sibol\Core\RateLimiter;
 use Sibol\Core\Response;
 use Sibol\Core\Uploads;
 use Sibol\Core\ValidationException;
@@ -119,6 +120,8 @@ final class AssignmentController extends Controller
             'maxFileMb' => min(self::MAX_FILE_MB, (int) (Uploads::maxBytes() / 1048576)),
             'toReview' => $toReview,
             'katex' => true,
+            // Anti-cheating on an assignment: copy and paste are off in the typed response.
+            'scripts' => $assignment['kind'] === 'assignment' && (int) $assignment['anti_cheating'] ? ['anticheat.js'] : [],
         ]);
     }
 
@@ -274,7 +277,7 @@ final class AssignmentController extends Controller
             'questions' => $questions,
             'saved' => $saved,
             'katex' => true,
-            'scripts' => ['quiz.js'],
+            'scripts' => (int) ($sub['anti_cheating'] ?? 0) === 1 ? ['quiz.js', 'anticheat.js'] : ['quiz.js'],
         ]);
     }
 
@@ -311,6 +314,43 @@ final class AssignmentController extends Controller
         }
         $this->flash('success', t('Answers saved.'));
         return $this->redirect('/student/assignments/' . $id . '/attempt');
+    }
+
+    /**
+     * Anti-cheating during a quiz attempt (anticheat.js): "left" when the student leaves the quiz page (another tab,
+     * window or app), "back" with the seconds away when they return, "paste" when a paste was blocked. Counted on the
+     * attempt in progress for the teacher; nothing else about the student's device is recorded.
+     */
+    public function activity(int $id): Response
+    {
+        $user = $this->user();
+        $assignment = Assessments::forStudent((int) $user['id'], $id);
+        if ($assignment['kind'] !== 'quiz') {
+            throw HttpException::notFound();
+        }
+        $sub = Assessments::studentState($assignment, (int) $user['id'])['in_progress'];
+        if (!$sub) {
+            return $this->json(['error' => t('This attempt is no longer open.')], 409);
+        }
+        // Only an attempt that started with anti-cheating on is watched.
+        if ((int) ($sub['anti_cheating'] ?? 0) !== 1) {
+            throw HttpException::notFound();
+        }
+        if (!RateLimiter::attempt('quiz-activity', (string) $sub['id'], 600, 3600)) {
+            return $this->json(['error' => t('Too many requests. Try again later.')], 429);
+        }
+        $event = $this->request->str('event');
+        $column = ['left' => 'left_page_count', 'paste' => 'paste_blocked_count'][$event] ?? null;
+        if ($column !== null) {
+            Db::exec("UPDATE submissions SET $column = LEAST($column + 1, 9999) WHERE id = :id AND status = 'in_progress'", ['id' => (int) $sub['id']]);
+        } elseif ($event === 'back') {
+            // Time away: what the page measured, never more than a day for one absence.
+            $seconds = max(0, min(86400, (int) $this->request->int('seconds', 0)));
+            Db::exec("UPDATE submissions SET left_page_seconds = LEAST(left_page_seconds + :s, 864000) WHERE id = :id AND status = 'in_progress'", ['s' => $seconds, 'id' => (int) $sub['id']]);
+        } else {
+            return $this->json(['error' => t('Unknown event.')], 422);
+        }
+        return $this->json(['left' => (int) Db::value('SELECT left_page_count FROM submissions WHERE id = :id', ['id' => (int) $sub['id']])]);
     }
 
     public function receipt(int $id): Response

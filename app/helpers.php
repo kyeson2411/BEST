@@ -205,6 +205,27 @@ function work_list(string $kind, string $role): array
     return $kind === 'quiz' ? [t('Quizzes'), '/' . $role . '/quizzes'] : [t('Assignments'), '/' . $role . '/assignments'];
 }
 
+/**
+ * What anti-cheating recorded on a quiz attempt, as plain sentences (none when nothing was): how many times the
+ * student left the quiz page and for about how long, and how many pastes were blocked. @return list<string>
+ */
+function anticheat_record(array $submission): array
+{
+    $out = [];
+    $left = (int) ($submission['left_page_count'] ?? 0);
+    if ($left > 0) {
+        // A recorded absence lasted at least a moment, even when the page measured under a second.
+        $seconds = max(1, (int) ($submission['left_page_seconds'] ?? 0));
+        $away = $seconds < 60 ? tp(':count second', ':count seconds', $seconds) : tp(':count minute', ':count minutes', (int) round($seconds / 60));
+        $out[] = tp('Left the quiz page :count time, about :away away in total.', 'Left the quiz page :count times, about :away away in total.', $left, ['away' => $away]);
+    }
+    $pastes = (int) ($submission['paste_blocked_count'] ?? 0);
+    if ($pastes > 0) {
+        $out[] = tp('Tried to paste :count time. It was blocked.', 'Tried to paste :count times. Each was blocked.', $pastes);
+    }
+    return $out;
+}
+
 /** Plain-language assignment status ("Scheduled" when published but not yet open). @return array{0:string,1:string} */
 function assignment_status(array $a): array
 {

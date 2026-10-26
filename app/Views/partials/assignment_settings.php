@@ -64,6 +64,7 @@ $val = static fn (string $k, $default = '') => $a[$k] ?? $default;
       <?= field('number', 'max_attempts', t('Attempts allowed'), ['value' => (string) $val('max_attempts', 1), 'attrs' => ['min' => 1, 'max' => 20], 'hint' => t('The best attempt counts.')]) ?>
       <?= field('number', 'time_limit_minutes', t('Time limit (minutes)'), ['value' => (string) $val('time_limit_minutes', ''), 'optional_label' => true, 'attrs' => ['min' => 1, 'max' => 600]]) ?>
     </div>
+    <?= checkbox('anti_cheating', t('Anti-cheating'), (bool) $val('anti_cheating', 1), t('Copy and paste are off during the quiz. Each time a student leaves the quiz page (another tab or app), it is counted with the time away and shown on their attempt. A browser cannot stop a student from leaving, so it is recorded instead.')) ?>
   </fieldset>
 <?php elseif ($isPaper): ?>
   <fieldset>
@@ -78,6 +79,7 @@ $val = static fn (string $k, $default = '') => $a[$k] ?? $default;
     <?= checkbox('allow_text', t('Typed response'), (bool) $val('allow_text', 1)) ?>
     <?= checkbox('allow_files', t('File attachments'), (bool) $val('allow_files', 0), t('PDF, Word, PowerPoint, text and images, up to 5 files.')) ?>
     <?= checkbox('allow_resubmission', t('Allow resubmission before the deadline'), (bool) $val('allow_resubmission', 0)) ?>
+    <?= checkbox('anti_cheating', t('Anti-cheating'), (bool) $val('anti_cheating', 1), t('Copy and paste are off in the typed response, so students type their own answer. Attached files are not affected.')) ?>
   </fieldset>
 <?php endif; ?>
 

@@ -627,6 +627,7 @@ final class AssignmentController extends Controller
             'allow_text' => 'bool',
             'allow_files' => 'bool',
             'allow_resubmission' => 'bool',
+            'anti_cheating' => 'bool',
             'feedback_release' => 'required|in:manual,immediate',
             'answer_key_release' => 'required|in:never,after_submit,after_due,manual',
         ], [
@@ -676,6 +677,8 @@ final class AssignmentController extends Controller
             'allow_text' => $isQuiz || !$online ? 0 : ((bool) $data['allow_text'] ? 1 : 0),
             'allow_files' => $isQuiz || !$online ? 0 : ((bool) $data['allow_files'] ? 1 : 0),
             'allow_resubmission' => $isQuiz || !$online ? 0 : ((bool) $data['allow_resubmission'] ? 1 : 0),
+            // Nothing is answered online for work done in class, so there is nothing to guard.
+            'anti_cheating' => $online && (bool) $data['anti_cheating'] ? 1 : 0,
             'feedback_release' => $online ? $data['feedback_release'] : 'manual',
             'answer_key_release' => $online ? $data['answer_key_release'] : 'never',
         ];

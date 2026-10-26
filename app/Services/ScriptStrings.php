@@ -54,6 +54,15 @@ final class ScriptStrings
         ];
     }
 
+    /** anticheat.js: copy and paste blocked in answers; leaving a quiz page counted. */
+    public static function antiCheat(): array
+    {
+        return [
+            'blocked' => t('Copy and paste are off here. Type your answer yourself.'),
+            'left' => [t('Leaving the quiz page has been recorded :count time. Your teacher sees this with your answers.'), t('Leaving the quiz page has been recorded :count times. Your teacher sees this with your answers.')],
+        ];
+    }
+
     /** practice-offline.js: practice sets kept on the device, and practising them on the offline page. */
     public static function practiceOffline(): array
     {

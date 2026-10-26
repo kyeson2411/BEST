@@ -179,6 +179,7 @@ $router->group('/student', ['role:student', 'notices'], static function ($r): vo
     $r->post('/assignments/{id}/start', [Student\AssignmentController::class, 'startQuiz']);
     $r->get('/assignments/{id}/attempt', [Student\AssignmentController::class, 'attempt']);
     $r->post('/assignments/{id}/attempt', [Student\AssignmentController::class, 'saveAttempt']);
+    $r->post('/assignments/{id}/attempt/activity', [Student\AssignmentController::class, 'activity']);
     $r->get('/submissions/{id}', [Student\AssignmentController::class, 'receipt']);
 
     $r->group('/learning', ['ai-student'], static function ($l): void {
