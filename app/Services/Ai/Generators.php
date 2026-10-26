@@ -112,7 +112,7 @@ final class Generators
                 }
                 continue;
             }
-            $choices = array_values(array_filter(array_map(static fn ($c) => mb_substr(trim((string) $c), 0, 300), (array) ($item['choices'] ?? []))));
+            $choices = self::plainChoices(array_values(array_filter(array_map(static fn ($c) => mb_substr(trim((string) $c), 0, 300), (array) ($item['choices'] ?? [])))));
             $answer = $item['answer'] ?? null;
             if (trim((string) ($item['question'] ?? '')) === '' || count($choices) < 2 || !is_numeric($answer) || !isset($choices[(int) $answer])) {
                 continue;
@@ -236,7 +236,7 @@ final class Generators
                 'source_ref' => self::sourceRef($sources, (int) ($q['source'] ?? 0)),
             ];
             if ($type === 'multiple_choice') {
-                $choices = array_values((array) ($q['choices'] ?? []));
+                $choices = self::plainChoices(array_values(array_map(static fn ($c): string => trim((string) $c), (array) ($q['choices'] ?? []))));
                 $answer = $q['answer'] ?? '';
                 if (is_numeric($answer)) {
                     $answer = ['A', 'B', 'C', 'D', 'E', 'F'][(int) $answer] ?? '';
@@ -415,6 +415,22 @@ final class Generators
             $parts[$i] = preg_replace(['/(?<!\\\\)\\\\"/', '/(?<!\\\\)\\\\[ \t]*(?=\n)/'], ['"', ''], $part) ?? $part;
         }
         return implode('', $parts);
+    }
+
+    /**
+     * Answer choices without the letters the model sometimes writes in front of them ("A. Arteries"), since the
+     * page shows its own letters. Only when every choice starts with its own letter, so "B cells" stays as it is.
+     * @param list<string> $choices @return list<string>
+     */
+    public static function plainChoices(array $choices): array
+    {
+        $letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+        foreach ($choices as $i => $choice) {
+            if (!preg_match('/^\(?' . ($letters[$i] ?? '-') . '[.)]\s+\S/i', $choice)) {
+                return $choices;
+            }
+        }
+        return array_map(static fn (string $c): string => (string) preg_replace('/^\(?[A-F][.)]\s+/i', '', $c), $choices);
     }
 
     private static function sourceRef(array $sources, int $n): ?string

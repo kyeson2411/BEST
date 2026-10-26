@@ -47,6 +47,14 @@ final class MarkdownTest extends TestCase
         self::assertStringNotContainsString("\x1B", $html);
     }
 
+    public function testLineBreaksInTableCellsAreKeptButNoOtherTag(): void
+    {
+        // As the live model wrote reteaching ideas on 2026-10-25: one cell, several ideas split by <br>.
+        $html = Markdown::render("| Topic | Ideas |\n| --- | --- |\n| Breathing | • Model lungs<br>• Concept map<br/>• Quiz <b>now</b> |");
+        self::assertStringContainsString('<td>• Model lungs<br>• Concept map<br>• Quiz &lt;b&gt;now&lt;/b&gt;</td>', $html);
+        self::assertSame(1, substr_count(Markdown::render('Text <br> outside a table'), '&lt;br&gt;'));
+    }
+
     public function testPlainCutsAtWordBoundary(): void
     {
         $plain = Markdown::plain('How do the respiratory and circulatory systems work together when I exercise?', 70);

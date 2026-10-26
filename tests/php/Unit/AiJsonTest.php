@@ -77,4 +77,19 @@ final class AiJsonTest extends TestCase
         self::assertSame('Ask: "Why do leaves need light?"', $json['items'][0]['explanation']);
         self::assertSame(0, $json['items'][0]['answer']);
     }
+
+    public function testLettersTheModelWroteBeforeChoicesAreDropped(): void
+    {
+        // As the live model drafted a quiz on 2026-10-25: the page already shows A, B, C, D beside each choice.
+        self::assertSame(['Arteries', 'Veins', 'Capillaries', 'All of the above'],
+            Generators::plainChoices(['A. Arteries', 'B. Veins', 'C. Capillaries', 'D. All of the above']));
+        self::assertSame(['Mitosis', 'Meiosis'], Generators::plainChoices(['(a) Mitosis', 'b) Meiosis']));
+    }
+
+    public function testChoicesThatOnlyLookLetteredAreKept(): void
+    {
+        self::assertSame(['B cells', 'T cells'], Generators::plainChoices(['B cells', 'T cells']));
+        self::assertSame(['A. thaliana', 'Rice'], Generators::plainChoices(['A. thaliana', 'Rice']));
+        self::assertSame(['C. elegans', 'A. thaliana'], Generators::plainChoices(['C. elegans', 'A. thaliana']));
+    }
 }

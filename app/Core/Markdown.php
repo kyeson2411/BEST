@@ -123,15 +123,17 @@ final class Markdown
             $isSep = static fn (string $row): bool => (bool) preg_match('/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?$/', $row);
             if (count($table) >= 2 && $isSep($table[1])) {
                 $cells = static fn (string $row): array => array_map('trim', explode('|', trim(trim($row), '|')));
+                // A cell has no other way to break a line, so models write <br> there; only that bare tag comes back.
+                $cell = static fn (string $text): string => (string) preg_replace('/&lt;br\s*\/?&gt;/i', '<br>', self::inline($text, $opts));
                 $html = '<div class="table-frame"><table class="md-table"><thead><tr>';
-                foreach ($cells($table[0]) as $cell) {
-                    $html .= '<th scope="col">' . self::inline($cell, $opts) . '</th>';
+                foreach ($cells($table[0]) as $text) {
+                    $html .= '<th scope="col">' . $cell($text) . '</th>';
                 }
                 $html .= '</tr></thead><tbody>';
                 foreach (array_slice($table, 2) as $row) {
                     $html .= '<tr>';
-                    foreach ($cells($row) as $cell) {
-                        $html .= '<td>' . self::inline($cell, $opts) . '</td>';
+                    foreach ($cells($row) as $text) {
+                        $html .= '<td>' . $cell($text) . '</td>';
                     }
                     $html .= '</tr>';
                 }
