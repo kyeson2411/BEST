@@ -40,11 +40,12 @@
     <li><?= e(t('If an answer seems wrong or unsafe, use Report. Your report and that answer go to school administrators.')) ?></li>
   </ul>
 
-  <h2 id="demo"><?= e(t('Demo mode')) ?></h2>
-  <p><?= e(t('A demo school contains only fictional people and records, so you can try every role safely.')) ?></p>
   <?php if ($aiDemo): ?>
+    <h2 id="demo"><?= e(t('Demo mode')) ?></h2>
+    <p><?= e(t('A demo school contains only fictional people and records, so you can try every role safely.')) ?></p>
     <p><?= e(t('AI demo mode means no AI service is connected. The companion finds the most relevant passages in your released class materials and shows them with their real sources, and practice items are made from those passages. It does not write new explanations. A school administrator can connect an AI provider in the server configuration.')) ?></p>
   <?php else: ?>
+    <h2 id="ai-answers"><?= e(t('AI answers')) ?></h2>
     <p><?= e(t('An AI provider is connected, so the companion writes new answers. They are still checked against your class materials when you ask about them.')) ?></p>
   <?php endif; ?>
 

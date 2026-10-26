@@ -51,7 +51,9 @@ final class SystemCheck
             $rows[] = ['label' => 'AI provider', 'ok' => $hasKey || $provider === 'openai_compatible', 'detail' => $provider . ($hasKey ? ' configured (key stored server-side)' : ' selected but AI_API_KEY is empty')];
         }
         $local = Config::isLocal();
-        $rows[] = ['label' => 'Environment', 'ok' => !$local, 'detail' => $local ? 'APP_ENV=local: developer error details and demo sign-in are enabled. Use APP_ENV=production for real use.' : 'production'];
+        $rows[] = ['label' => 'Environment', 'ok' => !$local, 'detail' => $local
+            ? 'APP_ENV=local: developer error details ' . (Config::get('app.demo_login') ? 'and demo sign-in are enabled' : 'are shown') . '. Use APP_ENV=production for real use.'
+            : 'production'];
         $secure = (bool) Config::get('app.secure_cookie');
         $rows[] = ['label' => 'Secure session cookie', 'ok' => $secure, 'detail' => $secure ? 'Enabled' : 'Off. Serve the site over HTTPS and set SESSION_SECURE_COOKIE=true.'];
         $dbUser = (string) Config::get('db.user');

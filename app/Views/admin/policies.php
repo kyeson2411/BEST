@@ -1,4 +1,5 @@
 <?php /** @var array $settings @var string $provider @var array $noticeProgress @var array $noticeVersions */
+use Sibol\Core\Config;
 use Sibol\Services\Settings;
 
 $ai = $settings['ai'];
@@ -49,7 +50,7 @@ $modes = (array) $ai['student_modes'];
     <div class="form-grid" style="margin-top: 16px">
       <?= field('number', 'student_daily_messages', t('Messages per student per day'), ['value' => (string) $ai['student_daily_messages'], 'required' => true, 'hint' => t('0 means no daily limit.'), 'attrs' => ['min' => 0, 'max' => 1000]]) ?>
       <?= field('number', 'teacher_daily_requests', t('Requests per teacher per day'), ['value' => (string) $ai['teacher_daily_requests'], 'required' => true, 'hint' => t('0 means no daily limit.'), 'attrs' => ['min' => 0, 'max' => 2000]]) ?>
-      <?= field('number', 'monthly_token_budget', t('Monthly token budget'), ['value' => (string) $ai['monthly_token_budget'], 'required' => true, 'hint' => t('For the whole school. 0 means no budget. Demo mode uses no tokens.'), 'attrs' => ['min' => 0, 'step' => 1000]]) ?>
+      <?= field('number', 'monthly_token_budget', t('Monthly token budget'), ['value' => (string) $ai['monthly_token_budget'], 'required' => true, 'hint' => Config::get('ai.provider', 'demo') === 'demo' ? t('For the whole school. 0 means no budget. Demo mode uses no tokens.') : t('For the whole school. 0 means no budget.'),'attrs' => ['min' => 0, 'step' => 1000]]) ?>
       <?= field('number', 'max_question_chars', t('Longest question'), ['value' => (string) $ai['max_question_chars'], 'required' => true, 'hint' => t('In characters.'), 'attrs' => ['min' => 200, 'max' => 8000]]) ?>
     </div>
   </section>

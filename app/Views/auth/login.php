@@ -27,7 +27,7 @@
 
 <?php if ($demoAccounts): ?>
   <section class="demo-logins" aria-labelledby="demo-title">
-    <h2 class="demo-logins__title" id="demo-title"><?= e(t('Explore the demo school')) ?></h2>
+    <h2 class="demo-logins__title" id="demo-title"><?= e(t('Quick login for capstone demonstration')) ?></h2>
     <p class="demo-logins__note"><?= e(t('Fictional accounts, available only on this computer while the app is in local mode.')) ?></p>
     <div class="demo-logins__list">
       <?php foreach ($demoAccounts as $account): ?>
